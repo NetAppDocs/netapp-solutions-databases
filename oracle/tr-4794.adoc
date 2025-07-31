@@ -1,0 +1,22 @@
+---
+sidebar: sidebar
+permalink: oracle/tr-4794.html
+keywords: 
+summary: 
+---
+
+= TR-4794: Oracle databases on NetApp EF-Series
+:hardbreaks:
+:nofooter:
+:icons: font
+:linkattrs:
+:imagesdir: ../media/
+
+Mitch Blackburn, Ebin Kadavy, NetApp
+
+[.lead]
+TR-4794 is intended to help storage administrators and database administrators successfully deploy Oracle on NetApp EF-Series storage.
+ 
+link:https://www.netapp.com/pdf.html?item=/media/17248-tr4794pdf.pdf[TR-4794: Oracle databases on NetApp EF-Series^]
+
+// NetApp Solutions restructuring (jul 2025) - renamed from databases/tr-4794.adoc
