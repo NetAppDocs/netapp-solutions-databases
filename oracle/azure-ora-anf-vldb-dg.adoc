@@ -905,11 +905,11 @@ To learn more about the information described in this document, review the follo
 
 * TR-5002: Oracle Active Data Guard Cost Reduction with Azure NetApp Files
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose^]
+link:https://docs.netapp.com/us-en/netapp-solutions-databases/oracle/azure-ora-anf-data-guard.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose^]
 
 * TR-4974: Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose^]
+link:https://docs.netapp.com/us-en/netapp-solutions-databases/oracle/aws-ora-fsx-ec2-nfs-asm.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose^]
 
 * Azure NetApp Files
 +

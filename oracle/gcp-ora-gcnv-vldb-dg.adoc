@@ -136,7 +136,7 @@ image:gcnv-ora-vldb-dg-vol-006.png["Screenshot showing GCNV environment configur
 
 In this demonstration, we have setup a primary Oracle database called NTAP on the primary DB server with eight NFS mount points: /u01 for the Oracle binary, /u02, /u03, /u04, /u05, /u06, /u07 for the Oracle data files, and load balanced with Oracle ASM disk group +DATA; /u08 for the Oracle active logs, archived log files, and load balanced with Oracle ASM disk group +LOGS. Oracle control files are placed on both +DATA and +LOGS disk groups for redundancy. This setup serves as a reference configuration. Your actual deployment should take into consideration of your specific needs and requirements in terms of the storage pool sizing, the service level, the number of database volumes and the sizing of each volume.
 
-For detailed step by step procedures for setting up Oracle Data Guard on NFS with ASM, please referred to TR-5002 - link:https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html[Oracle Active Data Guard Cost Reduction with Azure NetApp Files^]. Although the procedures in TR-5002 were validated on Azure ANF environment, they are equally applicable to Google GCNV environment. 
+For detailed step by step procedures for setting up Oracle Data Guard on NFS with ASM, please referred to TR-5002 - link:https://docs.netapp.com/us-en/netapp-solutions-databases/oracle/azure-ora-anf-data-guard.html[Oracle Active Data Guard Cost Reduction with Azure NetApp Files^]. Although the procedures in TR-5002 were validated on Azure ANF environment, they are equally applicable to Google GCNV environment. 
 
 Following illustrates the details of a primary Oracle VLDB in a Data Guard configuration in Google GCNV environment. 
 
@@ -558,7 +558,7 @@ This completes the demonstration of a Data Guard setup for VLDB NTAP at the prim
 
 Oracle Data Guard requires OS kernel configuration and Oracle software stacks including patch sets on standby DB server to match with primary DB server. For easy management and simplicity, the database storage configuration of the standby DB server ideally should match with the primary DB server as well, such as the database directory layout and sizes of NFS mount points. 
 
-Again, for detailed step by step procedures for setting up Oracle Data Guard standby on NFS with ASM, please referred to TR-5002 - link:https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html[Oracle Active Data Guard Cost Reduction with Azure NetApp Files^] and TR-4974 - link:https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose[Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM^] relevant sections. Following illustrates the detail of standby Oracle VLDB configuration on standby DB server in a Data Guard setting in Google GCNV environment. 
+Again, for detailed step by step procedures for setting up Oracle Data Guard standby on NFS with ASM, please referred to TR-5002 - link:https://docs.netapp.com/us-en/netapp-solutions-databases/oracle/azure-ora-anf-data-guard.html[Oracle Active Data Guard Cost Reduction with Azure NetApp Files^] and TR-4974 - link:https://docs.netapp.com/us-en/netapp-solutions-databases/oracle/aws-ora-fsx-ec2-nfs-asm.html#purpose[Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM^] relevant sections. Following illustrates the detail of standby Oracle VLDB configuration on standby DB server in a Data Guard setting in Google GCNV environment. 
 
 . The standby Oracle DB server configuration at standby site in the demo lab. 
 +
@@ -1294,7 +1294,7 @@ https://bitbucket.ngage.netapp.com/projects/NS-BB/repos/na_oracle_clone_gcnv/bro
 
 [NOTE]
 
-The toolkit can only be accessed by NetApp internal user with bitbucket access at this moment. For interested external users, please request access from your account team or reach out to NetApp Solutions Engineering team. Refer to link:https://docs.netapp.com/us-en/netapp-solutions/databases/automation_ora_clone_gcnv_asm.html#purpose[Automated Oracle Clone Lifecycle on GCNV with ASM^] for usage instructions.
+The toolkit can only be accessed by NetApp internal user with bitbucket access at this moment. For interested external users, please request access from your account team or reach out to NetApp Solutions Engineering team. Refer to link:https://docs.netapp.com/us-en/netapp-solutions-databases/automation/automation-ora-clone-gcnv-asm.html#purpose[Automated Oracle Clone Lifecycle on GCNV with ASM^] for usage instructions.
 
 ====
 
@@ -1305,11 +1305,11 @@ To learn more about the information described in this document, review the follo
 
 * TR-5002: Oracle Active Data Guard Cost Reduction with Azure NetApp Files
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose^]
+link:https://docs.netapp.com/us-en/netapp-solutions-databases/oracle/azure-ora-anf-data-guard.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose^]
 
 * TR-4974: Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose^]
+link:https://docs.netapp.com/us-en/netapp-solutions-databases/oracle/aws-ora-fsx-ec2-nfs-asm.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose^]
 
 * NetApp's best-in-class file storage service, in Google Cloud
 +
