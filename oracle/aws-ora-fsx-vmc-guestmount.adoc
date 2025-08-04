@@ -122,7 +122,7 @@ git clone https://github.com/NetApp-Automation/na_aws_fsx_ec2_deploy.git
 image:aws-ora-fsx-vmc-vm-008.png["Screenshot showing VMC SDDC test environment."]
 
 
-. Optionally, NetApp also provides several automation toolkits to run Oracle deployment and configuration when applicable. Refer to link:index.html[DB Automation Toolkits^] for more information.
+. Optionally, NetApp also provides several automation toolkits to run Oracle deployment and configuration when applicable. Refer to link:../databases/index.html[DB Automation Toolkits] for more information.
 
 [NOTE]
 

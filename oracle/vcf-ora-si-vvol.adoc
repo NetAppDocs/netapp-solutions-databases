@@ -790,8 +790,6 @@ To learn more about the information described in this document, review the follo
 
 * link:https://www.vmware.com/products/cloud-infrastructure/vmware-cloud-foundation[VMware Cloud Foundation^]
 
-* link:index.html[NetApp Enterprise Database Solutions^]
-
 * link:https://docs.netapp.com/us-en/snapcenter/[SnapCenter software documentation^]
 
 
