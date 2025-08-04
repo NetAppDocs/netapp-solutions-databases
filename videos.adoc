@@ -15,8 +15,6 @@ keywords: netapp, solutions, videos, demos
 [.lead]
 Overview of the videos and demos highlighting specific features of many of NetApp's solutions.
 
-.Enterprise Applications and Databases
-
 [underline]#*Videos for open source databases*#
 
 video::c381b887-8c8b-4d7d-8b0f-b0c0010c5c04[panopto, title="PostgreSQL automated deployment, HA/DR replication setup, failover, resync", width=360]
