@@ -5,8 +5,8 @@ indexpage:
   tiles:
     - title: "Introduction"
       links:
-        - title: "About this Repository"
-          url: about.html
+        - title: "Learn about NetApp Solutions"
+          url: https://docs.netapp.com/us-en/netapp-solutions-family/intro-family.html
         - title: "Change History"
           url: /whats-new.html
         - title: "Blogs"
