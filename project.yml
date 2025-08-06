@@ -1,5 +1,5 @@
 settings:
-  name: "NetApp Database solutions"
+  name: "NetApp database solutions"
   internal:
     pdf_enabled: true
     lipi_enabled: true
@@ -13,12 +13,12 @@ settings:
     zip-filename: netapp-solutions-databases.zip
 
 product-family:
-  name: NetApp Solutions
+  name: NetApp solutions
   repo: netapp-solutions-family
 
 sidebar:
   entries:
-    - title: "Database solutions"
+    - title: "database solutions"
       url: /index.html
     - section: databases
     
