@@ -105,9 +105,6 @@ entries:
           - title: "SAP with Oracle on UNIX and NFS with NetApp Clustered Data ONTAP"
             pdf-filename: "SAP with Oracle on UNIX and NFS with NetApp Clustered Data ONTAP"
             url: /oracle/tr-4250.html
-          - title: "Deploying Oracle Database on NetApp ONTAP"
-            pdf-filename: "Deploying Oracle Database on NetApp ONTAP"
-            url: https://docs.netapp.com/us-en/ontap-apps-dbs/oracle/oracle-overview.html
           - title: "Automated Deployment of Oracle 19c for ONTAP on NFS"
             pdf-filename: "Automated Deployment of Oracle 19c for ONTAP on NFS"
             entries:

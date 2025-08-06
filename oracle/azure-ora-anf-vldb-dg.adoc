@@ -138,7 +138,7 @@ image:azure-ora-anf-dg-vnet-004.png["Screenshot showing Azure environment config
 
 In this demonstration, we have setup a primary Oracle database called NTAP on the primary Azure DB server with six NFS mount points: /u01 for the Oracle binary, /u02, /u04, /u05, /u06 for the Oracle data files, and an Oracle control file, /u03 for the Oracle active logs, archived log files, and a redundant Oracle control file. This setup serves as a reference configuration. Your actual deployment should take into consideration of your specific needs and requirements in terms of the capacity pool sizing, the service level, the number of database volumes and the sizing of each volume.
 
-For detailed step by step procedures for setting up Oracle Data Guard on NFS with ASM, please referred to TR-5002 - link:https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html[Oracle Active Data Guard Cost Reduction with Azure NetApp Files^] and TR-4974 - link:https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose[Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM^] relevant sections. Although the procedures in TR-4974 were validated on Amazon FSx ONTAP, they are equally applicable to ANF. Following illustrates the details of a primary Oracle VLDB in a Data Guard configuration. 
+For detailed step by step procedures for setting up Oracle Data Guard on NFS with ASM, please refer to link:azure-ora-anf-data-guard.html[TR-5002- Oracle Active Data Guard Cost Reduction with Azure NetApp Files] and link:aws-ora-fsx-ec2-nfs-asm.html#purpose[TR-4974- Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM] relevant sections. Although the procedures in TR-4974 were validated on Amazon FSx ONTAP, they are equally applicable to ANF. Following illustrates the details of a primary Oracle VLDB in a Data Guard configuration. 
 
 . The primary database NTAP on the primary Azure DB server orap.internal.cloudapp.net is initially deployed as a standalone database with the ANF on NFS and ASM as database storage.  
 +
@@ -466,7 +466,7 @@ This completes the demonstration of a Data Guard setup for VLDB NTAP at the prim
 
 Oracle Data Guard requires OS kernel configuration and Oracle software stacks including patch sets on standby DB server to match with primary DB server. For easy management and simplicity, the database storage configuration of the standby DB server ideally should match with the primary DB server as well, such as the database directory layout and sizes of NFS mount points. 
 
-Again, for detailed step by step procedures for setting up Oracle Data Guard standby on NFS with ASM, please referred to TR-5002 - link:https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html[Oracle Active Data Guard Cost Reduction with Azure NetApp Files^] and TR-4974 - link:https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose[Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM^] relevant sections. Following illustrates the detail of standby Oracle VLDB configuration on standby DB server in a Data Guard setting. 
+Again, for detailed step by step procedures for setting up Oracle Data Guard standby on NFS with ASM, please refer to link:azure-ora-anf-data-guard.html[TR-5002 - Oracle Active Data Guard Cost Reduction with Azure NetApp Files] and link:aws-ora-fsx-ec2-nfs-asm.html#purpose[TR-4974 - Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM] relevant sections. Following illustrates the detail of standby Oracle VLDB configuration on standby DB server in a Data Guard setting. 
 
 . The standby Oracle DB server configuration at standby site in the demo lab. 
 +
@@ -905,11 +905,11 @@ To learn more about the information described in this document, review the follo
 
 * TR-5002: Oracle Active Data Guard Cost Reduction with Azure NetApp Files
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/azure_ora_anf_data_guard.html#purpose^]
+link:azure-ora-anf-data-guard.html#purpose[TR-5002: Oracle Active Data Guard Cost Reduction with Azure NetApp Files]
 
 * TR-4974: Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose[https://docs.netapp.com/us-en/netapp-solutions/databases/aws_ora_fsx_ec2_nfs_asm.html#purpose^]
+link:aws-ora-fsx-ec2-nfs-asm.html#purpose[TR-4974: Oracle 19c in Standalone Restart on AWS FSx/EC2 with NFS/ASM]
 
 * Azure NetApp Files
 +

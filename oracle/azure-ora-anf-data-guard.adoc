@@ -1095,11 +1095,11 @@ link:https://azure.microsoft.com/en-us/products/netapp[https://azure.microsoft.c
 
 * TR-4988: Oracle Database Backup, Recovery, and Clone on ANF with SnapCenter
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/snapctr_ora_azure_anf.html[https://docs.netapp.com/us-en/netapp-solutions/databases/snapctr_ora_azure_anf.html^]
+link:snapctr-ora-azure-anf.html[TR-4988: Oracle Database Backup, Recovery, and Clone on ANF with SnapCenter]
 
 * TR-4987: Simplified, Automated Oracle Deployment on Azure NetApp Files with NFS
 +
-link:https://docs.netapp.com/us-en/netapp-solutions/databases/automation_ora_anf_nfs.html[https://docs.netapp.com/us-en/netapp-solutions/databases/automation_ora_anf_nfs.html^]
+link:../automation/automation-ora-anf-nfs.html[TR-4987: Simplified, Automated Oracle Deployment on Azure NetApp Files with NFS]
 
 * Oracle Data Guard Concepts and Administration
 +

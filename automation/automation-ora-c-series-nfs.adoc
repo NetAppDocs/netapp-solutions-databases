@@ -563,8 +563,6 @@ To learn more about the information described in this document, review the follo
 
 * link:https://www.netapp.com/pdf.html?item=/media/81583-da-4240-aff-c-series.pdf[NetApp AFF C-Series^]
 
-* link:index.html[NetApp Enterprise Database Solutions^]
-
 * link:https://docs.oracle.com/en/database/oracle/oracle-database/19/ladbi/deploying-dnfs.html#GUID-D06079DB-8C71-4F68-A1E3-A75D7D96DCE2[Deploying Oracle Direct NFS^]
 
 
