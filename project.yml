@@ -88,8 +88,6 @@ sidebar:
                   url: /oracle/azure-ora-nfile-factors.html
                 - title: Deployment procedures
                   url: /oracle/azure-ora-nfile-procedures.html 
-  #              - title: Database protection
-  #                url: /oracle/azure-ora-nfile-protection.html
                 - title: Database migration
                   url: /oracle/azure-ora-nfile-migration.html
 
