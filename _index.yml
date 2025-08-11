@@ -10,7 +10,7 @@ indexpage:
         - title: "Blogs"
           url: /blogs.html
         - title: "Videos and demos"
-          url: /videos.html
+          url: /videos/index.html
 #
     - title: "Oracle for Amazon FSx for ONTAP"
       links:
