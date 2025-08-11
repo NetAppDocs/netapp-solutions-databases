@@ -1,5 +1,5 @@
 indexpage:
-  title: NetApp enterprise database solutions
+  title: NetApp database solutions
   lead: "NetApp enterprise database solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
   summary: "NetApp enterprise database Solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
   tiles:
@@ -49,7 +49,7 @@ indexpage:
         - title: "Review Oracle storage solutions on Google Cloud"
           url: /oracle/gcp-oracle-gcnv-overview.html
 #
-    - title: "SQL Server for cloud providers"
+    - title: "SQL server solutions for cloud and on-premises"
       links:
         - title: "Back up and recover SQL Server on AWS FSx ONTAP"
           url: /mssql/sqlsb-backup-restore-aws-fsxn.html
@@ -59,9 +59,6 @@ indexpage:
           url: /mssql/sql-srv-anf-overview.html
         - title: "Migrate on-prem SQL workload to FSx ONTAP"
           url: /mssql/customer-usecase-mssql-fsx1.html
-#
-    - title: "SQL Server for on-premises"
-      links:
         - title: "SAP with Microsoft SQL Server on Windows using clustered data ONTAP"
           url: https://www.netapp.com/pdf.html?item=/media/16865-tr-4467pdf.pdf
         - title: "Modernize Microsoft SQL Server"
