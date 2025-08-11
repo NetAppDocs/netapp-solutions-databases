@@ -9,7 +9,7 @@ keywords: netapp, solutions, videos, demos
 :nofooter:
 :icons: font
 :linkattrs:
-:imagesdir: ./media/
+:imagesdir: ../media/
 
 [.lead]
 Explore NetApp's comprehensive video library featuring database solutions for Oracle with NetApp. Each collection highlights practical solutions, integration best practices, and modern database management for enterprise workloads.

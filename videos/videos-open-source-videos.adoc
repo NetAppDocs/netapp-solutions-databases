@@ -9,7 +9,7 @@ keywords: netapp, solutions, videos, demos
 :nofooter:
 :icons: font
 :linkattrs:
-:imagesdir: ./media/
+:imagesdir: ../media/
 
 [.lead]
 Explore database solutions for open source databases with NetApp.
