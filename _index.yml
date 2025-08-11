@@ -1,7 +1,7 @@
 indexpage:
   title: NetApp database solutions
-  lead: "NetApp enterprise database solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
-  summary: "NetApp enterprise database Solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
+  lead: "NetApp database solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
+  summary: "NetApp enterprise database solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
   tiles:
     - title: "Get started"
       links:
