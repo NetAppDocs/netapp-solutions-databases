@@ -4,8 +4,7 @@ permalink: videos.html
 summary: Series of videos and demos discussing the features of many of NetApp's solutions
 keywords: netapp, solutions, videos, demos
 ---
-
-= NetApp Solutions: Videos and Demos
+= Watch videos and demos on database solutions with NetApp
 :hardbreaks:
 :nofooter:
 :icons: font
@@ -13,7 +12,7 @@ keywords: netapp, solutions, videos, demos
 :imagesdir: ./media/
 
 [.lead]
-Overview of the videos and demos highlighting specific features of many of NetApp's solutions.
+Explore NetApp's comprehensive video library featuring database solutions for Oracle, SQL Server, PostgreSQL, and open source databases. Each collection highlights practical solutions, integration best practices, and modern database management for enterprise workloads.
 
 [underline]#*Videos for open source databases*#
 

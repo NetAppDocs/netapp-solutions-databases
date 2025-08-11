@@ -4,7 +4,7 @@ permalink: blogs.html
 summary: Read the blogs that offer practical guidance and best practices for integrating ONTAP storage with NetApp Virtualization solutions.
 keywords: netapp, solutions, blogs
 ---
-= Read Virtualization solution blogs from NetApp experts
+= Read virtualization solution blogs from NetApp experts
 :hardbreaks:
 :nofooter:
 :icons: font
@@ -12,7 +12,7 @@ keywords: netapp, solutions, blogs
 :imagesdir: ./media/
 
 [.lead]
-Read the blogs that offer practical guidance and best practices for integrating ONTAP storage with NetApp Virtualization solutions.
+Read the blogs that offer practical guidance and best practices for integrating ONTAP storage with NetApp virtualization solutions.
 
 * link:https://aws.amazon.com/blogs/storage/using-netapp-snapcenter-with-amazon-fsx-for-netapp-ontap-to-protect-your-sql-server-workloads/[Protect your SQL Server workloads using NetApp SnapCenter with Amazon FSx ONTAP]
 
