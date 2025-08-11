@@ -1,0 +1,17 @@
+---
+sidebar: sidebar
+permalink: videos-open-source-videos.html
+summary: Series of videos and demos discussing the features of many of NetApp's solutions
+keywords: netapp, solutions, videos, demos
+---
+= Watch videos and demos on database solutions for open source databases with NetApp
+:hardbreaks:
+:nofooter:
+:icons: font
+:linkattrs:
+:imagesdir: ./media/
+
+[.lead]
+Explore database solutions for open source databases with NetApp.
+
+video::c381b887-8c8b-4d7d-8b0f-b0c0010c5c04[panopto, title="PostgreSQL automated deployment, HA/DR replication setup, failover, resync", width=360]
