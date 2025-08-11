@@ -6,16 +6,16 @@ indexpage:
     - title: "Oracle database videos"
       links:
         - title: "Deployment and automation"
-          url: /videos/videos-oracle-videos.html#deployment-and-automation
+          url: videos-oracle-videos.html#deployment-and-automation
         - title: "Backup, recovery and cloning"
-          url: /videos/videos-oracle-videos.html#backup-recovery-and-cloning
+          url: videos-oracle-videos.html#backup-recovery-and-cloning
         - title: "Modernization and migration"
-          url: /videos/videos-oracle-videos.html#modernization-and-migration
+          url: videos-oracle-videos.html#modernization-and-migration
         - title: "High availability, disaster recovery and replication"
-          url: /videos/videos-oracle-videos.html#high-availability-disaster-recovery-and-replication
+          url: videos-oracle-videos.html#high-availability-disaster-recovery-and-replication
     - title: "SQL Server and open source database videos"
       links:
         - title: "SQL Server videos"
-          url: /videos/videos-sqlserver-videos.html
+          url: videos-sqlserver-videos.html
         - title: "Open source database videos"
-          url: /videos/videos-open-source-videos.html
+          url: videos-open-source-videos.html
