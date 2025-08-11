@@ -272,6 +272,13 @@ sidebar:
 #    
     - title: "Videos"
       url: /videos/index.html
+      entries:
+        - title: "Oracle databases"
+          url: /videos/videos-oracle.html
+        - title: "Open source databases"
+          url: /videos/videos-open-source.html
+        - title: "SQL Server databases"
+          url: /videos/videos-sqlserver.html
     - title: "Blogs"
       url: /blogs.html
     - title: "Legal notices"
