@@ -3,18 +3,14 @@ indexpage:
   lead: "NetApp enterprise database solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
   summary: "NetApp enterprise database Solutions are a set of strategic and technology capabilities that demonstrate the capabilities of NetApp storage in the major enterprise databases."
   tiles:
-    - title: "Introduction"
+    - title: "Get started"
       links:
-        - title: "Learn about NetApp Solutions"
-          url: https://docs.netapp.com/us-en/netapp-solutions-family/intro-family.html
-        - title: "Change History"
+        - title: "What's new"
           url: /whats-new.html
         - title: "Blogs"
           url: /blogs.html
-        - title: "Videos & Demos"
+        - title: "Videos and demos"
           url: /videos.html
-        - title: "Legal Notices"
-          url: legal-notices.html
 #
     - title: "Oracle for Amazon FSx for NetApp ONTAP (FSx ONTAP)"
       links:
@@ -125,7 +121,7 @@ indexpage:
 #
     - title: "Feedback"
       links:
-        - title: "Propose a New Solution"
+        - title: "Propose a new solution"
           url: https://github.com/NetAppDocs/netapp-solutions/issues/new?body=[Request%20Solution]%0d%0a%0d%0aSolution%20Use%20Case:%20%0d%0aSolution%20Description:%20%0d%0aAdditional%20Comments:&title=Request%20Solution%20-%20%3Csolution%3E
-        - title: "Provide Solution Feedback"
+        - title: "Provide solution feedback"
           url: https://github.com/NetAppDocs/netapp-solutions/issues/new?body=[Solution%20Feedback]%0d%0a%0d%0aSolution%20Name:%20%0d%0aSolution%20Feedback:%20%0d%0aAdditional%20Comments:&title=Solution%20Feedback%20-%20%3Csolution%3E
