@@ -1,0 +1,17 @@
+---
+sidebar: sidebar
+permalink: videos/videos-sqlserver-videos.html
+summary: Series of videos and demos discussing the features of many of NetApp's solutions
+keywords: netapp, solutions, videos, demos
+---
+= Watch videos and demos on database solutions for SQL Server database with NetApp
+:hardbreaks:
+:nofooter:
+:icons: font
+:linkattrs:
+:imagesdir: ../media/
+
+[.lead]
+Explore videos on database solutions for SQL Server database with NetApp.
+
+video::27f28284-433d-4273-8748-b01200fb3cd7[panopto, title="Deploy SQL Server on AWS EC2 using Amazon FSx ONTAP", width=360]
