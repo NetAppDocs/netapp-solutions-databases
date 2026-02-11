@@ -42,6 +42,8 @@ indexpage:
 #
     - title: "Oracle for Google Cloud"
       links:
+        - title: "Deploy Oracle SI on Google NetApp Volumes with NFS"
+          url: /oracle/gcp-ora-gcnv-si-nfs.html
         - title: "Optimize Oracle VLDB backup and recovery on Google Cloud"
           url: /oracle/gcp-ora-gcnv-inc-merge.html
         - title: "Deploy Oracle VLDB with Data Guard on Google Cloud"
