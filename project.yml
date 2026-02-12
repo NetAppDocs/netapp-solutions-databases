@@ -93,7 +93,7 @@ sidebar:
 
         - title: "Google Cloud"
           entries:
-            - title: "Oracle Standalone Instance Deployment on Google NetApp Volumes over NFS"
+            - title: "Oracle Standalone Instance Deployment on Google NetApp Volumes with NFS"
               pdf-filename: "Oracle Standalone Instance Deployment on Google NetApp Volumes over NFS"
               url: /oracle/gcp-ora-gcnv-si-nfs.html
             - title: "Optimize Oracle VLDB backup & recovery with in-server incremental merge on Google Cloud NetApp Volumes"

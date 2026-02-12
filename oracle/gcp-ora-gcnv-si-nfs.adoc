@@ -5,7 +5,7 @@ keywords: Database, Oracle, Google, GCP, GCNV, NFS, Ansible, Automation
 summary: "The solution provides overview and details for Oracle deployment on Google NetApp Volumes as primary database storage over NFS protocol and Oracle database is deployed as a standalone container database with dNFS enabled." 
 ---
 
-= TR-XXXX:  Oracle Standalone Instance Deployment on Google NetApp Volumes over NFS
+= TR-5020:  Oracle Standalone Instance Deployment on Google NetApp Volumes with NFS
 :hardbreaks:
 :nofooter:
 :icons: font
@@ -15,28 +15,28 @@ summary: "The solution provides overview and details for Oracle deployment on Go
 Allen Cao, Niyaz Mohamed, NetApp
 
 [.lead]
-This solution provides overview and details for automated Oracle deployment in Google NetApp Volumes as primary database storage with NFS protocol and Oracle database is deployed as container database with dNFS enabled.
+This solution provides overview and details for Oracle deployment on Google NetApp Volumes as primary database storage over NFS protocol and Oracle database is deployed as a standalone container database with dNFS enabled.
 
 == Purpose
 
-Running performance-intensive and latency-sensitive Oracle workloads in the cloud can be challenging. Azure NetApp Files (ANF) makes it easy for enterprise line-of-business (LOB) and storage professionals to migrate and run demanding Oracle workloads without code change. Azure NetApp Files is widely used as the underlying shared file-storage service in various scenarios, such as new deployment or migration (lift and shift) of Oracle databases from on-premises to Azure.
+Running performance-intensive and latency-sensitive Oracle workloads in the cloud can be challenging. Google NetApp Volumes (GCNV) makes it easy for enterprise line-of-business (LOB) and storage professionals to migrate and run demanding Oracle workloads without code change. Google NetApp Volumes is widely used as the underlying shared file-storage service in various scenarios, such as new deployment or migration (lift and shift) of Oracle databases from on-premises to Google Cloud.
 
-This documentation demonstrates the simplified deployment of Oracle databases in Azure NetApp files via NFS mounts using Ansible automation. The Oracle database deploys in a container database (CDB) and pluggable databases (PDB) configuration with Oracle dNFS protocol enabled to boost performance. Furthermore, the on-premises Oracle single instance database or PDB can be migrated into a newly deployed container database in Azure using automated PDB relocation methodology with minimal service interruption. It also provides information on fast Oracle database backup, restore, and clone with NetApp SnapCenter UI tool in Azure Cloud. 
+This documentation demonstrates the GCNV DB volumes configuration in Google console and simplified deployment of Oracle databases in Google NetApp Volumes via NFS mounts using Ansible automation. The Oracle database deploys in a container database (CDB) and pluggable databases (PDB) configuration with Oracle dNFS protocol enabled to boost performance. Furthermore, it demonstrates a detailed database backup, restore, and clone strategy and provides an automation toolkit for Oracle database backup management in Google Cloud. 
 
 
 This solution addresses the following use cases:
 
-* Automated Oracle container database deployment on Azure NetApp files  
-* Automated Oracle database migration between on-premisses and Azure cloud 
+* Automated Oracle container database deployment on Google NetApp Volumes  
+* Automated Oracle database migration between on-premisses and Google Cloud 
 
 == Audience
 
 This solution is intended for the following people:
 
-* A DBA who would like to deploy Oracle on Azure NetApp Files.
-* A database solution architect who would like to test Oracle workloads on Azure NetApp Files.
-* A storage administrator who would like to deploy and manage an Oracle database on Azure NetApp Files.
-* An application owner who would like to stand up an Oracle database on Azure NetApp Files.
+* A DBA who would like to deploy Oracle on Google NetApp Volumes.
+* A database solution architect who would like to test Oracle workloads on Google NetApp Volumes.
+* A storage administrator who would like to deploy and manage an Oracle database on Google NetApp Volumes.
+* An application owner who would like to stand up an Oracle database on Google NetApp Volumes.
 
 == Solution test and validation environment
 
@@ -44,26 +44,23 @@ The testing and validation of this solution were performed in a lab setting that
 
 === Architecture
 
-image:automation-ora-anf-nfs-architecture.png["This image provides a detailed picture of the Oracle deployment configuration in AWS public cloud with iSCSI and ASM."]
+image:automation-ora-gcnv-nfs-architecture.png["This image provides a detailed picture of the Oracle deployment configuration in Google Cloud with NFS and Google NetApp Volumes."]
 
 === Hardware and software components
 
 [width=100%,cols="33%, 33%, 33%", frame=none, grid=rows]
 |===
 3+^| *Hardware*
-| Azure NetApp Files | Current offering in Azure by Microsoft | One capacity pool with Premium service level 
-| Azure VM for DB server | Standard_B4ms - 4 vCPUs, 16GiB | Two Linux virtual machine instances for concurrent deployment 
-| Azure VM for SnapCenter | Standard_B4ms - 4 vCPUs, 16GiB | One Windows virtual machine instance 
+| Google NetApp Volumes | Current offering in Google Cloud by Google | One storage pool with Flex service level, 2 TiB capacity, 64 MiB/s throughput, and 1024 IOPS provisioned for Oracle database storage
+| Google Compute Engine VMs for DB servers | n1-standard-4 (4 vCPUs, 15 GB Memory) | Two Linux virtual machine instances for deployment and recovery demonstration
+
 
 3+^| *Software*
-| RedHat Linux | RHEL Linux 8.6 (LVM) - x64 Gen2 | Deployed RedHat subscription for testing
-| Windows Server | 2022 DataCenter; Azure Edition Hotpatch - x64 Gen2 | Hosting SnapCenter server 
-| Oracle Database | Version 19.18 | Applied RU patch p34765931_190000_Linux-x86-64.zip
-| Oracle OPatch | Version 12.2.0.1.36 | Latest patch p6880880_190000_Linux-x86-64.zip
-| SnapCenter Server | Version 5.0 | Workgroup deployment 
-| Open JDK | Version java-11-openjdk | SnapCenter plugin requirement on DB VMs 
+| RedHat Linux | RHEL Linux 8.10 (LVM) - x64 Gen2 | Deployed RedHat subscription for testing
+| Oracle Database | Version 21.19 | Applied RU patch p38068980_210000_Linux-x86-64.zip
+| Oracle OPatch | Version 12.2.0.1.48 | Latest patch p6880880_210000_Linux-x86-64.zip
 | NFS | Version 3.0 | Oracle dNFS enabled
-| Ansible | core 2.16.2 | Python 3.6.8
+| Ansible | core 2.16.2 | Python 3.10.13
 |===
 
 === Oracle database configuration in the lab environment
@@ -72,8 +69,8 @@ image:automation-ora-anf-nfs-architecture.png["This image provides a detailed pi
 |===
 3+^| 
 | *Server* | *Database* | *DB Storage*
-| ora-01 | NTAP1(NTAP1_PDB1,NTAP1_PDB2,NTAP1_PDB3) | /u01, /u02, /u03 NFS mounts on ANF capacity pool
-| ora-02 | NTAP2(NTAP2_PDB1,NTAP2_PDB2,NTAP2_PDB3) | /u01, /u02, /u03 NFS mounts on ANF capacity pool
+| orap | NTAP(NTAP_PDB1,NTAP_PDB2,NTAP_PDB3) | /u01, /u02, /u03 NFS mounts on Google NetApp Volumes storage pool
+| orap2 | NTAP(NTAP_PDB1,NTAP_PDB2,NTAP_PDB3) | /u01, /u02, /u03 NFS mounts on Google NetApp Volumes storage pool
 |===
 
 === Key factors for deployment consideration
@@ -90,7 +87,7 @@ image:automation-ora-anf-nfs-architecture.png["This image provides a detailed pi
 
 == Solution deployment
 
-The following sections provide step-by-step procedures for automated Oracle 19c deployment and database migration on Azure NetApp Files with directly mounted database volumes via NFS to Azure VMs.     
+The following sections provide step-by-step procedures for automated Oracle 19c deployment and database migration on Google NetApp Volumes with directly mounted database volumes via NFS to Google Cloud VMs.     
 
 === Prerequisites for deployment
 [%collapsible%open]
