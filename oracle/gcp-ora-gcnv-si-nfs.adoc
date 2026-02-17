@@ -88,7 +88,7 @@ image:automation-ora-gcnv-nfs-architecture.png["This image provides a detailed p
 
 == Solution deployment
 
-The following sections provide step-by-step procedures for automated Oracle 19c deployment and database migration on Google NetApp Volumes with directly mounted database volumes via NFS to Google Cloud VMs.     
+The following sections provide step-by-step procedures for automated Oracle 21c deployment and database backup, recovery, clone on Google NetApp Volumes with directly mounted database volumes via NFS to Google Cloud Compute Engine VMs as database servers.     
 
 === Prerequisites for deployment
 [%collapsible%open]
@@ -96,52 +96,60 @@ The following sections provide step-by-step procedures for automated Oracle 19c 
 
 Deployment requires the following prerequisites.
 
-. An Azure account has been set up, and the necessary VNet and network segments have been created within your Azure account.
+. An Google Cloud account has been set up, and the necessary VPC and network settings have been created within your Google Cloud account specific project.
 
-. From the Azure cloud portal, deploy Azure Linux VMs as Oracle DB servers. Create an Azure NetApp Files capacity pool and database volumes for Oracle database. Enable VM SSH private/public key authentication for azureuser to DB servers. See the architecture diagram in the previous section for details about the environment setup. Also referred to link:../oracle/azure-ora-nfile-procedures.html[Step-by-Step Oracle deployment procedures on Azure VM and Azure NetApp Files^] for detailed information.
+. From the Google Cloud console, deploy Google Compute Engine VMs as Oracle DB servers. Ensure to turn off firewall and enable VM SSH private/public key authentication with an admin user to DB servers for automation. See the architecture diagram in the previous section for details about the environment setup. 
 +
 [NOTE]
 
-For Azure VMs deployed with local disk redundancy, ensure that you have allocated at least 128G in the VM root disk to have sufficient space to stage Oracle installation files and add OS swap file. Expand /tmplv and /rootlv OS partition accordingly. Add 1G free space to rootvg-homelv if it is less than 1G. Ensure the database volume naming follows the VMname-u01, VMname-u02, and VMname-u03 convention.
-+
-[source, cli]
-sudo lvresize -r -L +20G /dev/mapper/rootvg-rootlv
-+
-[source, cli]
-sudo lvresize -r -L +10G /dev/mapper/rootvg-tmplv
-+
-[source, cli]
-sudo lvresize -r -L +1G /dev/mapper/rootvg-homelv
+Ensure that you have allocated at least 50G in the VM root disk to have sufficient space to stage Oracle installation files and add OS swap file. 
 
-. From the Azure cloud portal, provision a Windows server to run the NetApp SnapCenter UI tool with the latest version. Refer to the following link for details: link:https://docs.netapp.com/us-en/snapcenter/install/task_install_the_snapcenter_server_using_the_install_wizard.html[Install the SnapCenter Server^]
-
-. Provision a Linux VM as the Ansible controller node with the latest version of Ansible and Git installed. Refer to the following link for details: link:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html[Getting Started with NetApp solution automation^^] in section - 
+. Provision a Linux VM as the Ansible controller node with the version of Ansible and Git installed as listed in the automation toolkit README. For help with Ansible automation, refer to the following link: link:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html[Getting Started with NetApp solution automation^^] in section - 
 `Setup the Ansible Control Node for CLI deployments on RHEL / CentOS` or 
 `Setup the Ansible Control Node for CLI deployments on Ubuntu / Debian`. 
 +
 [NOTE]
 
-The Ansible controller node can locate either on-premisses or in Azure cloud as far as it can reach Azure DB VMs via ssh port.  
+The Ansible controller node can locate either on-premisses or in Google Cloud as far as it can reach Google Cloud DB server VMs via ssh port.  
 
 . Clone a copy of the NetApp Oracle deployment automation toolkit for NFS. 
 +
 [source, cli]
 git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_deploy_nfs.git
 
-. Stage following Oracle 19c installation files on Azure DB VM /tmp/archive directory with 777 permission.
+. Stage following Oracle 21c installation files on Google Cloud DB VM /tmp/archive directory with 777 permission.
 +
       installer_archives:
-        - "LINUX.X64_193000_db_home.zip"
-        - "p34765931_190000_Linux-x86-64.zip"
-        - "p6880880_190000_Linux-x86-64.zip"
+        - "LINUX.X64_213000_db_home.zip"
+        - "p34765931_210000_Linux-x86-64.zip"
+        - "p6880880_210000_Linux-x86-64.zip"
 
 
-. Watch the following video:
-+
-video::d1c859b6-e45a-44c7-8361-b10f012fc89b[panopto, title="Simplified and automated Oracle deployment on Azure NetApp Files with NFS", width=360]
 
 ====
 
+=== Google NetApp Volumes configuration for Oracle database storage
+[%collapsible%open]
+
+====
+
+Following are the steps to configure Google NetApp Volumes for Oracle database storage with screen shots for demonstration.
+
+. Create a storage pool with the desired service level and capacity for Oracle database storage.
++image:gcp-ora-gcnv-si-nfs-deploy-spool.001.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-spool.002.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-spool.003.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-spool.004.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-spool.005.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
+
+. Create three DB volumes for Oracle database with the desired size in storage pool for database storage. For example, /u01 for binary files, /u02 for data files, and /u03 for redo logs and control files with NFSv3 protocol and mount option as demonstrated in the following screen shots.
++image:gcp-ora-gcnv-si-nfs-deploy-vol.001.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-vol.002.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-vol.003.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-vol.004.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
++image:gcp-ora-gcnv-si-nfs-deploy-vol.005.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
+
+====
 === Automation parameter files
 [%collapsible%open]
 
