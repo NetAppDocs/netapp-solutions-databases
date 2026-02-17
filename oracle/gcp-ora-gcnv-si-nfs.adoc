@@ -26,8 +26,8 @@ This documentation demonstrates the GCNV DB volumes configuration in Google cons
 
 This solution addresses the following use cases:
 
-* Automated Oracle container database deployment on Google NetApp Volumes  
-* Automated Oracle database migration between on-premisses and Google Cloud 
+* Automated Oracle database deployment on Google NetApp Volumes in Google Cloud with NFS.  
+* Oracle database backup, recovery, clone on Google NetApp Volumes in Google Cloud 
 
 == Audience
 
@@ -75,18 +75,16 @@ image:automation-ora-gcnv-nfs-architecture.png["This image provides a detailed p
 
 === Key factors for deployment consideration
 
-* *GCNV storage pool service level.* In this automated Oracle deployment, we provision three database volumes for each database to host Oracle binary, data, and logs by default. The volumes are mounted on Oracle DB server as /u01 - binary, /u02 - data, /u03 - logs via NFS. Dual control files are configured on /u02 and /u03 mount points for redundancy. 
+* *GCNV storage pool service level and throughput.* GCNV offer four different service levels: Standard, Premium, Extreme, and Flex. For Standard, Premium, Extreme service levels, IO throughput is determined and fixed based on the size of a DB volume. The total IO throughput is capped based on the storage pool sizing. For Flex Regional service level, IO throughput is not fixed on a DB volume size but shared among all DB volumes and capped at the storage pool sizing level. This accommodates smaller volume database with occasional IOPs surges. For reference, Standard, Premium, Extreme service level provides 16 KiB/s per GiB, 64 KiB/s per GiB, 128 KiB/s per GiB throughput respectively. On the other hand, Flex service level offers up to 5 GiB/s per storage pool with custom performance. It is important to right-size the service level and storage pool based on the expected IO throughput and IOPS requirements of the Oracle database workload.
 
-* *Database storage layout.* ANF file system IO throughput is regulated based on the size of volume. For initial deployment, allocate large size volumes can speed up the deployment. The volumes subsequently can be downsized dynamically without application impact.
+* *Database storage layout.* In this automated Oracle deployment, we provision three database volumes for each database to host Oracle binary, data, and logs by default. The volumes are mounted on Oracle DB server as /u01 - binary, /u02 - data, /u03 - logs via NFS. Dual control files are configured on /u02 and /u03 mount points for redundancy. 
 
-* *dNFS configuration.* By using dNFS (available since Oracle 11g), an Oracle database running on an Azure Virtual Machine can drive significantly more I/O than the native NFS client. Automated Oracle deployment configures dNFS on NFSv3 by default.
+* *dNFS configuration.* By using Oracle dNFS (available since Oracle 11g), an Oracle database running on Google Compute Engine with Google Netapp Volumes storage can drive significantly more I/O than the native NFS client. Automated Oracle deployment configures dNFS on NFSv3 by default.
 
-* *Database backup strategy.* The automation solution can deploy an Oracle container database to multiple DB servers in a single Ansible playbook run. Regardless of the number of DB servers, the playbook execution remains the same. You can deploy multiple container databases to a single VM instance by repeating the deployment with different database instance IDs (Oracle SID). But ensure there is sufficient memory on the host to support deployed databases.  
+* *Snapshot and Vault backup.* Rather than traditional RMAN backups, NetApp recommends implementing storage efficient, app-consistent snapshot and vault backup to achieve fast (seconds) snapshot backup, quick (minutes) database restore, recovery and clone from snapshots or backups in storage vault. A snapshot is a point-in-time copy of the database volumes that can be created in seconds and does not consume additional storage space at the time of creation. It coexists with the primary database volumes and may be lost if the primary volumes are compromised. A vault backup is a copy of the snapshot that is stored in a different location for disaster recovery purposes. 
 
-
-
-
-* *Database backup.* NetApp provides a SnapCenter software suite for database backup, restore, and cloning with a user-friendly UI interface. NetApp recommends implementing such a management tool to achieve fast (under a minute) snapshot backup, quick (minutes) database restore, and database clone.    
+* *RTO/RPO considerations.* When setting up database backup strategies, it is important to consider the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) requirements. While performance impact on database is minimal with snapshot based backup, there is tradeoff between the frequency of backups, which affects the RTO/RPO, and the storage expenditure. More frequent backups can help achieve lower RTO/RPO but may increase storage costs. It is important to find the right balance based on the business requirements and budget. The automation solution provides an automation toolkit based on Ansible playbook to manage Oracle database backup with user configurable retention and backup schedule. 
+  
 
 == Solution deployment
 
