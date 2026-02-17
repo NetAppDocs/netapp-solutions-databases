@@ -9,9 +9,9 @@ summary: "Configure SQL Server Always On availability groups on Google Compute E
 :imagesdir: ../media/
 
 [.lead]
-Configure SQL Server Always On availability groups on Google Compute Engine instances within a single subnet using Google Cloud NetApp Volumes iSCSI block storage. This procedure includes setting up compute instances, configuring NetApp volumes, establishing failover clustering, and deploying availability groups for high availability and disaster recovery.
+Configure SQL Server Always On availability groups on Google Compute Engine instances within a single subnet using Google Cloud NetApp Volumes iSCSI block storage. Learn how to set up compute instances, configure NetApp volumes, establish failover clustering, and deploy availability groups for high availability and disaster recovery.
 
-== Prerequisites
+== Before you begin
 
 Before you begin, ensure you have completed the following requirements:
 
