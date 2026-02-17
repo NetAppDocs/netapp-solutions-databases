@@ -631,10 +631,11 @@ Jan 28 16:59:10 orap systemd[1]: Started Oracle Database Start/Stop Service.
 
 ====
 
-=== Oracle database backup, restore, and clone in Google Cloud with Google NetApp Volumes
+=== Oracle database backup in Google Cloud with Google NetApp Volumes
 [%collapsible%open]
 
 ==== Oracle database snapshot and vault backup
+[%collapsible%open]
 
 ====
 
@@ -1069,6 +1070,30 @@ End Oracle DB snapshot backup at 2026-0217-160040
 ....
 
 
+====
+
+=== Oracle database recovery and clone in Google Cloud with Google NetApp Volumes
+[%collapsible%open]
+
+==== Oracle database in-place, point-in-time recovery using Google NetApp Volumes snapshots
+[%collapsible%open]
+====
+
+====
+
+==== Oracle database recovery to a new host using Google NetApp Volumes vault backups
+[%collapsible%open]
+====
+
+====
+
+==== Oracle database cloning to a new hostusing Google NetApp Volumes snapshots or vault backups
+[%collapsible%open]
+====
+
+The Oracle database cloning to a new host using Google NetApp Volumes snapshots or vault backups is identical to the previous section describes how to use Google NetApp Volumes snapshots or vault backups to restore and recovery of an Oracle database on a new host in the event of a failure. But renaming the cloned database may be only additional steps desired, which can be easiy done with Oracle utilities. The DB clone can be useful for UAT testing, development, or other purposes.
+
+For some customers, who needs automated cloning and refresh, please raise a request to NetApp Solutions team for a sample Ansible playbook that can be used as a reference for automating the cloning and refresh process with Google NetApp Volumes snapshots or vault backups. Following is the link for put in a request to NetApp Solutions team: 
 ====
 
 
