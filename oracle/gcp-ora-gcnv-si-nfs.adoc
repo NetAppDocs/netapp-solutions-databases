@@ -44,7 +44,7 @@ The testing and validation of this solution were performed in a lab setting that
 
 === Architecture
 
-image:automation-ora-gcnv-nfs-architecture.png["This image provides a detailed picture of the Oracle deployment configuration in Google Cloud with NFS and Google NetApp Volumes."]
+image:gcp-ora-gcnv-si-nfs-architecture.png["This image provides a detailed picture of the Oracle deployment configuration in Google Cloud with NFS and Google NetApp Volumes."]
 
 === Hardware and software components
 
@@ -1536,7 +1536,7 @@ testing Oracle in-place restore and point-in-time recovery for GCNV
 
 The Oracle database cloning to a new host using Google NetApp Volumes snapshots or vault backups is identical to the previous section describes how to use Google NetApp Volumes snapshots or vault backups to restore and recovery of an Oracle database on a new host in the event of a failure. But renaming the cloned database may be only additional steps desired, which can be easiy done with Oracle utilities. The DB clone can be useful for UAT testing, development, or other purposes.
 
-For some customers, who needs automated cloning and refresh, please raise a request to NetApp Solutions team for a sample Ansible playbook that can be used as a reference for automating the cloning and refresh process with Google NetApp Volumes snapshots or vault backups. Following is the link for put in a request to NetApp Solutions Engineering team:link:https://github.com/NetAppDocs/netapp-solutions-family/issues/new?labels=databases,automation&title=Request%20Automation%20-%20%3Crequest_title%3E&body==%0A%0A%20Solution%20Name:%20%0A%20Request%20Title:%20%0A%20Description:%0A%20Suggestions:%0A[Request for Automation]
+For some customers, who needs automated cloning and refresh, please raise a request to NetApp Solutions team for a sample Ansible playbook that can be used as a reference for automating the cloning and refresh process with Google NetApp Volumes snapshots or vault backups. Following is the link for put in a request to NetApp Solutions Engineering team:link:https://github.com/NetAppDocs/netapp-solutions-family/issues/new?labels=databases,automation&title=Request%20Automation%20-%20%3Crequest_title%3E&body==%0A%0A%20Solution%20Name:%20%0A%20Request%20Title:%20%0A%20Description:%0A%20Suggestions:%0A[Request for Automation^]
 
 ====
 
