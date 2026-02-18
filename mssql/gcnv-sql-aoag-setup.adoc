@@ -168,6 +168,8 @@ Example: `iqn.1991-05.com.microsoft:sqlnode1.cvsdemo.internal,iqn.1991-05.com.mi
 * `OS_TYPE`: Operating system type (for example, `WINDOWS`)
 * `DESCRIPTION`: Optional description for the host group
 
+image::gcnv-sql-aoag-001.png[Host group creation in Google Cloud console]
+
 === Create storage pool
 
 Create a storage pool with appropriate capacity and performance:
@@ -196,6 +198,8 @@ Replace the following values:
 * `PSA_RANGE`: Private Services Access range (for example, `xx.xxx.xxx.0/20`)
 * `THROUGHPUT`: Optional throughput in MiBps (for example, `64`)
 * `IOPS`: Optional IOPS (for example, `1024`)
+
+image::gcnv-sql-aoag-002.png[Storage pool configuration]
 
 === Create volumes
 
@@ -226,6 +230,8 @@ TIP: Multiple host groups can be specified with a # sign separating each host gr
 
 NOTE: Repeat this step for each volume type: data, log, temp, and backup.
 
+image::gcnv-sql-aoag-003.png[Volume creation for SQL Server]
+
 === Mount iSCSI volumes
 
 Mount the non-shared iSCSI volumes on each SQL instance:
@@ -243,9 +249,14 @@ Mount the non-shared iSCSI volumes on each SQL instance:
 
 . Click the *Discover* tab, then *Discover Portal*.
 . Add each IP address obtained; leave the default port 3260.
++
+image::gcnv-sql-aoag-004.png[iSCSI Initiator - Discover Portal]
+
 . In the *Connect to Target* dialog, check *Enable multi-path* if using multipathing.
 . Click *Advanced* and select the target portal IP from the dropdown.
 . Click *OK* to connect.
++
+image::gcnv-sql-aoag-005.png[Connect to iSCSI target]
 
 .Configure MPIO for iSCSI devices
 . Open MPIO from Control Panel or Server Manager.
@@ -253,6 +264,8 @@ Mount the non-shared iSCSI volumes on each SQL instance:
 . Check *Add support for iSCSI devices* and click *Add*.
 . Reboot if prompted.
 . Verify multipath configuration in Device Manager under *Disk drives*.
++
+image::gcnv-sql-aoag-006.png[MPIO configuration for iSCSI devices]
 
 .Initialize and format volumes
 . Launch Computer Management (`compmgmt.msc`) and select *Disk Management*.
@@ -271,6 +284,8 @@ Format-Volume -DriveLetter <DriveLetter> -FileSystem NTFS -NewFileSystemLabel <L
 $paths = "D:\MSSQL\DATA","E:\MSSQL\Log","F:\MSSQL\Backup","G:\MSSQL\Temp"
 $paths | % { New-Item -ItemType Directory -Path $_ -Force }
 ----
++
+image::gcnv-sql-aoag-007.png[Disk Management - Initialize and format volumes]
 
 == Configure SQL Server
 
@@ -434,6 +449,8 @@ Restart-Service -Name "MSSQLSERVER" -Force
 . Manually move `master.mdf` and `mastlog.ldf` from the old location to the new paths.
 . If you updated the error log path, move the `ERRORLOG` file as well.
 . Start SQL Server service.
++
+image::gcnv-sql-aoag-008.png[SQL Server Configuration Manager - Startup Parameters]
 
 == Set up failover cluster
 
@@ -470,8 +487,13 @@ Get-NetAdapterBinding -ComponentID ms_tcpip6
 . Select *Create Cluster*.
 . Add both SQL nodes (sqlnode1, sqlnode2).
 . Run validation tests and ensure all checks pass. Review and remediate any warnings before proceeding.
++
+image::gcnv-sql-aoag-009.png[Failover Cluster - Validation tests]
+
 . Provide a cluster name (for example, `sqlcluwest1`).
 . Complete the cluster creation.
++
+image::gcnv-sql-aoag-010.png[Failover Cluster creation]
 
 == Configure cluster quorum with file share witness
 
@@ -490,6 +512,8 @@ Create a file share on a VM in a different zone or region that has network conne
 .. Add the cluster account (for example, `sqlcluwest1$`) with *Full Control*
 .. Click *OK* to save permissions
 .. Complete the wizard
++
+image::gcnv-sql-aoag-011.png[File share witness permissions]
 
 === Configure quorum settings
 
@@ -504,6 +528,8 @@ Create a file share on a VM in a different zone or region that has network conne
 
 The cluster core resources are now configured with a file share witness.
 
+image::gcnv-sql-aoag-012.png[Cluster quorum configuration with file share witness]
+
 == Enable Always On availability groups
 
 Enable Always On availability groups on both SQL Server VMs:
@@ -516,6 +542,8 @@ Enable Always On availability groups on both SQL Server VMs:
 . Check *Enable Always On availability groups*.
 . Click *Apply*, then restart the SQL Server service when prompted.
 . Repeat for the second SQL Server instance.
++
+image::gcnv-sql-aoag-013.png[Enable Always On High Availability]
 
 == Create test database
 
@@ -611,6 +639,12 @@ GO
 
 IMPORTANT: Ensure firewall port 5022 is allowed on both SQL nodes.
 
+image::gcnv-sql-aoag-014.png[Create availability group]
+
+image::gcnv-sql-aoag-015.png[Add replicas to availability group]
+
+image::gcnv-sql-aoag-016.png[Availability group configuration complete]
+
 == Create DNN listener resource
 
 Create a Distributed Network Name (DNN) listener to route traffic to the appropriate clustered resource without requiring a load balancer.
@@ -650,6 +684,8 @@ By default, the cluster binds the DNN DNS name to all nodes. Exclude nodes not p
 
 The list of possible owners for the DNN resource should match the list of possible owners for the SQL Server availability group resource.
 
+image::gcnv-sql-aoag-017.png[DNN resource possible owners configuration]
+
 == Update application connection strings
 
 Update connection strings to use the DNN listener name and include the `MultiSubnetFailover=True` parameter:
@@ -681,6 +717,8 @@ WHERE group_id = (SELECT group_id FROM sys.availability_groups WHERE name = N'sq
 
 Ensure both nodes show `SYNCHRONOUS_COMMIT` for availability mode and `AUTOMATIC` for failover mode.
 
+image::gcnv-sql-aoag-018.png[Verify availability group configuration]
+
 .Initiate failover
 Run the following command on the secondary replica to initiate failover:
 
@@ -698,6 +736,10 @@ SELECT @@SERVERNAME AS NowPrimary;
 ----
 
 In SSMS, expand the availability group node, right-click *Always On High Availability*, and select *Show Dashboard*. The dashboard should display both nodes with healthy status and confirm the failover.
+
+image::gcnv-sql-aoag-019.png[Availability group failover verification]
+
+image::gcnv-sql-aoag-020.png[Always On High Availability dashboard]
 
 == Clean up resources
 
