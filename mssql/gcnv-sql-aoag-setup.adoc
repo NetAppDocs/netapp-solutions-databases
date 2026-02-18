@@ -168,7 +168,7 @@ Example: `iqn.1991-05.com.microsoft:sqlnode1.cvsdemo.internal,iqn.1991-05.com.mi
 * `OS_TYPE`: Operating system type (for example, `WINDOWS`)
 * `DESCRIPTION`: Optional description for the host group
 
-image::gcnv-sql-aoag-001.png[Host group creation in Google Cloud console]
+image::gcnv-sql-storage-pool.png[Storage pool configuration]
 
 === Create storage pool
 
@@ -198,8 +198,6 @@ Replace the following values:
 * `PSA_RANGE`: Private Services Access range (for example, `xx.xxx.xxx.0/20`)
 * `THROUGHPUT`: Optional throughput in MiBps (for example, `64`)
 * `IOPS`: Optional IOPS (for example, `1024`)
-
-image::gcnv-sql-aoag-002.png[Storage pool configuration]
 
 === Create volumes
 
