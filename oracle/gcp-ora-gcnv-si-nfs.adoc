@@ -1354,6 +1354,180 @@ Feb 06 21:42:19 orap systemd[1]: Started Oracle Database Start/Stop Service.
 [%collapsible%close]
 ====
 
+In the event of a failure that requires recovery to a new host such as when the original host is no longer available and primary DB volumes are inaccessible, you can use Google NetApp Volumes vault backups to restore the Oracle database on the new host. The process is similar to the in-place recovery using snapshots, but instead of reverting to a snapshot, you will restore the database from a vault backup. This allows you to recover the database on a different host, which can be useful in scenarios where the original host is no longer available or has experienced hardware failure. The steps for restoring from a vault backup are as follows:
+
+. Identify the vault backup that contains the data you want to recover. You can use the Google Cloud Console or the gcloud command-line tool to list the available vault backups for your Oracle database volume. Click on the three dots at the end of the vault backup list and under `Show more` to view the options. Select the `Create new volume from backup` to restore from the selected vault backup. Repeat for all DB volumes. You also have the option to restore to the same storage pool or a different storage pool if needed. 
++
+image:gcp-ora-gcnv-si-nfs-restore.006.png["This image provides screen shots for GCNV vault backup restore for Oracle deployment in Google Cloud with NFS."]
+image:gcp-ora-gcnv-si-nfs-restore.007.png["This image provides screen shots for GCNV vault backup restore for Oracle deployment in Google Cloud with NFS."] 
+image:gcp-ora-gcnv-si-nfs-restore.008.png["This image provides screen shots for GCNV vault backup restore for Oracle deployment in Google Cloud with NFS."]
+image:gcp-ora-gcnv-si-nfs-restore.009.png["This image provides screen shots for GCNV vault backup restore for Oracle deployment in Google Cloud with NFS."]       
+image:gcp-ora-gcnv-si-nfs-restore.010.png["This image provides screen shots for GCNV vault backup restore for Oracle deployment in Google Cloud with NFS."]
+image:gcp-ora-gcnv-si-nfs-restore.011.png["This image provides screen shots for GCNV vault backup restore for Oracle deployment in Google Cloud with NFS."]
+
+. Create a new database server that match with the original host in terms of hardware, operating system, and OS kernel patches configurations. This will ensure that the restored database can be properly mounted and opened after the restore process is completed.
++
+image:gcp-ora-gcnv-si-nfs-restore.012.png["This image provides screen shots for GCNV vault backup restore for Oracle deployment in Google Cloud with NFS."]
++
+....
+You may also use the same Ansible playbook from automated database deployment section to automate the new database server configuration for the linux only. 
+
+[admin@ansiblectl na_oracle_deploy_nfs]$ ansible-playbook -i hosts 2-linux_config.yml -u admin -e @vars/vars.yml
+
+....
+
+. Login to the new DB server as the admin user. Mount the restored DB volumes to the same mount points as the original host. Change ownership of the mount point if needed. 
++
+....
+
+[admin@orap2 ~]$ sudo mount -t nfs 10.165.128.242:/orap-u01-bkup /u01 -o rw,bg,hard,vers=3,proto=tcp,timeo=600,rsize=262144,wsize=262144
+mount: (hint) your fstab has been modified, but systemd still uses
+       the old version; use 'systemctl daemon-reload' to reload.
+[admin@orap2 ~]$ sudo mount -t nfs 10.165.128.242:/orap-u02-bkup /u02 -o rw,bg,hard,vers=3,proto=tcp,timeo=600,rsize=262144,wsize=262144
+mount: (hint) your fstab has been modified, but systemd still uses
+       the old version; use 'systemctl daemon-reload' to reload.
+[admin@orap2 ~]$ sudo mount -t nfs 10.165.128.242:/orap-u03-bkup /u03 -o rw,bg,hard,vers=3,proto=tcp,timeo=600,rsize=262144,wsize=262144
+mount: (hint) your fstab has been modified, but systemd still uses
+       the old version; use 'systemctl daemon-reload' to reload.
+[admin@orap2 ~]$ sudo systemctl daemon-reload
+[admin@orap2 ~]$ df -h
+Filesystem                     Size  Used Avail Use% Mounted on
+devtmpfs                       7.2G     0  7.2G   0% /dev
+tmpfs                          7.3G     0  7.3G   0% /dev/shm
+tmpfs                          7.3G  8.5M  7.2G   1% /run
+tmpfs                          7.3G     0  7.3G   0% /sys/fs/cgroup
+/dev/sda2                       50G   23G   28G  45% /
+/dev/sda1                      200M  5.9M  194M   3% /boot/efi
+tmpfs                          1.5G     0  1.5G   0% /run/user/1010
+tmpfs                          1.5G     0  1.5G   0% /run/user/1011
+10.165.128.242:/orap-u01-bkup   50G   11G   40G  22% /u01
+10.165.128.242:/orap-u02-bkup  500G  382G  119G  77% /u02
+10.165.128.242:/orap-u03-bkup  300G  5.6G  295G   2% /u03
+
+[admin@orap2 ~]$ sudo chown oracle:oinstall /u01
+[admin@orap2 ~]$ sudo chown oracle:oinstall /u02
+[admin@orap2 ~]$ sudo chown oracle:oinstall /u03
+
+....
+
+. Configure Oracle database environment variables and root directory files such as oratab, oraInstall.loc files.
++
+....
+[admin@orap2 ~]$ sudo vi /etc/oraInst.loc
+[admin@orap2 ~]$ vi /etc/oratab
+[admin@orap2 ~]$ sudo vi /etc/oratab
+[admin@orap2 ~]$ sudo chown oracle:oinstall /etc/oratab
+[admin@orap2 ~]$ ls -l /etc/ora*
+-rw-r--r--. 1 root   root      56 Feb 13 19:37 /etc/oraInst.loc
+-rw-rw-r--. 1 oracle oinstall 784 Feb 13 19:38 /etc/oratab
+
+[oracle@orap2 ~]$ env | grep ORA
+ORACLE_SID=NTAP
+ORACLE_HOME=/u01/app/oracle/product/21.0.0/NTAP
+
+....
+
+. As oracle user, relink Oracle binaries.
++
+....
+[oracle@orap2 ~]$ cd $ORACLE_HOME/bin
+[oracle@orap2 bin]$ ./relink
+writing relink log to: /u01/app/oracle/homes/OraDB21Home1/install/relinkActions2026-02-13_07-45-29PM.log
+
+....
+
+. Recover the database until last available log and open the database with resetlogs option.
++
+....
+[oracle@orap2 bin]$ sqlplus / as sysdba
+
+SQL*Plus: Release 21.0.0.0.0 - Production on Fri Feb 13 19:49:50 2026
+Version 21.19.0.0.0
+
+Copyright (c) 1982, 2021, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> startup mount;
+ORACLE instance started.
+
+Total System Global Area 6442447808 bytes
+Fixed Size                  9700288 bytes
+Variable Size            1593835520 bytes
+Database Buffers         4831838208 bytes
+Redo Buffers                7073792 bytes
+Database mounted.
+
+SQL> recover database until cancel using backup controlfile;
+ORA-00279: change 7017907 generated at 02/13/2026 05:00:07 needed for thread 1
+ORA-00289: suggestion :
+/u03/orareco/NTAP/archivelog/2026_02_13/o1_mf_1_96__938r46wf_.arc
+ORA-00280: change 7017907 for thread 1 is in sequence #96
+
+
+Specify log: {<RET>=suggested | filename | AUTO | CANCEL}
+auto
+ORA-00279: change 7022777 generated at 02/13/2026 06:00:06 needed for thread 1
+ORA-00289: suggestion :
+/u03/orareco/NTAP/archivelog/2026_02_13/o1_mf_1_97__96n12q2b_.arc
+ORA-00280: change 7022777 for thread 1 is in sequence #97
+ORA-00278: log file
+'/u03/orareco/NTAP/archivelog/2026_02_13/o1_mf_1_96__938r46wf_.arc' no longer
+needed for this recovery
+.
+.
+Specify log: {<RET>=suggested | filename | AUTO | CANCEL}
+cancel
+Media recovery cancelled.
+SQL> alter database open resetlogs;
+
+Database altered.
+
+SQL> select name, open_mode, log_mode from v$database;
+
+NAME      OPEN_MODE            LOG_MODE
+--------- -------------------- ------------
+NTAP      READ WRITE           ARCHIVELOG
+
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 NTAP_PDB1                      READ WRITE NO
+         4 NTAP_PDB2                      READ WRITE NO
+         5 NTAP_PDB3                      READ WRITE NO
+SQL> select instance_name, host_name from v$instance;
+
+INSTANCE_NAME
+----------------
+HOST_NAME
+----------------------------------------------------------------
+NTAP
+orap2
+
+
+SQL> alter session set container=ntap_pdb1;
+
+Session altered.
+
+SQL> select * from test;
+
+        ID
+----------
+DT
+---------------------------------------------------------------------------
+EVENT
+--------------------------------------------------------------------------------
+         1
+05-FEB-26 08.14.17.000000 PM
+testing Oracle in-place restore and point-in-time recovery for GCNV
+
+
+....
+
+. After the recovery is completed, you need to perform additional steps such as revising listener.ora, tnsnames.ora files to match with new hostname or IP address. If needed, setup systemd service to shutdown and restart database to complete the recovery process.
+
 ====
 
 ==== Oracle database cloning to a new host using Google NetApp Volumes snapshots or vault backups
