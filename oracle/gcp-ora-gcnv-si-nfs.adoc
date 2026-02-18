@@ -69,8 +69,8 @@ image:automation-ora-gcnv-nfs-architecture.png["This image provides a detailed p
 |===
 3+^| 
 | *Server* | *Database* | *DB Storage*
-| orap | NTAP(NTAP_PDB1,NTAP_PDB2,NTAP_PDB3) | /u01, /u02, /u03 NFS mounts on Google NetApp Volumes storage pool
-| orap2 | NTAP(NTAP_PDB1,NTAP_PDB2,NTAP_PDB3) | /u01, /u02, /u03 NFS mounts on Google NetApp Volumes storage pool
+| orap - primary DB server | NTAP(NTAP_PDB1,NTAP_PDB2,NTAP_PDB3) | /u01, /u02, /u03 NFS mounts on Google NetApp Volumes storage pool
+| orap2 - restored from backup | NTAP(NTAP_PDB1,NTAP_PDB2,NTAP_PDB3) | /u01, /u02, /u03 NFS mounts on Google NetApp Volumes storage pool
 |===
 
 === Key factors for deployment consideration
@@ -91,7 +91,7 @@ image:automation-ora-gcnv-nfs-architecture.png["This image provides a detailed p
 The following sections provide step-by-step procedures for automated Oracle 21c deployment and database backup, recovery, clone on Google NetApp Volumes with directly mounted database volumes via NFS to Google Cloud Compute Engine VMs as database servers.     
 
 === Prerequisites for deployment
-[%collapsible%open]
+[%collapsible%close]
 ====
 
 Deployment requires the following prerequisites.
@@ -130,7 +130,7 @@ git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_deploy_nfs.git
 ====
 
 === Google NetApp Volumes configuration for Oracle database storage
-[%collapsible%open]
+[%collapsible%close]
 
 ====
 
@@ -156,7 +156,7 @@ Following are the steps to configure Google NetApp Volumes for Oracle database s
 [%collapsible%open]
 
 ==== Automation parameter files
-[%collapsible%open]
+[%collapsible%close]
 
 ====
 
@@ -171,7 +171,7 @@ In addition to these user-defined variable files, there are several default vari
 ====
 
 ==== Parameter files configuration
-[%collapsible%open]
+[%collapsible%close]
 
 ====
 
@@ -245,7 +245,7 @@ nfs_lif: 10.165.128.242
 ====
 
 ==== Playbook execution
-[%collapsible%open]
+[%collapsible%close]
 
 ====
 
@@ -295,7 +295,7 @@ ansible-playbook -i hosts 5-destroy.yml -u admin -e @vars/vars.yml
 ====
 
 ==== Post execution validation
-[%collapsible%open]
+[%collapsible%close]
 
 ====
 
@@ -632,10 +632,10 @@ Jan 28 16:59:10 orap systemd[1]: Started Oracle Database Start/Stop Service.
 ====
 
 === Oracle database backup in Google Cloud with Google NetApp Volumes
-[%collapsible%open]
+[%collapsible%close]
 
 ==== Oracle database snapshot and vault backup
-[%collapsible%open]
+[%collapsible%close]
 
 ====
 
@@ -1073,27 +1073,297 @@ End Oracle DB snapshot backup at 2026-0217-160040
 ====
 
 === Oracle database recovery and clone in Google Cloud with Google NetApp Volumes
-[%collapsible%open]
+[%collapsible%close]
 
 ==== Oracle database in-place, point-in-time recovery using Google NetApp Volumes snapshots
-[%collapsible%open]
+[%collapsible%close]
 ====
+
+Oracle database point-in-time recovery is commonly used to recover data accidentally deleted or corrupted, or to recover from a logical error. With Google NetApp Volumes snapshots, you can easily perform point-in-time recovery of an Oracle database by restoring the database to a specific snapshot. This allows you to quickly recover from data loss or corruption without having to restore from a full backup. Following demonstrates the steps to recover a dropped table using Google NetApp Volumes snapshots.
+
+. For the purpose of this demonstration, we first create a test table named "test" in the "NTAP" database and insert some data into the table. Then we drop the table to simulate an accidental deletion of data. After that, we will use Google NetApp Volumes snapshots to restore the database to a point in time before the table was dropped, and verify that the table and its data have been successfully recovered.
++
+....
+SQL> select current_timestamp from dual;
+
+CURRENT_TIMESTAMP
+---------------------------------------------------------------------------
+06-FEB-26 08.41.29.708302 PM +00:00
+
+SQL> select * from test;
+
+        ID
+----------
+DT
+---------------------------------------------------------------------------
+EVENT
+--------------------------------------------------------------------------------
+         1
+05-FEB-26 08.14.17.000000 PM
+testing Oracle in-place restore and point-in-time recovery for GCNV
+
+
+SQL> drop table test;
+
+Table dropped.
+
+SQL> select * from test;
+select * from test
+              *
+ERROR at line 1:
+ORA-00942: table or view does not exist
+
+....
+
+. Stop Oracle services to shutdown Oracle database and unmount the file system on the host before restoring from a snapshot.
++
+....
+[root@orap admin]# systemctl stop oracle_NTAP
+[root@orap admin]# ps -ef | grep ora
+root        1410       1  0 Feb04 ?        00:00:09 /opt/google-cloud-ops-agent/libexec/google_cloud_ops_agent_wrapper -config_path /etc/google-cloud-ops-agent/config.yaml -log_path /var/log/google-cloud-ops-agent/subagents/logging-module.log /opt/google-cloud-ops-agent/subagents/fluent-bit/bin/fluent-bit --config /run/google-cloud-ops-agent-fluent-bit/fluent_bit_main.conf --parser /run/google-cloud-ops-agent-fluent-bit/fluent_bit_parser.conf --storage_path /var/lib/google-cloud-ops-agent/fluent-bit/buffers
+root        1714    1410  0 Feb04 ?        00:04:21 /opt/google-cloud-ops-agent/subagents/fluent-bit/bin/fluent-bit --config /run/google-cloud-ops-agent-fluent-bit/fluent_bit_main.conf --parser /run/google-cloud-ops-agent-fluent-bit/fluent_bit_parser.conf --storage_path /var/lib/google-cloud-ops-agent/fluent-bit/buffers
+root       61557   61354  0 20:45 pts/0    00:00:00 grep --color=auto ora
+
+[root@orap admin]# umount /u01
+[root@orap admin]# umount /u02
+[root@orap admin]# umount /u03
+[root@orap admin]# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+devtmpfs        7.2G     0  7.2G   0% /dev
+tmpfs           7.3G     0  7.3G   0% /dev/shm
+tmpfs           7.3G   17M  7.2G   1% /run
+tmpfs           7.3G     0  7.3G   0% /sys/fs/cgroup
+/dev/sda2        50G   23G   28G  46% /
+/dev/sda1       200M  5.9M  194M   3% /boot/efi
+tmpfs           1.5G     0  1.5G   0% /run/user/1010
+
+....
+
+. Identify the snapshot that contains the data you want to recover. You can use the Google Cloud Console or the gcloud command-line tool to list the available snapshots for your Oracle database volume. Click on the three dots at the end of the snapshot list and under `Show More` to view the options. Select the `Revert` to revert to the selected snapshot. Repeat for all DB volumes.
++
+image:gcp-ora-gcnv-si-nfs-restore.001.png["This image provides screen shots for GCNV volumes snapshots revert for Oracle deployment in Google Cloud with NFS."]
++
+image:gcp-ora-gcnv-si-nfs-restore.002.png["This image provides screen shots for GCNV volumes snapshots revert for Oracle deployment in Google Cloud with NFS."]
++
+image:gcp-ora-gcnv-si-nfs-restore.003.png["This image provides screen shots for GCNV volumes snapshots revert for Oracle deployment in Google Cloud with NFS."]
+
+. Mount the DB volumes after the snapshot revert is completed.
++
+....
+[root@orap admin]# mount -t nfs 10.165.128.242:/orap-u01 /u01 -o rw,bg,hard,vers=3,proto=tcp,timeo=600,rsize=65536,wsize=65536
+[root@orap admin]# mount -t nfs 10.165.128.242:/orap-u02 /u02 -o rw,bg,hard,vers=3,proto=tcp,timeo=600,rsize=65536,wsize=65536
+[root@orap admin]# mount -t nfs 10.165.128.242:/orap-u03 /u03 -o rw,bg,hard,vers=3,proto=tcp,timeo=600,rsize=65536,wsize=65536
+[root@orap admin]# df -h
+Filesystem                Size  Used Avail Use% Mounted on
+devtmpfs                  7.2G     0  7.2G   0% /dev
+tmpfs                     7.3G     0  7.3G   0% /dev/shm
+tmpfs                     7.3G   17M  7.2G   1% /run
+tmpfs                     7.3G     0  7.3G   0% /sys/fs/cgroup
+/dev/sda2                  50G   23G   28G  46% /
+/dev/sda1                 200M  5.9M  194M   3% /boot/efi
+tmpfs                     1.5G     0  1.5G   0% /run/user/1010
+10.165.128.242:/orap-u01   50G   11G   40G  22% /u01
+10.165.128.242:/orap-u02  500G  477G   24G  96% /u02
+10.165.128.242:/orap-u03  300G  4.9G  296G   2% /u03
+
+....
+
+. Login to Oracle database server and run point-in-time recovery commands via sqlplus to recover the database to the desired point in time. 
++
+....
+[oracle@orap ~]$ env | grep ORA
+ORACLE_SID=NTAP
+ORACLE_HOME=/u01/app/oracle/product/21.0.0/NTAP
+[oracle@orap ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 21.0.0.0.0 - Production on Fri Feb 6 21:08:34 2026
+Version 21.19.0.0.0
+
+Copyright (c) 1982, 2021, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> startup mount;
+ORACLE instance started.
+
+Total System Global Area 6442447808 bytes
+Fixed Size                  9700288 bytes
+Variable Size            1342177280 bytes
+Database Buffers         5083496448 bytes
+Redo Buffers                7073792 bytes
+Database mounted.
+
+SQL> recover database until cancel using backup controlfile;
+ORA-00279: change 6239773 generated at 02/06/2026 20:30:06 needed for thread 1
+ORA-00289: suggestion : /u03/orareco/NTAP/archivelog/2026_02_06/o1_mf_1_55_%u_.arc
+ORA-00280: change 6239773 for thread 1 is in sequence #55
+
+[oracle@orap ~]$ ls -l /u03/orareco/NTAP/archivelog/2026_02_06
+total 159376
+-r--r----- 1 oracle oinstall 118324736 Feb  6 16:05 o1_mf_1_50__4lsr8joo_.arc
+-r--r----- 1 oracle oinstall   7432704 Feb  6 17:05 o1_mf_1_51__4p51o6k4_.arc
+-r--r----- 1 oracle oinstall  11385856 Feb  6 18:05 o1_mf_1_52__4sjbbr29_.arc
+-r--r----- 1 oracle oinstall  16721920 Feb  6 19:05 o1_mf_1_53__4wvn4ohy_.arc
+-r--r----- 1 oracle oinstall   8655360 Feb  6 20:30 o1_mf_1_54__51mmc8ph_.arc
+
+
+Specify log: {<RET>=suggested | filename | AUTO | CANCEL}
+/u03/orareco/NTAP/onlinelog/redo01.log
+Log applied.
+Media recovery complete.
+SQL> alter database open resetlogs;
+
+Database altered.
+
+Note: You may need to apply the current online logs if there are any changes when the snapshot was taken.
+....
+
+. After the recovery is completed, verify that the data has been successfully recovered.
++
+....
+
+SQL> alter session set container = ntap_pdb1;
+
+Session altered.
+
+SQL> select * from test;
+
+        ID DT                                                                          EVENT
+---------- --------------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------
+         1 05-FEB-26 08.14.17.000000 PM                                                testing Oracle in-place restore and point-in-time recovery for GCNV
+
+SQL> select current_timestamp from dual;
+
+CURRENT_TIMESTAMP
+---------------------------------------------------------------------------
+06-FEB-26 09.39.08.097365 PM +00:00
+
+....
+
+. Shutdown and restart database as a systemd service to complete the recovery process.
++
+....
+SQL> alter session set container=cdb$root;
+
+Session altered.
+
+SQL> shutdown immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> exit
+
+
+[root@orap admin]# systemctl start oracle_NTAP
+[root@orap admin]# systemctl status oracle_NTAP
+● oracle_NTAP.service - Oracle Database Start/Stop Service
+   Loaded: loaded (/etc/systemd/system/oracle_NTAP.service; enabled; vendor preset: disabled)
+   Active: active (running) since Fri 2026-02-06 21:42:19 UTC; 9s ago
+  Process: 61431 ExecStop=/u01/app/oracle/product/21.0.0/NTAP/bin/dbshut /u01/app/oracle/product/21.0.0/NTAP (code=exited, status=0/SUCCESS)
+  Process: 62476 ExecStart=/u01/app/oracle/product/21.0.0/NTAP/bin/dbstart /u01/app/oracle/product/21.0.0/NTAP (code=exited, status=0/SUCCESS)
+    Tasks: 85 (limit: 94156)
+   Memory: 6.6G
+   CGroup: /system.slice/oracle_NTAP.service
+           ├─62487 /u01/app/oracle/product/21.0.0/NTAP/bin/tnslsnr LISTENER -inherit
+           ├─62587 ora_pmon_NTAP
+           ├─62591 ora_clmn_NTAP
+           ├─62595 ora_psp0_NTAP
+           ├─62599 ora_vktm_NTAP
+           ├─62605 ora_gen0_NTAP
+           ├─62609 ora_mman_NTAP
+           ├─62615 ora_gen1_NTAP
+           ├─62617 ora_gen2_NTAP
+           ├─62619 ora_vosd_NTAP
+           ├─62621 ora_diag_NTAP
+           ├─62623 ora_ofsd_NTAP
+           ├─62625 ora_dbrm_NTAP
+           ├─62627 ora_vkrm_NTAP
+           ├─62629 ora_svcb_NTAP
+           ├─62631 ora_pman_NTAP
+           ├─62633 ora_dia0_NTAP
+           ├─62635 ora_dbw0_NTAP
+           ├─62637 ora_lgwr_NTAP
+           ├─62642 ora_ckpt_NTAP
+           ├─62648 ora_smon_NTAP
+           ├─62651 ora_smco_NTAP
+           ├─62655 ora_reco_NTAP
+           ├─62657 ora_lreg_NTAP
+           ├─62659 ora_bg00_NTAP
+           ├─62661 ora_pxmn_NTAP
+           ├─62675 ora_mmon_NTAP
+           ├─62677 ora_mmnl_NTAP
+           ├─62685 ora_lg00_NTAP
+           ├─62688 ora_bg01_NTAP
+           ├─62690 ora_d000_NTAP
+           ├─62692 ora_w000_NTAP
+           ├─62695 ora_s000_NTAP
+           ├─62699 ora_lg01_NTAP
+           ├─62701 ora_tmon_NTAP
+           ├─62703 ora_w001_NTAP
+           ├─62710 ora_m000_NTAP
+           ├─62712 ora_m001_NTAP
+           ├─62717 ora_tt00_NTAP
+           ├─62719 ora_arc0_NTAP
+           ├─62721 ora_tt01_NTAP
+           ├─62723 ora_arc1_NTAP
+           ├─62725 ora_arc2_NTAP
+           ├─62727 ora_arc3_NTAP
+           ├─62729 ora_tt02_NTAP
+           ├─62733 ora_rcbg_NTAP
+           ├─62737 ora_w002_NTAP
+           ├─62739 ora_aqpc_NTAP
+           ├─62743 ora_p000_NTAP
+           ├─62745 ora_p001_NTAP
+           ├─62747 ora_p002_NTAP
+           ├─62749 ora_p003_NTAP
+           ├─62751 ora_p004_NTAP
+           ├─62753 ora_p005_NTAP
+           ├─62755 ora_p006_NTAP
+           ├─62757 ora_p007_NTAP
+           ├─62759 ora_s001_NTAP
+           ├─62942 ora_w003_NTAP
+           ├─62949 ora_w004_NTAP
+           ├─62958 ora_cjq0_NTAP
+           ├─62960 ora_qm02_NTAP
+           ├─63026 ora_q001_NTAP
+           ├─63028 ora_qm03_NTAP
+           ├─63030 ora_q003_NTAP
+           ├─63032 ora_q004_NTAP
+           ├─63034 ora_q005_NTAP
+           ├─63036 ora_p008_NTAP
+           ├─63038 ora_p009_NTAP
+           ├─63040 ora_p00a_NTAP
+           ├─63042 ora_p00b_NTAP
+           ├─63048 ora_m002_NTAP
+           ├─63050 ora_m003_NTAP
+           ├─63056 ora_mz00_NTAP
+           ├─63060 ora_mz03_NTAP
+           ├─63062 ora_mz02_NTAP
+           ├─63064 ora_mz04_NTAP
+           └─63072 ora_m004_NTAP
+
+Feb 06 21:41:55 orap systemd[1]: Starting Oracle Database Start/Stop Service...
+Feb 06 21:41:55 orap dbstart[62524]: Processing Database instance "NTAP": log file /u01/app/oracle/homes/OraDB21Home1/rdbms/log/startup.log
+Feb 06 21:42:19 orap systemd[1]: Started Oracle Database Start/Stop Service.
+
+....
 
 ====
 
 ==== Oracle database recovery to a new host using Google NetApp Volumes vault backups
-[%collapsible%open]
+[%collapsible%close]
 ====
 
 ====
 
-==== Oracle database cloning to a new hostusing Google NetApp Volumes snapshots or vault backups
-[%collapsible%open]
+==== Oracle database cloning to a new host using Google NetApp Volumes snapshots or vault backups
+[%collapsible%close]
 ====
 
 The Oracle database cloning to a new host using Google NetApp Volumes snapshots or vault backups is identical to the previous section describes how to use Google NetApp Volumes snapshots or vault backups to restore and recovery of an Oracle database on a new host in the event of a failure. But renaming the cloned database may be only additional steps desired, which can be easiy done with Oracle utilities. The DB clone can be useful for UAT testing, development, or other purposes.
 
-For some customers, who needs automated cloning and refresh, please raise a request to NetApp Solutions team for a sample Ansible playbook that can be used as a reference for automating the cloning and refresh process with Google NetApp Volumes snapshots or vault backups. Following is the link for put in a request to NetApp Solutions team: 
+For some customers, who needs automated cloning and refresh, please raise a request to NetApp Solutions team for a sample Ansible playbook that can be used as a reference for automating the cloning and refresh process with Google NetApp Volumes snapshots or vault backups. Following is the link for put in a request to NetApp Solutions Engineering team:link:https://github.com/NetAppDocs/netapp-solutions-family/issues/new?labels=databases,automation&title=Request%20Automation%20-%20%3Crequest_title%3E&body==%0A%0A%20Solution%20Name:%20%0A%20Request%20Title:%20%0A%20Description:%0A%20Suggestions:%0A[Request for Automation]
+
 ====
 
 
