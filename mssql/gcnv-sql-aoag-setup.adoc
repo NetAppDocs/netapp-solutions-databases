@@ -237,14 +237,16 @@ Mount the non-shared iSCSI volumes on each SQL instance:
 . Select the volume created for the SQL instance (for example, `node1data`).
 . Copy both IP addresses for the iSCSI target (for example, `10.165.128.216` and `10.165.128.217`).
 . On sqlnode1, run `iscsicpl` or use PowerShell:
+. Click the *Discover* tab, then *Discover Portal*.
+. Add each IP address obtained; leave the default port 3260.
 +
 [source,powershell]
 ----
 "10.165.128.216","10.165.128.217" | % { New-IscsiTargetPortal -TargetPortalAddress $_ }
 ----
-
-. Click the *Discover* tab, then *Discover Portal*.
-. Add each IP address obtained; leave the default port 3260.
++
+image::gcnv-sql-iscsi-vol.png[Discover iSCSI target portals]
++
 . In the *Connect to Target* dialog, check *Enable multi-path* if using multipathing.
 . Click *Advanced* and select the target portal IP from the dropdown.
 . Click *OK* to connect.
@@ -432,6 +434,16 @@ Restart-Service -Name "MSSQLSERVER" -Force
 -eE:\MSSQL\Log\ERRORLOG
 ----
 
++
+[source,powershell]
+----
+"10.165.128.216","10.165.128.217" | % { New-IscsiTargetPortal -TargetPortalAddress $_ }
+----
+
++
+image::gcnv-sql-server-prop.png[Discover iSCSI target portals]
++
+
 . Click *OK*.
 . Stop SQL Server service.
 . Manually move `master.mdf` and `mastlog.ldf` from the old location to the new paths.
@@ -446,8 +458,16 @@ Set up Windows Server Failover Clustering to provide high availability for SQL S
 
 === Configure firewall rules
 
-Open required ports on both SQL nodes for cluster communication. For detailed firewall requirements, refer to link:https://learn.microsoft.com/en-us/troubleshoot/windows-server/high-availability/service-overview-and-network-port-requirements[Windows Server service and network port requirements^].
+. Open required ports on both SQL nodes for cluster communication. 
++
+Required ports include: UDP 3343, TCP 3343, TCP 1433, TCP 5022, TCP 135, TCP 445, TCP 49152-65535 (dynamic RPC).
 
+. Run the following checkpoint on both the servers to allow SQL Server and cluster communication through the firewall. 
++
+
+Adjust port numbers if you have custom configurations.
+
++
 [source,powershell]
 ----
 # Open firewall for SQL Server
@@ -457,12 +477,11 @@ netsh advfirewall firewall add rule name="Allow SQL Server" dir=in action=allow 
 netsh advfirewall firewall add rule name="Allow SQL Server replication" dir=in action=allow protocol=TCP localport=5022
 ----
 
-Required ports include: UDP 3343, TCP 3343, TCP 1433, TCP 5022, TCP 135, TCP 445, TCP 49152-65535 (dynamic RPC).
++
+For detailed firewall requirements, refer to link:https://learn.microsoft.com/en-us/troubleshoot/windows-server/high-availability/service-overview-and-network-port-requirements[Windows Server service and network port requirements^].
 
-=== Validate cluster prerequisites
-
-Run validation checks on both nodes before creating the cluster:
-
+. Run validation checks on both nodes before creating the cluster:
++
 [source,powershell]
 ----
 Test-Connection servername
@@ -474,6 +493,9 @@ Get-NetAdapterBinding -ComponentID ms_tcpip6
 
 .Steps
 . Run `cluadmin.msc` or open Failover Cluster Manager from Server Manager.
++
+image::gcnv-sql-failover-cluster.png[Failover Cluster Manager]
++
 . Select *Create Cluster*.
 . Add both SQL nodes (sqlnode1, sqlnode2).
 . Run validation tests and ensure all checks pass. Review and remediate any warnings before proceeding.
@@ -495,34 +517,40 @@ Create a file share on a VM in a different zone or region that has network conne
 . Connect to the file share witness server VM.
 . In Server Manager, select *Tools* > *Computer Management*.
 . Select *Shared Folders*, right-click *Shares*, and select *New Share*.
-. Use the Create a Shared Folder Wizard:
 +
-image::gcnv-sql-aoag-006.png[Create a Shared Folder Wizard]
+image::gcnv-sql-cluster-new-share.png[Create new share for cluster quorum witness]
++
+. Use the *Create a Shared Folder Wizard* to create a share `\\servername\share`.
 
-.. Browse to or create a path for the shared folder (for example, `C:\ClusterQuorum`)
-.. Verify the share name and path
-.. Select *Customize permissions* and click *Custom*
-.. Add the cluster account (for example, `sqlcluwest1$`) with *Full Control*
-.. Click *OK* to save permissions
-.. Complete the wizard
+. On the *Folder Path* page, select *Browse*.
+. Locate or create a path for the shared folder and then select *Next*. 
+. On the *Name, Description, and Settings* page, verify the share name and path and then select *Next*.
+. On the *Shared Folder Permissions* page, select *Customize permissions* and click *Custom*
+. On the *Customize Permissions* dialog, select *Add* to add the cluster account.
++
+Make sure that the account that's used to create the cluster (sqlcluwest1$) has full control.
++
+. Click *OK* to save permissions.
+. On the *Shared Folder Permissions* page, select *Finish* and then select *Finish* again.
 
 === Configure quorum settings
 
 .Steps
 . In Failover Cluster Manager, right-click the cluster and select *More Actions* > *Configure Cluster Quorum Settings*.
 +
-image::gcnv-sql-aoag-007.png[Configure Cluster Quorum Settings menu]
+image::gcnv-sql-cluster-quorum-settings.png[Configure Cluster Quorum Settings menu]
 
 . In the Configure Cluster Quorum Wizard, click *Next*.
 . On the *Select Quorum Configuration* page, choose *Select the quorum witness* and click *Next*.
 . On the *Select Quorum Witness* page, select *Configure a file share witness*.
+. In the *Configure File Share Witness* page, select *Configure a file share witness*.
 . Enter the path to the share you created (for example, `\\servername\share`) and click *Next*.
 . Verify the settings on the Confirmation page and click *Next*.
 . Click *Finish*.
 
 The cluster core resources are now configured with a file share witness.
 
-image::gcnv-sql-aoag-008.png[Cluster quorum configured with file share witness]
+image::gcnv-sql-file-share-confirm.png[Cluster quorum configured with file share witness]
 
 == Enable Always On availability groups
 
@@ -536,7 +564,7 @@ Enable Always On availability groups on both SQL Server VMs:
 . Check *Enable Always On availability groups*.
 . Click *Apply*, then restart the SQL Server service when prompted.
 +
-image::gcnv-sql-aoag-009.png[Enable Always On High Availability]
+image::gcnv-sql-always-on-group.png[Enable Always On High Availability]
 
 . Repeat for the second SQL Server instance.
 
