@@ -568,9 +568,9 @@ image::gcnv-sql-always-on-group.png[Enable Always On High Availability]
 
 . Repeat for the second SQL Server instance.
 
-== Create test database
+== Create a database on the first SQL Server instance
 
-Create a test database on the first SQL Server instance:
+Create a database on the first SQL Server instance.
 
 .Steps
 . Connect to the first SQL Server VM with a domain account that's a member of the sysadmin fixed server role.
@@ -587,10 +587,8 @@ GO
 
 == Create and configure availability group
 
-=== Perform initial backups
-
-Before creating the availability group, take full and transaction log backups:
-
+. Take both a full backup and a transaction log backup of the database.
++
 [source,sql]
 ----
 -- Full backup
@@ -603,10 +601,9 @@ BACKUP LOG MyDB1
 TO DISK = 'F:\MSSQL\Backup\MyDB1_Log.trn'
 WITH INIT, COMPRESSION;
 ----
-
-=== Restore backups on secondary replica
-
-Copy the backup files to the second SQL Server instance and restore them with NORECOVERY:
++
+. Copy the backup files to the second SQL Server instance and restore them with NORECOVERY.
++
 
 [source,sql]
 ----
@@ -620,10 +617,9 @@ RESTORE LOG MyDB1
 FROM DISK = 'F:\MSSQL\Backup\MyDB1_Log.trn'
 WITH NORECOVERY;
 ----
-
-=== Create availability group
-
-Create the availability group with synchronous commit and automatic failover:
++
+. Create the availability group with synchronous commit and automatic failover and readable secondary replicas:
++
 
 [source,sql]
 ----
@@ -646,29 +642,19 @@ REPLICA ON
   );
 GO
 ----
-
-On the secondary replica, join the availability group:
-
-[source,sql]
-----
--- Run on secondary replica
-ALTER AVAILABILITY GROUP sqlagwest1 JOIN;
-GO
-
--- Join the database
-ALTER DATABASE MyDB1 SET HADR AVAILABILITY GROUP = sqlagwest1;
-GO
-----
++
+. Create the availability group using the Availability Group Wizard.
++
+image::gcnv-sql-avail-group-options.png[Create availability group wizard]
++
+image::gcnv-sql-select-database.png[Add database and replicas to availability group]
++
 
 IMPORTANT: Ensure firewall port 5022 is allowed on both SQL nodes.
++
+image::gcnv-sql-avail-group-sync.png[Availability group synchronization]
 
-image::gcnv-sql-aoag-010.png[Create availability group wizard]
-
-image::gcnv-sql-aoag-011.png[Add database and replicas to availability group]
-
-image::gcnv-sql-aoag-012.png[Availability group synchronization]
-
-image::gcnv-sql-aoag-013.png[Availability group created successfully]
+image::gcnv-sql-avail-group-replica.png[Availability group created successfully]
 
 == Create DNN listener resource
 
