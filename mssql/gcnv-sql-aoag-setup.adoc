@@ -737,7 +737,7 @@ image::gcnv-sql-dns-props.png[DNN resource properties]
 
 . Clear the checkbox for any nodes that don't participate in the availability group.
 +
-image::gcnv-sql-dns-configure.png[Configure DNN possible owners]
+image::gcnv-sql-configure-dns.png[Configure DNN possible owners]
 
 . Click *OK* to save settings.
 
