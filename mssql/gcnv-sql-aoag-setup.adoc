@@ -691,11 +691,11 @@ By default, the cluster binds the DNN DNS name to all nodes. Exclude nodes not p
 . In Failover Cluster Manager, locate the DNN resource.
 . Right-click the DNN resource and select *Properties*.
 +
-image::gcnv-sql-aoag-014.png[DNN resource properties]
+image::gcnv-sql-dns-props.png[DNN resource properties]
 
 . Clear the checkbox for any nodes that don't participate in the availability group.
 +
-image::gcnv-sql-aoag-015.png[Configure DNN possible owners]
+image::gcnv-sql-dns-configure.png[Configure DNN possible owners]
 
 . Click *OK* to save settings.
 
@@ -712,12 +712,12 @@ NOTE: If your client doesn't support the MultiSubnetFailover parameter, it isn't
 
 == Test failover
 
-Verify availability group configuration and test failover:
-
-.Verify configuration
+. Run the following command on any replica to verify the availability group configuration. 
++
+Both replicas should show `SYNCHRONOUS_COMMIT` for availability mode and `AUTOMATIC` for failover mode, which ensures zero data loss during automatic failover.
++
 [source,sql]
 ----
--- Run on any replica to verify AG primary and synchronization mode
 SELECT ag.name AS AG_Name, ars.primary_replica
 FROM sys.dm_hadr_availability_group_states AS ars
 JOIN sys.availability_groups AS ag ON ag.group_id = ars.group_id;
@@ -727,30 +727,30 @@ SELECT replica_server_name, availability_mode_desc, failover_mode_desc
 FROM sys.availability_replicas
 WHERE group_id = (SELECT group_id FROM sys.availability_groups WHERE name = N'sqlagwest1');
 ----
-
-Ensure both nodes show `SYNCHRONOUS_COMMIT` for availability mode and `AUTOMATIC` for failover mode.
-
-image::gcnv-sql-aoag-016.png[Verify availability group configuration and synchronization]
-
-.Initiate failover
-Run the following command on the secondary replica to initiate failover:
-
++
+image::gcnv-sql-test-failover.png[Test failover]
++
+. Run the following command on the secondary node to initiate failover:
++
 [source,sql]
 ----
 ALTER AVAILABILITY GROUP sqlagwest1 FAILOVER;
 GO
 ----
-
-.Verify failover
++
+. Check that the connectivity target switched to the new primary:
++
 [source,sql]
 ----
--- Check current primary replica
+-- 
 SELECT @@SERVERNAME AS NowPrimary;
 ----
-
-In SSMS, expand the availability group node, right-click *Always On High Availability*, and select *Show Dashboard*. The dashboard should display both nodes with healthy status and confirm the failover.
-
-image::gcnv-sql-aoag-017.png[Always On High Availability dashboard showing successful failover]
++
+In SSMS, expand the availability group node, right-click *Always On High Availability*, and select *Show Dashboard*. 
++
+The dashboard should display both nodes with healthy status and confirm the failover.
++
+image::gcnv-sql-success-failover.png[Always On High Availability dashboard showing successful failover]
 
 == Clean up resources
 
