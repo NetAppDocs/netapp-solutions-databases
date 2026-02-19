@@ -473,11 +473,6 @@ Restart-Service -Name "MSSQLSERVER" -Force
 -eE:\MSSQL\Log\ERRORLOG
 ----
 +
-[source,powershell]
-----
-"10.165.128.216","10.165.128.217" | % { New-IscsiTargetPortal -TargetPortalAddress $_ }
-----
-+
 image::gcnv-sql-server-prop.png[Discover iSCSI target portals]
 +
 .. Click *OK*.
