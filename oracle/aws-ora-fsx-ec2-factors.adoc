@@ -59,7 +59,7 @@ For optimum performance and to prevent performance problems, adjust the kernel p
 [source, cli]
 sysctl -a | grep tcp.*.slot_table
 
-* The following table provides recommended NFS mount options for Linux NFSv3 - single instance.
+* The following table provides recommended NFS mount options for Linux - single instance.
 +
 image:aws-ora-fsx-ec2-nfs-001.png["Figure showing input/output dialog or representing written content"]
 
