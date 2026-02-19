@@ -11,6 +11,17 @@ summary: "Configure SQL Server Always On availability groups on Google Compute E
 [.lead]
 Configure SQL Server Always On availability groups on Google Compute Engine instances within a single subnet using Google Cloud NetApp Volumes iSCSI block storage. Learn how to set up compute instances, configure NetApp volumes, establish failover clustering, and deploy availability groups for high availability and disaster recovery. 
 
+== Prerequisites
+Before proceeding, complete the configuration prerequisite steps in the Google Cloud documentation:
+
+- link:https://docs.cloud.google.com/compute/docs/instances/sql-server/configure-availability#before-you-begin[Before you begin^]
+- link:https://docs.cloud.google.com/compute/docs/instances/sql-server/configure-availability#prepare_your_project_and_network[Prepare your project and network^]
+- link:https://docs.cloud.google.com/compute/docs/instances/sql-server/configure-availability#create_firewall_rules[Firewall rules^]
+- link:https://docs.cloud.google.com/netapp/volumes/docs/plan-and-prepare/workflow[Set up NetApp volumes^]
+
+
+
+
 == Before you begin
 
 Ensure you have completed the following requirements:
@@ -36,14 +47,17 @@ Configuring the SQL Server Always On availability group includes the following h
 
 == Cost considerations
 
-This tutorial uses billable components of Google Cloud, including Compute Engine instances and Google Cloud NetApp Volumes storage.
+This tutorial uses billable components of Google Cloud, including link:https://console.cloud.google.com/compute/overview?[Compute Engine instances^] and link:https://console.cloud.google.com/netapp/volumes?[Google Cloud NetApp Volumes^] storage.
 
-Use the link:https://cloud.google.com/products/calculator[Google Cloud Pricing Calculator^] to generate a cost estimate based on your compute and storage requirements. The example configuration uses N4-SKU compute instances and NetApp Flex service level storage for the SQL Server Always On availability group setup.
+Use the link:https://cloud.google.com/products/calculator?dl=CjhDaVF4T1dJeU5XRTBZUzFtTmpjMkxUUTRZVGd0WVdOalpDMHhNMkpsTVRVMU9UaG1OVFlRQVE9PRAqGiRBNzVCRUZBMC0zMjBGLTQ1OTctQjNFQy1BQzk5OEYxMTg1NDA[Pricing Calculator^] to generate a cost estimate based on your compute and storage requirements. The example configuration uses N4-SKU compute instances and NetApp Flex service level storage for the SQL Server Always On availability group setup.
 
 == Configure domain accounts
 
 Configure two accounts in Active Directory: one installation account (your admin account) and one service account for both SQL Server VMs.
+
 For example, use the values in the following table for the accounts:
+
+NOTE: This example uses `cvsdemo` as the domain name. Replace `cvsdemo` with your actual domain name throughout this procedure.
 
 [cols="25,25,25,25",options="header"]
 |===
@@ -314,7 +328,9 @@ Configure SQL Server on both nodes to use the domain service account, update def
 +
 If connection fails, launch SSMS as `<local computer>\Administrator`. Ensure the Administrator account is enabled in Users & Groups with appropriate password.
 
-. Create the domain account logins with required permissions:
+. Create the domain account logins with required permissions.
++
+NOTE: Replace `CVSDEMO` with your actual domain name in the following SQL commands.
 
 +
 [source,sql]
@@ -526,12 +542,11 @@ image::gcnv-sql-failover-cluster.png[Failover Cluster Manager]
 . Add both SQL nodes (sqlnode1, sqlnode2).
 . Run validation tests and ensure all checks pass. Review and remediate any warnings before proceeding.
 +
-image::gcnv-sql-aoag-004.png[Failover Cluster - Validation tests]
-
 . Provide a cluster name (for example, `sqlcluwest1`).
++
 . Complete the cluster creation.
 +
-image::gcnv-sql-aoag-005.png[Failover Cluster creation]
+image::gcnv-sql-failover-confirm.png[Failover Cluster creation]
 
 == Configure cluster quorum with file share witness
 
