@@ -13,7 +13,7 @@ Configure SQL Server Always On availability groups on Google Compute Engine inst
 
 == Before you begin
 
-Before you begin, ensure you have completed the following requirements:
+Ensure you have completed the following requirements:
 
 * Google Cloud project with admin permissions for compute, network, IAM, and storage
 * VPC network with subnet for a region setup
@@ -25,7 +25,7 @@ NOTE: New Google Cloud users might be eligible for link:https://cloud.google.com
 
 == Objectives
 
-The SQL Server Always On availability group configuration workflow covers the following tasks:
+Configuring the SQL Server Always On availability group includes the following high-level tasks:
 
 * Set up Compute Engine instances and NetApp storage volumes
 * Set up SQL Server on both nodes
@@ -144,6 +144,8 @@ Get-InitiatorPort | Select-Object NodeAddress
 
 == Create NetApp block storage volumes
 
+Create iSCSI block storage volumes using Google Cloud NetApp Volumes to provide high-performance, shared storage for SQL Server databases. This process includes creating a host group, storage pool, and individual volumes for data, logs, temp, and backup.
+
 === Create the host group
 
 Create a host group containing the iSCSI initiators from both SQL nodes. For more details, refer to link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/host-groups/create-host-group[Create a host group^] documentation.
@@ -251,24 +253,26 @@ image::gcnv-sql-iscsi-vol.png[Discover iSCSI target portals]
 . Click *Advanced* and select the target portal IP from the dropdown.
 . Click *OK* to connect.
 
-.Configure MPIO for iSCSI devices
-. Open MPIO from Control Panel or Server Manager.
-. Click the *Discover Multi-Paths* tab.
-. Check *Add support for iSCSI devices* and click *Add*.
-. Reboot if prompted.
-. Verify multipath configuration in Device Manager under *Disk drives*.
+. Configure MPIO for iSCSI devices
 
-.Initialize and format volumes
-. Launch Computer Management (`compmgmt.msc`) and select *Disk Management*.
-. Initialize, partition, and format each disk with 64K allocation unit:
+.. Open MPIO from Control Panel or Server Manager.
+.. Click the *Discover Multi-Paths* tab.
+.. Check *Add support for iSCSI devices* and click *Add*.
+.. Reboot if prompted.
+.. Verify multipath configuration in Device Manager under *Disk drives*.
+
+. Initialize and format volumes
+.. Launch Computer Management (`compmgmt.msc`) and select *Disk Management*.
+.. Initialize, partition, and format each disk with 64K allocation unit:
 +
 [source,powershell]
 ----
 Format-Volume -DriveLetter <DriveLetter> -FileSystem NTFS -NewFileSystemLabel <Label> -AllocationUnitSize 65536 -Confirm:$false
 ----
 
-. Assign drive letters (for example, D: for Data, E: for Log, F: for Backup, G: for Temp).
-. Create directory structure for SQL Server:
+.. Assign drive letters (for example, D: for Data, E: for Log, F: for Backup, G: for Temp).
+
+.. Create the directory structure for SQL Server:
 +
 [source,powershell]
 ----
@@ -279,19 +283,19 @@ $paths | % { New-Item -ItemType Directory -Path $_ -Force }
 
 == Configure SQL Server
 
-=== Update service accounts
+Configure SQL Server on both nodes to use the domain service account, update default paths to use NetApp volumes, and move system databases to the new storage locations.
 
 .Steps
-. On each SQL instance, open `services.msc`.
-. Update *Log on as* to `domain\sqlsvc` for SQL Server and SQL Server Agent services.
-. Open SQL Server Management Studio (SSMS) and connect with your domain account.
+. Update the SQL Server and SQL Server Agent services to run under the domain service account for cluster authentication and failover support.
+.. On each SQL instance, open `services.msc`.
+.. Update *Log on as* to `domain\sqlsvc` for SQL Server and SQL Server Agent services.
+.. Open SQL Server Management Studio (SSMS) and connect with your domain account.
 +
 If connection fails, launch SSMS as `<local computer>\Administrator`. Ensure the Administrator account is enabled in Users & Groups with appropriate password.
 
-=== Create SQL Server logins
+. Create the domain account logins with required permissions:
 
-Create the domain account logins with required permissions:
-
++
 [source,sql]
 ----
 USE [master]
@@ -336,11 +340,9 @@ GO
 ALTER ROLE [db_owner] ADD MEMBER [CVSDEMO\sqlsvc]
 GO
 ----
-
-=== Update default SQL Server paths
-
-Update the default paths to use the NetApp volumes instead of the OS drive:
-
++
+. Update the default paths to use the NetApp volumes instead of the OS drive:
++
 [source,sql]
 ----
 USE [master]
@@ -361,11 +363,10 @@ EXEC xp_instance_regwrite N'HKEY_LOCAL_MACHINE',
   N'DefaultLog', REG_SZ, N'E:\MSSQL\Log'
 GO
 ----
-
-=== Move system databases
-
-.Move model and msdb databases
-. Verify current paths:
++
+. Move the system databases (model, msdb, tempdb, and master) from the OS drive to the NetApp volumes for better performance and management.
++
+.. Verify current paths:
 +
 [source,sql]
 ----
@@ -374,8 +375,8 @@ SELECT name, physical_name
 FROM sys.master_files
 WHERE database_id IN (DB_ID('model'), DB_ID('msdb'));
 ----
-
-. Update to new locations:
++
+.. Update to new locations:
 +
 [source,sql]
 ----
@@ -392,10 +393,11 @@ ALTER DATABASE msdb MODIFY FILE
   (NAME = MSDBLog, FILENAME = 'E:\MSSQL\Log\MSDBLog.ldf');
 GO
 ----
-
-. Stop SQL Server, manually move the files from the old location to the new paths, then restart SQL Server.
-
-.Move tempdb database
++
+.. Stop SQL Server, manually move the files from the old location to the new paths, then restart SQL Server.
++
+.. Move the tempdb database
++
 [source,sql]
 ----
 USE master;
@@ -413,38 +415,36 @@ ALTER DATABASE tempdb MODIFY FILE
   (NAME = templog, FILENAME = 'G:\MSSQL\Temp\templog.ldf');
 GO
 ----
-
-Restart SQL Server for changes to take effect:
-
++
+.. Restart SQL Server for changes to take effect:
++
 [source,powershell]
 ----
 Restart-Service -Name "MSSQLSERVER" -Force
 ----
-
-.Move master database
-. Open *SQL Server Configuration Manager*.
-. Navigate to *SQL Server Services*, right-click *SQL Server (MSSQLSERVER)*, and select *Properties*.
-. Click the *Startup Parameters* tab.
-. In *Existing parameters*, locate the parameters starting with `-d`, `-e`, and `-l`.
-. Remove the old parameters and add new ones:
++
+. Move the master database
+.. Open *SQL Server Configuration Manager*.
+.. Navigate to *SQL Server Services*, right-click *SQL Server (MSSQLSERVER)*, and select *Properties*.
+.. Click the *Startup Parameters* tab.
+.. In *Existing parameters*, locate the parameters starting with `-d`, `-e`, and `-l`.
+.. Remove the old parameters and add new ones:
 +
 ----
 -dD:\MSSQL\Data\master.mdf
 -lE:\MSSQL\Log\mastlog.ldf
 -eE:\MSSQL\Log\ERRORLOG
 ----
-
 +
 [source,powershell]
 ----
 "10.165.128.216","10.165.128.217" | % { New-IscsiTargetPortal -TargetPortalAddress $_ }
 ----
-
 +
 image::gcnv-sql-server-prop.png[Discover iSCSI target portals]
 +
+.. Click *OK*.
 
-. Click *OK*.
 . Stop SQL Server service.
 . Manually move `master.mdf` and `mastlog.ldf` from the old location to the new paths.
 . If you updated the error log path, move the `ERRORLOG` file as well.
@@ -458,6 +458,9 @@ Set up Windows Server Failover Clustering to provide high availability for SQL S
 
 === Configure firewall rules
 
+Open the required network ports on both SQL nodes to enable cluster communication, SQL Server connectivity, and availability group replication.
+
+.Steps
 . Open required ports on both SQL nodes for cluster communication. 
 +
 Required ports include: UDP 3343, TCP 3343, TCP 1433, TCP 5022, TCP 135, TCP 445, TCP 49152-65535 (dynamic RPC).
@@ -491,6 +494,8 @@ Get-NetAdapterBinding -ComponentID ms_tcpip6
 
 === Create the failover cluster
 
+Create a Windows Server Failover Cluster with both SQL Server nodes to enable high availability and automatic failover capabilities.
+
 .Steps
 . Run `cluadmin.msc` or open Failover Cluster Manager from Server Manager.
 +
@@ -508,6 +513,8 @@ image::gcnv-sql-aoag-004.png[Failover Cluster - Validation tests]
 image::gcnv-sql-aoag-005.png[Failover Cluster creation]
 
 == Configure cluster quorum with file share witness
+
+Configure a file share witness to maintain quorum in a two-node cluster configuration. The witness provides an additional vote to prevent split-brain scenarios and ensure cluster availability.
 
 === Create file share
 
@@ -534,6 +541,8 @@ Make sure that the account that's used to create the cluster (sqlcluwest1$) has 
 . On the *Shared Folder Permissions* page, select *Finish* and then select *Finish* again.
 
 === Configure quorum settings
+
+Configure the cluster to use the file share witness for quorum voting.
 
 .Steps
 . In Failover Cluster Manager, right-click the cluster and select *More Actions* > *Configure Cluster Quorum Settings*.
@@ -586,6 +595,8 @@ GO
 ----
 
 == Create and configure availability group
+
+Create an Always On availability group with synchronous commit and automatic failover to provide high availability for your SQL Server databases.
 
 . Take both a full backup and a transaction log backup of the database.
 +
@@ -711,6 +722,8 @@ Server=AOAGDNN,1433;Database=MyDB1;MultiSubnetFailover=True;
 NOTE: If your client doesn't support the MultiSubnetFailover parameter, it isn't compatible with DNN.
 
 == Test failover
+
+Verify the availability group configuration and test failover to ensure automatic failover works correctly between nodes.
 
 . Run the following command on any replica to verify the availability group configuration. 
 +
