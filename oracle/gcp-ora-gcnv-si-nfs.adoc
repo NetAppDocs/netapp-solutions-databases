@@ -21,13 +21,13 @@ This solution provides overview and details for Oracle deployment on Google Clou
 
 Running performance-intensive and latency-sensitive Oracle workloads in the cloud can be challenging. Google Cloud NetApp Volumes (GCNV) makes it easy for enterprise line-of-business (LOB) and storage professionals to migrate and run demanding Oracle workloads without code change. Google Cloud NetApp Volumes is widely used as the underlying shared file-storage service in various scenarios, such as new deployment or migration (lift and shift) of Oracle databases from on-premises to Google Cloud.
 
-This documentation demonstrates the GCNV DB volumes configuration in Google console and simplified deployment of Oracle databases in Google Cloud NetApp Volumes via NFS mounts using Ansible automation. The Oracle database deploys in a container database (CDB) and pluggable databases (PDB) configuration with Oracle dNFS protocol enabled to boost performance. Furthermore, it demonstrates a detailed database backup, restore, and clone strategy and provides an automation toolkit for Oracle database backup management in Google Cloud. 
+This documentation demonstrates the GCNV DB volumes configuration in Google cloud console and simplified deployment of Oracle databases in Google Cloud NetApp Volumes via NFS mounts using Ansible automation. The Oracle database deploys in a container database (CDB) and pluggable databases (PDB) configuration with Oracle dNFS protocol enabled to boost performance. Furthermore, it demonstrates a detailed database backup, restore, and clone strategy and provides an automation toolkit for Oracle database backup management in Google Cloud. 
 
 
 This solution addresses the following use cases:
 
-* Automated Oracle database deployment on Google Cloud NetApp Volumes in Google Cloud with NFS.  
-* Oracle database backup, recovery, clone on Google Cloud NetApp Volumes in Google Cloud 
+* Automated Oracle database deployment on Google Cloud NetApp Volumes in Google Cloud with NFS protocol.  
+* Oracle database backup, recovery, clone on Google Cloud NetApp Volumes in Google Cloud. 
 
 == Audience
 
@@ -75,13 +75,13 @@ image:gcp-ora-gcnv-si-nfs-architecture.png["This image provides a detailed pictu
 
 === Key factors for deployment consideration
 
-* *GCNV storage pool service level and throughput.* GCNV offer four different service levels: Standard, Premium, Extreme, and Flex. For Standard, Premium, Extreme service levels, IO throughput is determined and fixed based on the size of a DB volume. The total IO throughput is capped based on the storage pool sizing. For Flex Regional service level, IO throughput is not fixed on a DB volume size but shared among all DB volumes and capped at the storage pool sizing level. This accommodates smaller volume database with occasional IOPs surges. For reference, Standard, Premium, Extreme service level provides 16 KiB/s per GiB, 64 KiB/s per GiB, 128 KiB/s per GiB throughput respectively. On the other hand, Flex service level offers up to 5 GiB/s per storage pool with custom performance. It is important to right-size the service level and storage pool based on the expected IO throughput and IOPS requirements of the Oracle database workload.
+* *GCNV storage pool service level and throughput.* GCNV offer four different service levels: Standard, Premium, Extreme, and Flex. For Standard, Premium, Extreme service levels, IO throughput is determined and fixed based on the size of a DB volume. The total IO throughput is capped based on the storage pool sizing. For Flex service level, IO throughput is not fixed on a DB volume size but shared among all DB volumes and capped at the storage pool sizing level. This accommodates smaller volume database with occasional IOPs surges. For reference, Standard, Premium, Extreme service level provides 16 KiB/s per GiB, 64 KiB/s per GiB, 128 KiB/s per GiB throughput respectively. On the other hand, Flex service level offers up to 5 GiB/s per storage pool with custom performance setting. It is important to right-size the service level and storage pool based on the expected IO throughput and IOPS requirements of the Oracle database workload.
 
 * *Database storage layout.* In this automated Oracle deployment, we provision three database volumes for each database to host Oracle binary, data, and logs by default. The volumes are mounted on Oracle DB server as /u01 - binary, /u02 - data, /u03 - logs via NFS. Dual control files are configured on /u02 and /u03 mount points for redundancy. 
 
 * *dNFS configuration.* By using Oracle dNFS (available since Oracle 11g), an Oracle database running on Google Compute Engine with Google Cloud NetApp Volumes storage can drive significantly more I/O than the native NFS client. Automated Oracle deployment configures dNFS on NFSv3 by default.
 
-* *Snapshot and Vault backup.* Rather than traditional RMAN backups, NetApp recommends implementing storage efficient, app-consistent snapshot and vault backup to achieve fast (seconds) snapshot backup, quick (minutes) database restore, recovery and clone from snapshots or backups in storage vault. A snapshot is a point-in-time copy of the database volumes that can be created in seconds and does not consume additional storage space at the time of creation. It coexists with the primary database volumes and may be lost if the primary volumes are compromised. A vault backup is a copy of the snapshot that is stored in a different location for disaster recovery purposes. 
+* *Snapshot and Vault backup.* Rather than traditional RMAN database backup, NetApp recommends implementing storage efficient, app-consistent snapshot and vault backup to achieve fast (seconds) snapshot backup, quick (minutes) database restore, recovery and clone from snapshots or backups in storage vault. A snapshot is a point-in-time copy of the database volumes that can be created in seconds and does not consume additional storage space at the time of creation. It coexists with the primary database volumes and may be lost if the primary volumes are compromised. A vault backup is a copy of the snapshot that is stored in a different location for disaster recovery purposes. 
 
 * *RTO/RPO considerations.* When setting up database backup strategies, it is important to consider the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) requirements. While performance impact on database is minimal with snapshot based backup, there is tradeoff between the frequency of backups, which affects the RTO/RPO, and the storage expenditure. More frequent backups can help achieve lower RTO/RPO but may increase storage costs. It is important to find the right balance based on the business requirements and budget. The automation solution provides an automation toolkit based on Ansible playbook to manage Oracle database backup with user configurable retention and backup schedule. 
   
@@ -116,7 +116,10 @@ The Ansible controller node can locate either on-premisses or in Google Cloud as
 +
 [source, cli]
 git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_deploy_nfs.git
-+[NOTE] The toolkit can only be accessed by NetApp internal user with bitbucket access at this moment. For interested external users, please request access from your account team or reach out to NetApp Solutions Engineering team.
++
+[NOTE] 
+
+The toolkit can only be accessed by NetApp internal user with bitbucket access at this moment. For interested external users, please request access from your account team or reach out to NetApp Solutions Engineering team.
 
 . Stage following Oracle 21c installation files on Google Cloud DB VM /tmp/archive directory with 777 permission.
 +
@@ -149,6 +152,10 @@ Following are the steps to configure Google Cloud NetApp Volumes for Oracle data
 +image:gcp-ora-gcnv-si-nfs-deploy-vol.003.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
 +image:gcp-ora-gcnv-si-nfs-deploy-vol.004.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
 +image:gcp-ora-gcnv-si-nfs-deploy-vol.005.png["This image provides screen shots for GCNV volumes configuration for Oracle deployment in Google Cloud with NFS."]
+
+[NOTE]
+
+Do not turn on scheduled backup in Google Cloud NetApp Volumes at this moment since the built-in backup scheme is not app-consistent. The backup automation toolkit provided for this solution will manage app-consistent database backup with user defined schedule and retention.
 
 ====
 
@@ -233,11 +240,10 @@ db_domain: cvs-pm-host-1p.internal
 # Database SID. By default, a container DB is created with 3 PDBs within the CDB
 oracle_sid: NTAP
 
-# CDB is created with SGA at 75% of memory_limit, MB. Consider how many databases to be hosted on the node and
-# how much ram to be allocated to each DB. The grand total of SGA should not exceed 75% available RAM on node.
+# CDB is created with SGA at 75% of memory_limit, MB. Consider how many databases to be hosted on the node and how much ram to be allocated to each DB. The grand total of SGA should not exceed 75% available RAM on node.
 memory_limit: 8192
 
-# Local NFS lif ip address to access database volumes
+# NFS server ip address to access database volumes - retrieved from Google Cloud console within the volume details.  
 nfs_lif: 10.165.128.242
 
 ....
@@ -649,7 +655,7 @@ git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_bkup_gcnv.git
 [NOTE] 
 The toolkit can only be accessed by NetApp internal user with bitbucket access at this moment. For interested external users, please request access from your account team or reach out to NetApp Solutions Engineering team.
 
-. Read the README file in the toolkit for detailed instructions on how to configure and schedule the backup job from the crontab or any other scheduling tool. The playbook is designed to be run on Ansible controller node with access to Oracle DB server VMs and Google NetApp Volumes. It will create snapshots of the database volumes based on the defined schedule and retention policy, and copy the snapshots to vault for disaster recovery purposes. 
+. Read the README file in the toolkit for detailed instructions on how to configure and schedule the backup job from the crontab or any other scheduling tool. The playbook is designed to be run on Ansible controller node with access to Oracle DB server VMs and Google NetApp Volumes. It will create app-consistent snapshots of the database volumes based on the defined schedule and retention policy, and copy the snapshots to vault for disaster recovery purposes. 
 
 . By default, the playbook creates a daily snapshot backup and an hourly snapshots every hour.  The default snapshots retention is 7 daily snapshots and 24 hourly snapshots. Any additional snapshots exceeding retention are pruned and maintain a rolling copies of 7 daily snapshots and 24 hourly snapshots. You can adjust the backup frequency and retention based on your RTO/RPO requirements and storage cost consideration. While daily snapshot backup all DB volumes, hourly snapshot backup only log volumes and save storage space.
 
@@ -665,7 +671,7 @@ The toolkit can only be accessed by NetApp internal user with bitbucket access a
 
 ....
 
-. The weekly vault backup purge all existing backups and reset the baseline. Once baseline backup is established. All additional vault backup are incremental using incremental forever methodology and all vault backup are created from most recent app-consistent snapshots at the time of execution to ensure recoverbility. In above example, a full backup and baseline reset happens on every sunday when weekly vault backup job run at 12:05 am. The daily vault backup script creates a incremental backup copy of the database from daily snapshot from Monday to Saturday at 12:05 am. You can adjust the schedule as needed. The script can also be executed at hourly basis if you want to have more frequent vault backup.
+. The weekly vault backup purge all existing backups and reset the baseline. Once baseline backup is established. All additional vault backups are incremental using incremental forever methodology and all vault backups are created from most recent app-consistent snapshots at the time of execution to ensure recoverbility. In above example, a full backup and baseline reset happens on every sunday when weekly vault backup job run at 12:05 am. The daily vault backup script creates a incremental backup copy of the database from daily snapshot from Monday to Saturday at 12:05 am. You can adjust the schedule as needed. The script can also be executed at hourly basis if you want to have more frequent vault backup.
 
 . The following logging is an example of the snapshot backup and retention management.
 +
@@ -1115,15 +1121,10 @@ ORA-00942: table or view does not exist
 
 ....
 
-. Stop Oracle services to shutdown Oracle database and unmount the file system on the host before restoring from a snapshot.
+. Stop Oracle services to shutdown Oracle database and unmount the file systems on the host before restoring from a snapshot.
 +
 ....
 [root@orap admin]# systemctl stop oracle_NTAP
-[root@orap admin]# ps -ef | grep ora
-root        1410       1  0 Feb04 ?        00:00:09 /opt/google-cloud-ops-agent/libexec/google_cloud_ops_agent_wrapper -config_path /etc/google-cloud-ops-agent/config.yaml -log_path /var/log/google-cloud-ops-agent/subagents/logging-module.log /opt/google-cloud-ops-agent/subagents/fluent-bit/bin/fluent-bit --config /run/google-cloud-ops-agent-fluent-bit/fluent_bit_main.conf --parser /run/google-cloud-ops-agent-fluent-bit/fluent_bit_parser.conf --storage_path /var/lib/google-cloud-ops-agent/fluent-bit/buffers
-root        1714    1410  0 Feb04 ?        00:04:21 /opt/google-cloud-ops-agent/subagents/fluent-bit/bin/fluent-bit --config /run/google-cloud-ops-agent-fluent-bit/fluent_bit_main.conf --parser /run/google-cloud-ops-agent-fluent-bit/fluent_bit_parser.conf --storage_path /var/lib/google-cloud-ops-agent/fluent-bit/buffers
-root       61557   61354  0 20:45 pts/0    00:00:00 grep --color=auto ora
-
 [root@orap admin]# umount /u01
 [root@orap admin]# umount /u02
 [root@orap admin]# umount /u03
@@ -1534,9 +1535,9 @@ testing Oracle in-place restore and point-in-time recovery for GCNV
 [%collapsible%close]
 ====
 
-The Oracle database cloning to a new host using Google Cloud NetApp Volumes snapshots or vault backups is identical to the previous section describes how to use Google Cloud NetApp Volumes snapshots or vault backups to restore and recovery of an Oracle database on a new host in the event of a failure. But renaming the cloned database may be only additional steps desired, which can be easiy done using Oracle dbnewid utility. The DB clone can be useful for UAT testing, development, or other purposes.
+The Oracle database cloning to a new host using Google Cloud NetApp Volumes snapshots or vault backups is identical to the previous section describing how to use Google Cloud NetApp Volumes snapshots or vault backups to restore and recovery of an Oracle database on a new host in the event of a failure. But renaming the cloned database may be an additional steps desired, which can be easiy done using Oracle dbnewid utility. The DB clone can be useful for UAT testing, development, or other purposes.
 
-For some customers, who needs automated cloning and refresh, please raise a request to NetApp Solutions Engineering team for a sample Ansible playbook that can be used as a reference for automating the cloning and refresh process with Google Cloud NetApp Volumes snapshots or vault backups. Following is the link for put in a request to NetApp Solutions Engineering team:link:https://github.com/NetAppDocs/netapp-solutions-family/issues/new?labels=databases,automation&title=Request%20Automation%20-%20%3Crequest_title%3E&body==%0A%0A%20Solution%20Name:%20%0A%20Request%20Title:%20%0A%20Description:%0A%20Suggestions:%0A[Request for Automation^]
+For some customers, who needs automated cloning and clone refresh, please raise a request to NetApp Solutions Engineering team for a sample Ansible playbook that can be used as a reference for automating the cloning and refresh process with Google Cloud NetApp Volumes snapshots or vault backups. Following is the link for putting in a request to NetApp Solutions Engineering team:link:https://github.com/NetAppDocs/netapp-solutions-family/issues/new?labels=databases,automation&title=Request%20Automation%20-%20%3Crequest_title%3E&body==%0A%0A%20Solution%20Name:%20%0A%20Request%20Title:%20%0A%20Description:%0A%20Suggestions:%0A[Request for Automation^]
 
 ====
 
