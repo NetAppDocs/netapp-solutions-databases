@@ -43,8 +43,8 @@ Use the link:https://cloud.google.com/products/calculator[Google Cloud Pricing C
 == Configure domain accounts
 
 Configure two accounts in Active Directory: one installation account (your admin account) and one service account for both SQL Server VMs.
+For example, use the values in the following table for the accounts:
 
-.Domain accounts configuration
 [cols="25,25,25,25",options="header"]
 |===
 |Account
@@ -65,10 +65,12 @@ Configure two accounts in Active Directory: one installation account (your admin
 
 == Create Compute Engine VMs for SQL Server
 
-To create two compute instances (sqlnode1, sqlnode2) with SQL Server 2022 Enterprise preinstalled on Windows Server 2025, follow the link:https://cloud.google.com/compute/docs/instances/create-start-instance[Google Cloud documentation to create a VM instance^].
+Create two Google Compute Engine VM instances with SQL Server 2022 Enterprise preinstalled on Windows Server 2025 to host the availability group replicas.
 
 .Steps
-. In the Google Cloud console, go to the *Create an instance* page.
+. In the Google Cloud console, go to the link:https://console.cloud.google.com/compute/instancesAdd[*Create an instance*] page.
++ 
+Refer to the link:https://cloud.google.com/compute/docs/instances/create-start-instance[Google Cloud documentation^] for more information.
 . For *Name*, enter `sqlnode1`.
 . In the *Machine configuration* section:
 .. Select *General Purpose*
@@ -76,20 +78,20 @@ To create two compute instances (sqlnode1, sqlnode2) with SQL Server 2022 Enterp
 .. In the *Machine type* list, select *n4-highmem-8 (8 vCPU, 64 GB memory)*
 . Select the region where you created your VPC (for example, region=us-west1, zone=us-west1-a).
 . In the *Boot disk* section, click *Change*:
-.. On the *Public images* tab, in the *Operating system* list, select *SQL Server on Windows Server*
-.. In the *Version* list, select *SQL Server 2022 Enterprise on Windows Server 2025 Datacenter*
-.. In the *Boot disk type* list, select *Hyperdisk Balanced*
-.. In the *Size (GB)* field, enter *50* GB
-.. Click *Select* to save the boot disk configuration
-. In the *Networking* section, edit the network interface to select the correct VPC and subnet.
-. On the network interface card, select *gVNIC*.
-. For link:https://cloud.google.com/network-tiers/docs/overview[*Network service tier*^], select *Premium* for mission-critical workloads or *Standard* to optimize costs.
+.. On the *Public images* tab, in the *Operating system* list, select *SQL Server on Windows Server*.
+.. In the *Version* list, select *SQL Server 2022 Enterprise on Windows Server 2025 Datacenter*.
+.. In the *Boot disk type* list, select *Hyperdisk Balanced*.
+.. In the *Size (GB)* field, enter *50* GB.
+.. Click *Select* to save the boot disk configuration.
+. In the *Networking* section, edit the network interface to select the correct VPC and subnet. If you have only one VPC network, it will be selected by default.
+.. On the network interface card, select *gVNIC*.
+.. For link:https://cloud.google.com/network-tiers/docs/overview[*Network service tier*^], select *Premium* for mission-critical workloads or *Standard* to optimize costs.
 . Click *Create* to create the VM.
 . Repeat these steps to create `sqlnode2`.
 
 === Join servers to the domain
 
-Complete the following steps for both SQL Server VMs:
+After creating the VMs, join them to the Active Directory domain and install the required Windows features for failover clustering and iSCSI connectivity.
 
 .Steps
 . Connect remotely to the virtual machine with the local administrator account.
@@ -107,11 +109,18 @@ NOTE: Your SQL instance will run using the sqlsvc account, which is required for
 
 === Install required Windows features
 
-Install Failover Clustering and MPIO on both SQL Server VMs.
+Install Failover Clustering and MPIO on both SQL Server VMs using either Server Manager or PowerShell.
 
-Using Server Manager, select *Role-based or feature-based installation*, select your server, and in Features select *Failover Clustering*. 
+.Option 1: Using Server Manager
+. In Server Manager, select *Manage* > *Add Roles and Features*.
+. Select *Role-based or feature-based installation* and click *Next*.
+. Select your server and click *Next*.
+. On the *Features* page, select *Failover Clustering* and *Multipath I/O*.
+. Click *Add Features* when prompted to include management tools.
+. Complete the wizard and restart if prompted.
 
-Alternatively, run PowerShell as administrator and execute the following commands:
+.Option 2: Using PowerShell
+Run PowerShell as administrator and execute the following commands:
 
 [source,powershell]
 ----
@@ -129,13 +138,17 @@ Install-WindowsFeature RSAT-AD-PowerShell
 
 === Obtain iSCSI initiator names
 
-Use the iSCSI Initiator (iscsicpl) from Windows Run (Win+R) or search bar to obtain the iSCSI qualified name (IQN) for each SQL instance to include in the host group.
+Obtain the iSCSI qualified name (IQN) for each SQL Server VM to include in the host group using either the iSCSI Initiator GUI or PowerShell.
 
-On the iSCSI Initiator Properties dialog, go to the *Configuration* tab to get the Initiator Name.
-
+.Option 1: Using iSCSI Initiator
+. Press *Win+R* or use the Windows search bar to open `iscsicpl`.
+. In the iSCSI Initiator Properties dialog, go to the *Configuration* tab.
+. Copy the *Initiator Name* value and include it in the host group.
++
 Example: `iqn.1991-05.com.microsoft:sqlnode1.cvsdemo.internal`
 
-Alternatively, run PowerShell to execute the following command:
+.Option 2: Using PowerShell
+Run the following command in PowerShell:
 
 [source,powershell]
 ----
@@ -148,8 +161,9 @@ Create iSCSI block storage volumes using Google Cloud NetApp Volumes to provide 
 
 === Create the host group
 
-Create a host group containing the iSCSI initiators from both SQL nodes. For more details, refer to link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/host-groups/create-host-group[Create a host group^] documentation.
-
+.Steps
+. Create a host group containing the iSCSI initiators from both SQL nodes. 
++
 [source,bash]
 ----
 gcloud beta netapp host-groups create HOST_GROUP_NAME \
@@ -159,8 +173,10 @@ gcloud beta netapp host-groups create HOST_GROUP_NAME \
   --os-type=OS_TYPE \
   --description=DESCRIPTION
 ----
-
-Replace the following values:
++
+For more details, refer to link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/host-groups/create-host-group[Create a host group^] documentation.
++
+. Replace the following values:
 
 * `HOST_GROUP_NAME`: Name for the host group (for example, `demosql`)
 * `LOCATION`: Region (for example, `us-west1`)
@@ -169,7 +185,7 @@ Replace the following values:
 Example: `iqn.1991-05.com.microsoft:sqlnode1.cvsdemo.internal,iqn.1991-05.com.microsoft:sqlnode2.cvsdemo.internal`
 * `OS_TYPE`: Operating system type (for example, `WINDOWS`)
 * `DESCRIPTION`: Optional description for the host group
-
++
 image::gcnv-sql-storage-pool.png[Storage pool configuration]
 
 === Create storage pool
