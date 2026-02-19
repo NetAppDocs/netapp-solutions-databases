@@ -190,8 +190,9 @@ image::gcnv-sql-storage-pool.png[Storage pool configuration]
 
 === Create storage pool
 
-Create a storage pool with appropriate capacity and performance. For more details, refer to link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/storage-pools/create-storage-pool[Create a storage pool^] documentation.
-
+.Steps
+. Create a storage pool with appropriate capacity and performance. 
++
 [source,bash]
 ----
 gcloud netapp storage-pools create POOL_NAME \
@@ -204,8 +205,10 @@ gcloud netapp storage-pools create POOL_NAME \
   --total-iops=1024 \
   --network=name=VPC_NAME,psa-range=PSA_RANGE
 ----
-
-Replace the following values:
++
+For more details, refer to link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/storage-pools/create-storage-pool[Create a storage pool^] documentation.
++
+. Replace the following values:
 
 * `POOL_NAME`: Name of the pool (for example, `sqltest`)
 * `PROJECT_ID`: Your Google Cloud project name
@@ -219,8 +222,8 @@ Replace the following values:
 
 === Create volumes
 
-Create volumes for data, logs, temp, and backup. For more details, refer to link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/volumes/create-volume[Create a volume^] documentation. Run the following command for each volume type:
-
+. Create volumes for data, logs, temp, and backup. Run the following command for each volume type:
++
 [source,bash]
 ----
 gcloud beta netapp volumes create VOLUME_NAME \
@@ -232,8 +235,10 @@ gcloud beta netapp volumes create VOLUME_NAME \
   --block-devices="name=VOLUME_NAME,host-groups=HOST_GROUP_PATH,os-type=WINDOWS" \
   --snapshot-directory=false
 ----
-
-Replace the following values:
++
+For more details, refer to link:https://cloud.google.com/netapp/volumes/docs/configure-and-use/volumes/create-volume[Create a volume^] documentation. 
++
+. Replace the following values:
 
 * `VOLUME_NAME`: Unique name for each volume (for example, `node1data`, `node1log`, `node1temp`, `node1backup`)
 * `PROJECT_ID`: Your Google Cloud project name
