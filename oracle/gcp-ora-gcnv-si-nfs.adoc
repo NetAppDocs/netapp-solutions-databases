@@ -668,10 +668,10 @@ The toolkit can only be accessed by NetApp internal user with bitbucket access a
 0 1-23 * * * /home/admin/na_oracle_bkup_gcnv/oracle_standalone_snapshot_hourly.sh
 5 0 * * 7 /home/admin/na_oracle_bkup_gcnv/oracle_standalone_vaultbkup_weekly.sh
 5 0 * * 1-6 /home/admin/na_oracle_bkup_gcnv/oracle_standalone_vaultbkup_daily.sh
-
+5 1-23 * * * /home/admin/na_oracle_bkup_gcnv/oracle_standalone_vaultbkup_hourly.sh
 ....
 
-. The weekly vault backup purge all existing backups and reset the baseline. Once baseline backup is established. All additional vault backups are incremental using incremental forever methodology and all vault backups are created from most recent app-consistent snapshots at the time of execution to ensure recoverbility. In above example, a full backup and baseline reset happens on every sunday when weekly vault backup job run at 12:05 am. The daily vault backup script creates a incremental backup copy of the database from daily snapshot from Monday to Saturday at 12:05 am. You can adjust the schedule as needed. The script can also be executed at hourly basis if you want to have more frequent vault backup.
+. The vault backup can be executed at weekly, daily, or hourly basis depending on your RTO/RPO requirements. While weekly, daily backup includes all DB volumes, hourly vault backup only includes log volumes to save storage space. The very first vault backup takes longer time as it creates the baseline. Once the baseline backup is established, all additional vault backups are incremental using incremental forever methodology. All vault backups are created from most recent app-consistent snapshots at the time of execution to ensure recoverbility. Unlike typical baseline and incremental backups, the baseline vault backup data is rolled up to every incremental backup. In other words, every incremental vault backup contains the full data set and can be used for recovery without the need to restore the baseline backup. This approach simplifies backup management and recovery process while providing efficient storage utilization in vault. You may need occasionally trim the backup list when it get too long after a long period of time, but there is no need to worry about the backup chain and dependencies when you need to delete any backup since all backups are independent in this approach.
 
 . The following logging is an example of the snapshot backup and retention management.
 +
@@ -1075,6 +1075,154 @@ End Oracle DB snapshot backup at 2026-0217-160040
 
 ....
 
+. The following logging is an example of an hourly vault backup.
++
+....
+Begin Oracle DB hourly vault backup at 2026-0220-140448
+
+PLAY [Enable Oracle bkup mode for consistent snapshot] *************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [orap]
+
+TASK [Call presnap tasks block before snapshot] ********************************
+skipping: [orap]
+
+PLAY [Take a volume snapshot or vault backup] **********************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [ontap : Open a GCP connection via cli] ***********************************
+included: /home/admin/na_oracle_bkup_gcnv/roles/ontap/tasks/gcp_open_conn.yml for localhost
+
+TASK [ontap : Login to GCP with service key from cli] **************************
+changed: [localhost]
+
+TASK [ontap : Take app consistent snapshots for DB volumes] ********************
+skipping: [localhost]
+
+TASK [ontap : Take app consistent vault backups from DB volume snapshots] ******
+included: /home/admin/na_oracle_bkup_gcnv/roles/ontap/tasks/gcp_snap_bk2vault.yml for localhost
+
+TASK [ontap : Check if an existing backup vault db-vault exist] ****************
+ok: [localhost]
+
+TASK [ontap : debug] ***********************************************************
+ok: [localhost] => {
+    "vault_list_raw.stdout_lines": [
+        "db-vault",
+        "us-east4-vault",
+        "ora-vault",
+        "dg-backup-vault-destination-b9ec"
+    ]
+}
+
+TASK [ontap : Check if db-vault is in the list] ********************************
+ok: [localhost]
+
+TASK [ontap : Create backup vault, if not exist] *******************************
+skipping: [localhost]
+
+TASK [ontap : Assign DB volumes to backup vault] *******************************
+skipping: [localhost] => (item=orap-u01)
+skipping: [localhost] => (item=orap-u02)
+skipping: [localhost] => (item=orap-u03)
+skipping: [localhost]
+
+TASK [ontap : List the existing vault backup when vault already exist] *********
+changed: [localhost]
+
+TASK [ontap : debug] ***********************************************************
+ok: [localhost] => {
+    "bkup_list.stdout_lines": [
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u01-20260220t131037",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u02-20260213t103840",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u03-20260220t131037",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u02-20260220t131037",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u01-20260213t103840",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u03-20260213t103840"
+    ]
+}
+
+TASK [ontap : Obtain current date, time] ***************************************
+ok: [localhost] => {
+    "ansible_date_time": {
+        "date": "2026-02-20",
+        "day": "20",
+        "epoch": "1771614291",
+        "epoch_int": "1771614291",
+        "hour": "14",
+        "iso8601": "2026-02-20T19:04:51Z",
+        "iso8601_basic": "20260220T140451420184",
+        "iso8601_basic_short": "20260220T140451",
+        "iso8601_micro": "2026-02-20T19:04:51.420184Z",
+        "minute": "04",
+        "month": "02",
+        "second": "51",
+        "time": "14:04:51",
+        "tz": "EST",
+        "tz_dst": "EDT",
+        "tz_offset": "-0500",
+        "weekday": "Friday",
+        "weekday_number": "5",
+        "weeknumber": "07",
+        "year": "2026"
+    }
+}
+
+TASK [ontap : Create a vault backup for each volume from most recent volume snapshot] ***
+skipping: [localhost] => (item=orap-u01)
+skipping: [localhost] => (item=orap-u02)
+skipping: [localhost] => (item=orap-u03)
+skipping: [localhost]
+
+TASK [ontap : Create a vault backup for each volume from most recent volume snapshot] ***
+skipping: [localhost] => (item=orap-u01)
+skipping: [localhost] => (item=orap-u02)
+skipping: [localhost] => (item=orap-u03)
+skipping: [localhost]
+
+TASK [ontap : Create a vault backup for each volume from most recent volume snapshot] ***
+included: /home/admin/na_oracle_bkup_gcnv/roles/ontap/tasks/gcp_process_vol_vault.yml for localhost => (item=orap-u03)
+
+TASK [ontap : List an existing snapshot of a DB volume in sequence if exist] ***
+changed: [localhost]
+
+TASK [ontap : Debug last snapshot] *********************************************
+ok: [localhost] => {
+    "snapshots.stdout_lines | sort | last": "projects/cvs-pm-host-1p/locations/us-east4-b/volumes/orap-u03/snapshots/snap-hourly-orap-u03-20260220t140007"
+}
+
+TASK [ontap : Take a vault bkup of DB volume from most recent snapshot] ********
+changed: [localhost]
+
+TASK [ontap : Take app consistent vault backups from DB volumes] ***************
+skipping: [localhost]
+
+PLAY [End Oracle backup mode after snapshot] ***********************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [orap]
+
+TASK [Call postsnap tasks block after snapshot] ********************************
+skipping: [orap]
+
+PLAY [Prune volume snapshot based on defined retention goals] ******************
+
+TASK [Gathering Facts] *********************************************************
+ok: [localhost]
+
+TASK [Call snapshot management tasks block] ************************************
+skipping: [localhost]
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=15   changed=4    unreachable=0    failed=0    skipped=7    rescued=0    ignored=0
+orap                       : ok=2    changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0
+
+End Oracle DB hourly vault backup at 2026-0220-140511
+
+....
 
 ====
 
@@ -1528,6 +1676,10 @@ testing Oracle in-place restore and point-in-time recovery for GCNV
 ....
 
 . After the recovery is completed, you need to perform additional steps such as revising listener.ora, tnsnames.ora files to match with new hostname or IP address. If needed, setup systemd service to shutdown and restart database to complete the restore and recovery process.
+
+[NOTE]
+
+In the case that duplicate copies of Oracle control files are implemented in your database configuration. The restored database may have inconsistent control files after the DB restore. In this case, you can use the controlfile located in log volume to overwrite controfile in data volume to resolve the issue.
 
 ====
 
