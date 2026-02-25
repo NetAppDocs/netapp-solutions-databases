@@ -81,7 +81,7 @@ image:gcp-ora-gcnv-si-nfs-architecture.png["This image provides a detailed pictu
 
 * *dNFS configuration.* By using Oracle dNFS (available since Oracle 11g), an Oracle database running on Google Compute Engine with Google Cloud NetApp Volumes storage can drive significantly more I/O than the native NFS client. Automated Oracle deployment configures dNFS on NFSv3 by default.
 
-* *Snapshot and Vault backup.* Rather than traditional RMAN database backup, NetApp recommends implementing storage efficient, app-consistent snapshot and vault backup to achieve fast (seconds) snapshot backup, quick (minutes) database restore, recovery and clone from snapshots or backups in storage vault. A snapshot is a point-in-time copy of the database volumes that can be created in seconds and does not consume additional storage space at the time of creation. It coexists with the primary database volumes and may be lost if the primary volumes are compromised. A vault backup is a copy of the snapshot that is stored in a different location for disaster recovery purposes. 
+* *Snapshot and Vault backup.* Rather than traditional RMAN database backup, NetApp recommends implementing storage efficient, app-consistent snapshot and vault backup to achieve fast (seconds) snapshot backup, quick (minutes) database restore, recovery and clone from snapshots or backups in storage vault. A snapshot is a point-in-time copy of the database volumes that can be created in seconds and does not consume additional storage space at the time of creation. It coexists with the primary database volumes and may be lost if the primary volumes are compromised. A vault backup is a copy of the snapshot that is stored in object storage and in a different location for disaster recovery purposes. 
 
 * *RTO/RPO considerations.* When setting up database backup strategies, it is important to consider the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) requirements. While performance impact on database is minimal with snapshot based backup, there is tradeoff between the frequency of backups, which affects the RTO/RPO, and the storage expenditure. More frequent backups can help achieve lower RTO/RPO but may increase storage costs. It is important to find the right balance based on the business requirements and budget. The automation solution provides an automation toolkit based on Ansible playbook to manage Oracle database backup with user configurable retention and backup schedule. 
   
@@ -673,7 +673,7 @@ The toolkit can only be accessed by NetApp internal user with bitbucket access a
 
 . The vault backup can be executed at weekly, daily, or hourly interval depending on your RTO/RPO requirements. While weekly, daily backup includes all DB volumes, hourly vault backup only includes log volumes to save storage space. The very first vault backup takes longer time as it creates the baseline. Once the baseline backup is established, all additional vault backups are incremental using incremental forever methodology. All vault backups are created from most recent app-consistent snapshots at the time of execution to ensure recoverbility. Unlike typical baseline and incremental backups, the baseline vault backup data is rolled up to every incremental backup. In other words, every incremental vault backup contains the full data set and can be used for recovery without the need to restore the baseline backup. This approach simplifies backup management and recovery process while providing efficient storage utilization in vault. There is no need to worry about the backup chain and dependencies when you need to delete any backup since all backups are independent in this approach. The backup automation script trims the backups automatically to meet retention goal defined. 
 
-. The following logging is an example of the snapshot backup and retention management.
+. The following log file recording is an example of the snapshot backup and retention management.
 +
 ....
 Begin Oracle DB snapshot backup at 2026-0217-160001
@@ -1075,11 +1075,12 @@ End Oracle DB snapshot backup at 2026-0217-160040
 
 ....
 
-. The following logging is an example of vault backup from app-consistent snapshots.
+. The following log file recording captures the details of a vault backup from app-consistent snapshots.
 +
 ....
 
-Begin Oracle DB daily vault backup at 2026-0224-134621
+
+Begin Oracle DB daily vault backup at 2026-0225-000501
 
 PLAY [Enable Oracle bkup mode for consistent snapshot] *************************
 
@@ -1135,87 +1136,96 @@ included: /home/admin/na_oracle_bkup_gcnv/roles/ontap/tasks/gcp_del_vault_bkup.y
 included: /home/admin/na_oracle_bkup_gcnv/roles/ontap/tasks/gcp_del_vault_bkup.yml for localhost => (item=orap-u02)
 included: /home/admin/na_oracle_bkup_gcnv/roles/ontap/tasks/gcp_del_vault_bkup.yml for localhost => (item=orap-u03)
 
-TASK [ontap : List existing vault bkup of the DB volume orap-u01 if exist] ***
+TASK [ontap : List existing vault bkup of the DB volume orap-u01 if exist] *****
 changed: [localhost]
 
-TASK [ontap : Debug backup list for volume orap-u01] ***************************
+TASK [ontap : Display all backups for volume orap-u01] *************************
 ok: [localhost] => {
     "vol_vault_bkup.stdout_lines": [
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u01-20260220t131037",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-orap-u01-20260224t134624",
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u01-20260224t000504",
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u01-20260223t155123"
     ]
 }
 
-TASK [ontap : Debug the list of vault backup to purge for volume orap-u01 with retention goal] ***
+TASK [ontap : Retrieve the vault backups to purge for volume orap-u01 with retention goal] ***
 ok: [localhost] => {
-    "msg": []
+    "msg": [
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u01-20260220t131037"
+    ]
 }
 
 TASK [ontap : Purge the extra vault backups for volume orap-u01 to maintain the retention] ***
-skipping: [localhost]
+changed: [localhost] => (item=projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u01-20260220t131037)
 
-TASK [ontap : List an existing vault bkup of the DB volume orap-u02 if exist] ***
+TASK [ontap : List existing vault bkup of the DB volume orap-u02 if exist] *****
 changed: [localhost]
 
-TASK [ontap : Debug backup list for volume orap-u02] ***************************
+TASK [ontap : Display all backups for volume orap-u02] *************************
 ok: [localhost] => {
     "vol_vault_bkup.stdout_lines": [
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u02-20260224t000504",
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u02-20260223t155123",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u02-20260220t131037",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-orap-u02-20260224t134624"
+    ]
+}
+
+TASK [ontap : Retrieve the vault backups to purge for volume orap-u02 with retention goal] ***
+ok: [localhost] => {
+    "msg": [
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u02-20260220t131037"
     ]
 }
 
-TASK [ontap : Debug the list of vault backup to purge for volume orap-u02 with retention goal] ***
-ok: [localhost] => {
-    "msg": []
-}
-
 TASK [ontap : Purge the extra vault backups for volume orap-u02 to maintain the retention] ***
-skipping: [localhost]
+changed: [localhost] => (item=projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u02-20260220t131037)
 
-TASK [ontap : List an existing vault bkup of the DB volume orap-u03 if exist] ***
+TASK [ontap : List existing vault bkup of the DB volume orap-u03 if exist] *****
 changed: [localhost]
 
-TASK [ontap : Debug backup list for volume orap-u03] ***************************
+TASK [ontap : Display all backups for volume orap-u03] *************************
 ok: [localhost] => {
     "vol_vault_bkup.stdout_lines": [
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u03-20260224t120840",
         "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u03-20260224t000504",
-        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-hourly-orap-u03-20260220t140451"
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-hourly-orap-u03-20260220t140451",
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-orap-u03-20260224t134624"
     ]
 }
 
-TASK [ontap : Debug the list of vault backup to purge for volume orap-u03 with retention goal] ***
+TASK [ontap : Retrieve the vault backups to purge for volume orap-u03 with retention goal] ***
 ok: [localhost] => {
-    "msg": []
+    "msg": [
+        "projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u03-20260224t000504"
+    ]
 }
 
 TASK [ontap : Purge the extra vault backups for volume orap-u03 to maintain the retention] ***
-skipping: [localhost]
+changed: [localhost] => (item=projects/cvs-pm-host-1p/locations/us-east4/backupVaults/db-vault/backups/bkup-daily-orap-u03-20260224t000504)
 
 TASK [ontap : Obtain current date, time] ***************************************
 ok: [localhost] => {
     "ansible_date_time": {
-        "date": "2026-02-24",
-        "day": "24",
-        "epoch": "1771958784",
-        "epoch_int": "1771958784",
-        "hour": "13",
-        "iso8601": "2026-02-24T18:46:24Z",
-        "iso8601_basic": "20260224T134624812226",
-        "iso8601_basic_short": "20260224T134624",
-        "iso8601_micro": "2026-02-24T18:46:24.812226Z",
-        "minute": "46",
+        "date": "2026-02-25",
+        "day": "25",
+        "epoch": "1771995904",
+        "epoch_int": "1771995904",
+        "hour": "00",
+        "iso8601": "2026-02-25T05:05:04Z",
+        "iso8601_basic": "20260225T000504817299",
+        "iso8601_basic_short": "20260225T000504",
+        "iso8601_micro": "2026-02-25T05:05:04.817299Z",
+        "minute": "05",
         "month": "02",
-        "second": "24",
-        "time": "13:46:24",
+        "second": "04",
+        "time": "00:05:04",
         "tz": "EST",
         "tz_dst": "EDT",
         "tz_offset": "-0500",
-        "weekday": "Tuesday",
-        "weekday_number": "2",
+        "weekday": "Wednesday",
+        "weekday_number": "3",
         "weeknumber": "08",
         "year": "2026"
     }
@@ -1237,7 +1247,7 @@ changed: [localhost]
 
 TASK [ontap : Retrieve the last or most recent snapshot] ***********************
 ok: [localhost] => {
-    "snapshots.stdout_lines | sort | last": "projects/cvs-pm-host-1p/locations/us-east4-b/volumes/orap-u01/snapshots/snap-daily-orap-u01-20260224t134506"
+    "snapshots.stdout_lines | sort | last": "projects/cvs-pm-host-1p/locations/us-east4-b/volumes/orap-u01/snapshots/snap-daily-orap-u01-20260225t000007"
 }
 
 TASK [ontap : Take a vault bkup of DB volume orap-u01 from most recent snapshot] ***
@@ -1248,7 +1258,7 @@ changed: [localhost]
 
 TASK [ontap : Retrieve the last or most recent snapshot] ***********************
 ok: [localhost] => {
-    "snapshots.stdout_lines | sort | last": "projects/cvs-pm-host-1p/locations/us-east4-b/volumes/orap-u02/snapshots/snap-daily-orap-u02-20260224t134506"
+    "snapshots.stdout_lines | sort | last": "projects/cvs-pm-host-1p/locations/us-east4-b/volumes/orap-u02/snapshots/snap-daily-orap-u02-20260225t000007"
 }
 
 TASK [ontap : Take a vault bkup of DB volume orap-u02 from most recent snapshot] ***
@@ -1259,7 +1269,7 @@ changed: [localhost]
 
 TASK [ontap : Retrieve the last or most recent snapshot] ***********************
 ok: [localhost] => {
-    "snapshots.stdout_lines | sort | last": "projects/cvs-pm-host-1p/locations/us-east4-b/volumes/orap-u03/snapshots/snap-hourly-orap-u03-20260224t130007"
+    "snapshots.stdout_lines | sort | last": "projects/cvs-pm-host-1p/locations/us-east4-b/volumes/orap-u03/snapshots/snap-hourly-orap-u03-20260224t230008"
 }
 
 TASK [ontap : Take a vault bkup of DB volume orap-u03 from most recent snapshot] ***
@@ -1289,10 +1299,10 @@ TASK [Call snapshot management tasks block] ************************************
 skipping: [localhost]
 
 PLAY RECAP *********************************************************************
-localhost                  : ok=33   changed=10   unreachable=0    failed=0    skipped=10   rescued=0    ignored=0
+localhost                  : ok=36   changed=13   unreachable=0    failed=0    skipped=7    rescued=0    ignored=0
 orap                       : ok=2    changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0
 
-End Oracle DB daily vault backup at 2026-0224-134710
+End Oracle DB daily vault backup at 2026-0225-001406
 
 
 ....
