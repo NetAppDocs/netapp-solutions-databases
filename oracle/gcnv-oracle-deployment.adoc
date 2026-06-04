@@ -100,7 +100,7 @@ Three *independent* data paths — do not conflate storage replication with Data
 .GCNV Oracle Deployment - reference architecture
 // NOTE: Source HTML referenced image001.png and image002.jpg. You requested PNG.
 // Replace the filename if your /media folder uses a different name.
-image::oracle-26ai-ha-on-gcnv-3-data-paths.png[alt="Oracle 26ai HA on GCNV - reference architecture"]
+image::oracle-26ai-ha.png[alt="Oracle 26ai HA on GCNV - reference architecture"]
 
 *Storage replication ≠ redo replication.* Path ① moves datafiles at the GCNV layer for standby initialization. Path ② keeps databases synchronized after cutover. Path ③ orchestrates role transitions and FSFO.
 
