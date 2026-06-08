@@ -11,8 +11,6 @@ summary: "This setup guide describes recommended deployment topologies for runni
 [.lead]
 This setup guide describes recommended deployment topologies for running Oracle Database 26ai high availability on Google Compute Engine using Google Cloud NetApp Volumes with iSCSI block storage, Data Guard, and Fast-Start Failover.
 
-*Oracle Database 26ai HA · Google Cloud NetApp Volumes (GCNV) iSCSI · Data Guard · Fast-Start Failover (FSFO)*
-
 [[deployment-options]]
 == Deployment options
 
@@ -95,11 +93,10 @@ GCNV replication significantly reduces standby initialization time compared to R
 [[reference-diagram]]
 === Reference diagram
 
-Three *independent* data paths — do not conflate storage replication with Data Guard redo:
+The architecture provides three *independent* data paths. Storage replication and Data Guard redo transport are separate paths.
 
 .GCNV Oracle Deployment - reference architecture
-// NOTE: Source HTML referenced image001.png and image002.jpg. You requested PNG.
-// Replace the filename if your /media folder uses a different name.
+
 image::oracle-26ai-ha.png[alt="Oracle 26ai HA on GCNV - reference architecture"]
 
 *Storage replication ≠ redo replication.* Path ① moves datafiles at the GCNV layer for standby initialization. Path ② keeps databases synchronized after cutover. Path ③ orchestrates role transitions and FSFO.
@@ -146,10 +143,10 @@ Oracle Linux 10 on all three VMs. Confirm roles, APIs, and PSA networking before
 [[access-and-apis]]
 === Access and APIs
 
-* [ ] GCP roles for Compute Engine VMs, VPC firewall (or Firewall Policies), NetApp Volumes, and PSA networking (Shared VPC host-project sign-off if applicable).
-* [ ] *NetApp Volumes API* enabled (Cloud Console → APIs & Services, or command below).
-* [ ] VPC + subnet with *PSA range* for GCNV (https://cloud.google.com/netapp/volumes/docs/get-started/configure-access/networking).
-* [ ] *Time synchronized* on all three VMs (command below).
+* GCP roles for Compute Engine VMs, VPC firewall (or Firewall Policies), NetApp Volumes, and PSA networking (Shared VPC host-project sign-off if applicable).
+* *NetApp Volumes API* enabled (Cloud Console → APIs & Services, or command below).
+* VPC + subnet with *PSA range* for GCNV (https://cloud.google.com/netapp/volumes/docs/get-started/configure-access/networking).
+* *Time synchronized* on all three VMs (command below).
 
 [source,bash]
 ----
@@ -377,7 +374,7 @@ Run on `oracdb1` using that host’s pool portals, then on `oracdb2` using the s
 If host *egress* is restricted, allow *TCP/3260* from each database VM to its GCNV iSCSI portal IPs (in addition to inter-VM TCP/1521 from <<vpc-firewall-allow-1521,Step 2: VPC firewall — allowlist TCP/1521 across all three zones>>).
 
 . Discover targets, log in, and *persist* node startup:
-
++
 [source,bash]
 ----
 sudo iscsiadm --mode discovery --op update --type sendtargets --portal <ISCSI_PORTAL_1>
@@ -390,7 +387,7 @@ sudo lsblk -o NAME,SIZE,WWN,VENDOR,MODEL
 ----
 
 After reboot, re-check before starting Oracle:
-
++
 [source,bash]
 ----
 sudo iscsiadm --mode session
@@ -412,13 +409,13 @@ blacklist {
     devnode "^cciss.*"
 }
 EOF
-
++
 sudo systemctl enable --now multipathd
 sudo multipath -ll
 ----
 
 . Add *host-discovered* WWID aliases to `/etc/multipath.conf` (do not guess — `multipath.conf` does *not* expand shell variables). Discover WWIDs:
-
++
 [source,bash]
 ----
 sudo multipath -ll
@@ -429,9 +426,9 @@ for dev in /dev/sd*; do
   echo
 done
 ----
-
++
 Append *concrete* aliases for that host to `/etc/multipath.conf`, then `sudo systemctl restart multipathd`.
-
++
 On `oracdb1`, append:
 
 [source]
@@ -444,7 +441,7 @@ multipaths {
     multipath { wwid <host-discovered-wwid-for-fra-01>   alias ora_oracdb1_fra_01  }
 }
 ----
-
++
 On `oracdb2`, use the same pattern with `ora_oracdb2_*` aliases, then:
 
 [source,bash]
