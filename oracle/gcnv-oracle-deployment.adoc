@@ -2,21 +2,79 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-deployment.html
 keywords: oracle database, google cloud netapp volumes, gcnv, iscsi, data guard, fsfo, high availability, disaster recovery, google compute engine
-summary: "This setup guide describes recommended deployment topologies for running Oracle Database 26ai high availability on Google Compute Engine using Google Cloud NetApp Volumes with iSCSI block storage, Data Guard, and Fast-Start Failover."
+summary: "Deploy Oracle Database 26ai high availability on Google Compute Engine using Google Cloud NetApp Volumes with iSCSI block storage. This guide shows how to provision compute instances and storage, install Oracle Grid Infrastructure and Oracle Database, initialize a standby database, and configure Oracle Data Guard with Fast-Start Failover."
 ---
 = Deploy Oracle Database 26ai high availability with Google Cloud NetApp Volumes
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-This setup guide describes recommended deployment topologies for running Oracle Database 26ai high availability on Google Compute Engine using Google Cloud NetApp Volumes with iSCSI block storage, Data Guard, and Fast-Start Failover.
+Deploy Oracle Database 26ai high availability on Google Compute Engine using Google Cloud NetApp Volumes with iSCSI block storage. This guide shows how to provision compute instances and storage, install Oracle Grid Infrastructure and Oracle Database, initialize a standby database, and configure Oracle Data Guard with Fast-Start Failover.
+
+[[prerequisites]]
+== Prerequisites
+
+Before you begin, ensure that you have the following:
+
+* A Google Cloud project with permissions for Compute Engine, VPC networking, firewall configuration, IAM, and NetApp Volumes
+* The NetApp Volumes API enabled
+* A VPC and subnet configured for the target region
+* Private Services Access (PSA) configured for Google Cloud NetApp Volumes
+* Oracle Linux 10 for all required virtual machines
+* Time synchronization configured for all virtual machines
+* DNS and hostname resolution planned for the database hosts and Observer host
+* Oracle installation media and patch files available for Oracle Database 26ai and Grid Infrastructure
+* Familiarity with Oracle Data Guard, Oracle Restart, and iSCSI storage concepts
+
+[source,bash]
+----
+gcloud services enable netapp.googleapis.com
+chronyc tracking
+timedatectl
+----
+
+[cols="1,2",options="header"]
+|===
+| Task | Required access
+| Create Compute Engine VMs | Compute Instance Admin (or equivalent)
+| Firewall / Firewall Policies | Network Admin or delegated policy admin
+| Create GCNV pools and volumes | NetApp Volumes Admin
+| Configure PSA | Network admin in host project
+| SSH via IAP | IAP-secured Tunnel User + OS Login (if used)
+|===
+
+*Oracle media:* <<appendix-a-oracle-media-and-patches,Appendix A>>. *Security:* <<appendix-b-security-posture,Appendix B>>.
+
+== Before you begin
+
+This guide uses the following deployment assumptions:
+
+* Three Google Compute Engine virtual machines:
+** `oracdb1` for the primary database
+** `oracdb2` for the standby database
+** `oradg-obs` for the Fast-Start Failover Observer
+* One GCNV Flex Unified storage pool per database zone
+* Five GCNV iSCSI volumes per database host
+* Oracle Data Guard Broker and Fast-Start Failover for automatic failover
+* Dedicated storage per database host; primary and standby hosts do not share iSCSI volumes
+
+Replace all example values in commands with values from your environment, including host names, IP addresses, zones, project names, portal IPs, passwords, and Oracle media file names.
+
+== Objectives
+
+In this procedure, you complete the following tasks:
+
+* Provision Compute Engine instances for the primary database, standby database, and Observer
+* Configure GCNV iSCSI storage and multipath devices for Oracle
+* Install Oracle Grid Infrastructure and Oracle Database 26ai on both database hosts
+* Create the primary Oracle database
+* Initialize the standby database by using GCNV replication, snapshots, or clones
+* Configure Oracle Data Guard Broker, Fast-Start Failover, and the Observer
 
 [[deployment-options]]
 == Deployment options
 
-This section compares practical HA/DR deployment patterns for Oracle Database on Google Compute Engine (GCE) with Google Cloud NetApp Volumes (GCNV) iSCSI block storage. It also highlights how GCNV snapshot and volume clone capabilities can dramatically reduce time-to-standby and time-to-recovery.
-
-Use this matrix to choose a tier before you start. *This guide implements Prod HA (Data Guard + FSFO)* — the rightmost column.
+This section compares practical HA/DR deployment patterns for Oracle Database on Google Compute Engine (GCE) with Google Cloud NetApp Volumes (GCNV) iSCSI block storage. It also highlights how GCNV replication accelerates standby initialization. Use this matrix to choose a tier before you start. *This guide implements Prod HA (Data Guard + FSFO)* — the rightmost column.
 
 [cols="1,1,1,1,1,1,1,1",options="header"]
 |===
@@ -64,7 +122,7 @@ Use this matrix to choose a tier before you start. *This guide implements Prod H
 [[overview]]
 == Overview
 
-This architecture deploys *Oracle Database 26ai* HA on Google Cloud using *Google Cloud NetApp Volumes (GCNV)* iSCSI storage and *Oracle Data Guard*. GCNV provides high-performance block storage and accelerates standby database initialization using storage-layer *replication, snapshots, and clones*. Data Guard provides *continuous redo transport*, role management, and *failover orchestration* (Broker, FSFO, Observer).
+This architecture deploys *Oracle Database 26ai* high availability on Google Cloud using *Google Cloud NetApp Volumes (GCNV)* iSCSI storage and *Oracle Data Guard*. GCNV provides high-performance block storage and supports standby initialization at the storage layer. Data Guard provides continuous synchronization, switchover, and Fast-Start Failover.
 
 [cols="1,2",options="header"]
 |===
@@ -73,7 +131,7 @@ This architecture deploys *Oracle Database 26ai* HA on Google Cloud using *Googl
 | *Data Guard* | Continuous synchronization, redo apply, switchover, FSFO
 |===
 
-GCNV replication significantly reduces standby initialization time compared to RMAN active duplicate by moving data at the *storage layer* instead of through Oracle database channels. Prefer *GCNV replicate, snapshot, or clone* to populate the standby zone, then use Data Guard for ongoing HA.
+GCNV replication significantly reduces standby initialization time compared to RMAN active duplicate by moving data at the *storage layer* instead of through Oracle database channels. Prefer *GCNV replication* for production standby seeding when your environment supports it.
 
 [cols="1,3",options="header"]
 |===
@@ -99,7 +157,7 @@ The architecture provides three *independent* data paths. Storage replication an
 
 image::oracle-26ai-ha.png[alt="Oracle 26ai HA on GCNV - reference architecture"]
 
-*Storage replication ≠ redo replication.* Path ① moves datafiles at the GCNV layer for standby initialization. Path ② keeps databases synchronized after cutover. Path ③ orchestrates role transitions and FSFO.
+*Storage replication ≠ redo replication.* Path ① moves datafiles at the GCNV layer for standby initialization. Path ② keeps databases synchronized after cutover. Path ③ orchestrates role transitions and automatic failover through Oracle Data Guard Broker and the Observer.
 
 [[platform-roles]]
 === Platform roles
@@ -134,38 +192,6 @@ GCNV replication runs a *baseline* copy, then *incremental* block updates per po
 
 .Machine types
 Sample `n4-highmem-8` in this guide; OLTP workloads typically use `c4-standard-*` (<<appendix-c-machine-type-guidance,Appendix C>>).
-
-[[prerequisites]]
-== Prerequisites
-
-Oracle Linux 10 on all three VMs. Confirm roles, APIs, and PSA networking before you start.
-
-[[access-and-apis]]
-=== Access and APIs
-
-* GCP roles for Compute Engine VMs, VPC firewall (or Firewall Policies), NetApp Volumes, and PSA networking (Shared VPC host-project sign-off if applicable).
-* *NetApp Volumes API* enabled (Cloud Console → APIs & Services, or command below).
-* VPC + subnet with *PSA range* for GCNV (https://cloud.google.com/netapp/volumes/docs/get-started/configure-access/networking).
-* *Time synchronized* on all three VMs (command below).
-
-[source,bash]
-----
-gcloud services enable netapp.googleapis.com
-chronyc tracking
-timedatectl
-----
-
-[cols="1,2",options="header"]
-|===
-| Task | Required access
-| Create Compute Engine VMs | Compute Instance Admin (or equivalent)
-| Firewall / Firewall Policies | Network Admin or delegated policy admin
-| Create GCNV pools and volumes | NetApp Volumes Admin
-| Configure PSA | Network admin in host project
-| SSH via IAP | IAP-secured Tunnel User + OS Login (if used)
-|===
-
-*Oracle media:* <<appendix-a-oracle-media-and-patches,Appendix A>>. *Security:* <<appendix-b-security-posture,Appendix B>>.
 
 [[provision-compute-engine]]
 == Provision Compute Engine
