@@ -30,7 +30,7 @@ Use this matrix to choose a tier before you start. *This guide implements Prod H
 | No
 | Yes
 | No
-| <<prerequisites,Prerequisites>> through <<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>, <<install-oracle-db-home,Install Oracle Database 26ai on each DB host>>, and <<create-primary-database,Create the primary database>>
+| <<prerequisites,Prerequisites>> through <<provision-gcnv-iscsi-volumes,Step 2: Provision GCNV iSCSI volumes>>, <<install-oracle-db-home,Install Oracle Database 26ai on each DB host>>, and <<create-primary-database,Create the primary database>>
 | Snapshot clone
 
 | Prod Basic (Restart)
@@ -171,7 +171,7 @@ timedatectl
 *Oracle media:* <<appendix-a-oracle-media-and-patches,Appendix A>>. *Security:* <<appendix-b-security-posture,Appendix B>>.
 
 [[provision-compute-engine]]
-== Provision Compute Engine
+== Step 1: Provision Compute Engine
 
 [[create-the-vms]]
 === Create the VMs
@@ -188,7 +188,7 @@ Create three VMs in *different zones* of the same region (zonal failure isolatio
 
 *Network tier:* *Premium* when latency or egress (>~200 GiB/month) matters; *Standard* for lower TCO in dev/test.
 
-Enable *Secure Boot*, *vTPM*, and *Integrity Monitoring* on all three. The boot disk holds the *OS only*. `/u01`, *Grid/DB homes, staging, and all ASM data* use *GCNV iSCSI volumes* (see <<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>) — do *not* attach a separate GCE data disk for `/u01`.
+Enable *Secure Boot*, *vTPM*, and *Integrity Monitoring* on all three. The boot disk holds the *OS only*. `/u01`, *Grid/DB homes, staging, and all ASM data* use *GCNV iSCSI volumes* (see <<provision-gcnv-iscsi-volumes,Step 2: Provision GCNV iSCSI volumes>>) — do *not* attach a separate GCE data disk for `/u01`.
 
 [[vpc-firewall-allow-1521]]
 === VPC firewall — allowlist TCP/1521 across all three zones
@@ -302,7 +302,7 @@ Repeat on `oracdb2`. Record each host’s IQN — one host group per host so a s
 *Cloned VMs:* If both hosts share the same IQN, regenerate on `oracdb2` (stop `iscsi`, clear `/var/lib/iscsi/nodes/*`, new `InitiatorName` in `/etc/iscsi/initiatorname.iscsi`, restart `iscsid`).
 
 [[provision-gcnv-iscsi-volumes]]
-== Provision GCNV iSCSI volumes
+== Step 2: Provision GCNV iSCSI volumes
 
 [[create-flex-unified-pool-per-zone]]
 === Create one GCNV Flex Unified iSCSI storage pool per database zone
@@ -512,10 +512,10 @@ sudo chown -R oracle:oinstall /u01/app/oracle /u01/stage
 sudo chmod -R 775 /u01/app /u01/stage
 ----
 
-Reboot once and confirm `/u01` mounts before <<install-oracle-software,Install Oracle software>>.
+Reboot once and confirm `/u01` mounts before <<install-oracle-software,Step 3: Install Oracle software>>.
 
 [[install-oracle-software]]
-== Install Oracle software
+== Step 3: Install Oracle software
 
 Run *Grid* and then *database home* installation on each DB host before <<create-primary-database,Create the primary database>>.
 
@@ -667,7 +667,7 @@ Expected *ONLINE:* `ora.DATA.dg`, `ora.RECO.dg`, `ora.FRA.dg`, `ora.LISTENER.lsn
 [[install-oracle-db-home]]
 === Install Oracle Database 26ai on each DB host
 
-Run this section on `oracdb1`, then on `oracdb2`. The standby database is created in <<create-standby-database,Create the standby database>>.
+Run this section on `oracdb1`, then on `oracdb2`. The standby database is created in <<create-standby-database,Step 4: Create the standby database>>.
 
 [[unzip-db-home-and-ru-patch]]
 ==== Unzip the DB home and the RU patch
@@ -739,7 +739,7 @@ export TNS_ADMIN=$ORACLE_HOME/network/admin
 EOF
 ----
 
-(Use `ORACLE_SID=orcls` on the standby host. The standby database is created in <<create-standby-database,Create the standby database>>.)
+(Use `ORACLE_SID=orcls` on the standby host. The standby database is created in <<create-standby-database,Step 4: Create the standby database>>.)
 
 [[create-primary-database]]
 == Create the primary database (`oracdb1` only)
@@ -820,9 +820,9 @@ srvctl status service -db orcl -service orclapp
 After Broker enable, `orclapp` runs only on *PRIMARY*. Multiplex control files across ASM disk groups; size memory to workload (this guide uses 4 GB / 3 GB SGA as examples).
 
 [[create-standby-database]]
-== Create the standby database
+== Step 4: Create the standby database
 
-Build `orcls` on `oracdb2` (dedicated volumes on `oracle-pool-b`). Complete the initial primary and standby setup, then <<gcnv-standby-initialization,GCNV standby initialization>>, the standby completion tasks, and <<broker-fsfo-observer,Configure Data Guard Broker, FSFO, and Observer>>. Target: primary *READ WRITE*; standby *PHYSICAL STANDBY*, *MOUNTED*, MRP applying.
+Build `orcls` on `oracdb2` (dedicated volumes on `oracle-pool-b`). Complete the initial primary and standby setup, then <<gcnv-standby-initialization,GCNV standby initialization>>, the standby completion tasks, and <<broker-fsfo-observer,Step 5: Configure Data Guard Broker, FSFO, and Observer>>. Target: primary *READ WRITE*; standby *PHYSICAL STANDBY*, *MOUNTED*, MRP applying.
 
 [[primary-sys-password-and-dg-params]]
 === Primary: SYS password, password file, and DG parameters
@@ -948,7 +948,7 @@ NOMOUNT with no datafiles until <<gcnv-standby-initialization,GCNV standby initi
 [[gcnv-standby-initialization]]
 === GCNV standby initialization
 
-Populate standby ASM volumes in *`oracle-pool-b`* using *Google Cloud NetApp Volumes replication* (SnapMirror-based, *Default-mode*), *volume snapshots*, or *clone*, then run <<oracle-finalize,Oracle finalize>>. iSCSI and ASM are the same as <<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>.
+Populate standby ASM volumes in *`oracle-pool-b`* using *Google Cloud NetApp Volumes replication* (SnapMirror-based, *Default-mode*), *volume snapshots*, or *clone*, then run <<oracle-finalize,Oracle finalize>>. iSCSI and ASM are the same as <<provision-gcnv-iscsi-volumes,Step 2: Provision GCNV iSCSI volumes>>.
 
 [cols="1,2",options="header"]
 |===
@@ -966,7 +966,7 @@ Populate standby ASM volumes in *`oracle-pool-b`* using *Google Cloud NetApp Vol
 | 3 | Volume replication (<<create-volume-replications,Create volume replications>> and <<cutover-quiesce-stop-repl-attach,Cutover — quiesce, stop replication, attach standby LUNs>>) or snapshot (<<snapshot-seed,Alternative — snapshot seed>>)
 | 4 | On `oracdb2`: iSCSI, multipath, ASM mount (<<configure-iscsi-and-multipath,Configure Linux iSCSI and multipath for GCNV iSCSI volumes>>, <<partition-asm-backing-devices,Partition ASM backing devices on GCNV iSCSI volumes>>, and <<format-and-mount-u01,Format and mount `/u01` on the local GCNV iSCSI volume>>)
 | 5 | Oracle finalize — recover to SCN, *MOUNTED* (<<oracle-finalize,Oracle finalize>>)
-| 6 | SRL rebuild (<<standby-redo-log-files,Standby redo log files>>), MRP, broker (<<broker-fsfo-observer,Configure Data Guard Broker, FSFO, and Observer>>)
+| 6 | SRL rebuild (<<standby-redo-log-files,Standby redo log files>>), MRP, broker (<<broker-fsfo-observer,Step 5: Configure Data Guard Broker, FSFO, and Observer>>)
 |===
 
 RMAN active duplicate remains valid for small labs. *GCNV replication is preferred* for production standby seeding.
@@ -1299,7 +1299,7 @@ srvctl status database -db orcls
 ----
 
 [[broker-fsfo-observer]]
-== Configure Data Guard Broker, FSFO, and Observer
+== Step 5: Configure Data Guard Broker, FSFO, and Observer
 
 After `ENABLE CONFIGURATION`, manage transport and roles through *DGMGRL* (not ad-hoc `LOG_ARCHIVE_DEST_*` SQL).
 
