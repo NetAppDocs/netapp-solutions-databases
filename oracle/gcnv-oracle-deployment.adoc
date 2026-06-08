@@ -30,7 +30,7 @@ Use this matrix to choose a tier before you start. *This guide implements Prod H
 | No
 | Yes
 | No
-| <<prerequisites,Prerequisites>> through <<provision-gcnv-iscsi-volumes,Step 2: Provision GCNV iSCSI volumes>>, <<install-oracle-db-home,Install Oracle Database 26ai on each DB host>>, and <<create-primary-database,Create the primary database>>
+| <<prerequisites,Prerequisites>> through <<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>, <<install-oracle-db-home,Step 2: Install Oracle Database 26ai on each DB host>>, and <<create-primary-database,Create the primary database>>
 | Snapshot clone
 
 | Prod Basic (Restart)
@@ -48,7 +48,7 @@ Use this matrix to choose a tier before you start. *This guide implements Prod H
 | Partial
 | Yes
 | Partial
-| <<prerequisites,Prerequisites>> through <<create-primary-database,Create the primary database>>; see <<gcnv-standby-initialization,GCNV standby initialization>> for GCNV seed/clone
+| <<prerequisites,Prerequisites>> through <<create-primary-database,Create the primary database>>; see <<gcnv-standby-initialization,Step 3: GCNV standby initialization>> for GCNV seed/clone
 | GCNV clone recovery
 
 | *Prod HA (DG + FSFO)*
@@ -171,10 +171,10 @@ timedatectl
 *Oracle media:* <<appendix-a-oracle-media-and-patches,Appendix A>>. *Security:* <<appendix-b-security-posture,Appendix B>>.
 
 [[provision-compute-engine]]
-== Step 1: Provision Compute Engine
+== Provision Compute Engine
 
 [[create-the-vms]]
-=== Create the VMs
+=== Step 1: Create the VMs
 
 Create three VMs in *different zones* of the same region (zonal failure isolation). Prefer a *lower-carbon region* for TCO and sustainability where it meets latency and compliance needs (for example `us-west1` vs `us-central1`). Use the Cloud Console, `gcloud`, Terraform, or your standard provisioning workflow.
 
@@ -188,10 +188,10 @@ Create three VMs in *different zones* of the same region (zonal failure isolatio
 
 *Network tier:* *Premium* when latency or egress (>~200 GiB/month) matters; *Standard* for lower TCO in dev/test.
 
-Enable *Secure Boot*, *vTPM*, and *Integrity Monitoring* on all three. The boot disk holds the *OS only*. `/u01`, *Grid/DB homes, staging, and all ASM data* use *GCNV iSCSI volumes* (see <<provision-gcnv-iscsi-volumes,Step 2: Provision GCNV iSCSI volumes>>) — do *not* attach a separate GCE data disk for `/u01`.
+Enable *Secure Boot*, *vTPM*, and *Integrity Monitoring* on all three. The boot disk holds the *OS only*. `/u01`, *Grid/DB homes, staging, and all ASM data* use *GCNV iSCSI volumes* (see <<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>) — do *not* attach a separate GCE data disk for `/u01`.
 
 [[vpc-firewall-allow-1521]]
-=== VPC firewall — allowlist TCP/1521 across all three zones
+=== Step 2: VPC firewall — allowlist TCP/1521 across all three zones
 
 Allow *TCP/1521* between all three VM `/32` internal IPs in *every* zone (`us-west1-a/b/c` here). Use VPC firewall rules or *Firewall Policies* with the same allowlist. Missing rules break redo transport and Observer connectivity.
 
@@ -211,14 +211,14 @@ done
 |===
 | Port | Expected | Meaning
 | `22` | Connected | SSH path works
-| `1521` | Connection refused | Firewall open; Grid listener starts during <<install-grid-infrastructure,Install Oracle Grid Infrastructure (Oracle Restart) on each DB host>>
+| `1521` | Connection refused | Firewall open; Grid listener starts during <<install-grid-infrastructure,Step 1: Install Oracle Grid Infrastructure (Oracle Restart) on each DB host>>
 | Either | Timeout | Fix firewall or routing
 |===
 
 Run from *all three VMs* toward each peer IP.
 
 [[hostname-dns-and-etchosts]]
-=== Hostname, DNS, and `/etc/hosts`
+=== Step 3: Hostname, DNS, and `/etc/hosts`
 
 After each VM boots, set the hostname and add `/etc/hosts` entries on all three hosts so forward/reverse name resolution works for Oracle Net, the broker, and the Observer.
 
@@ -245,11 +245,11 @@ ping -c 1 oracdb1 && ping -c 1 oracdb2 && ping -c 1 oradg-obs
 ----
 
 [[os-baseline-db-hosts-only]]
-=== OS baseline (DB hosts only)
+=== Step 4: OS baseline (DB hosts only)
 
 *Prerequisite:* Outbound HTTPS to `yum.oracle.com` (Cloud NAT or internal mirror on private subnets).
 
-Run on `oracdb1` *and* `oracdb2` (Observer setup is covered in <<install-instant-client-on-observer,Install Oracle Instant Client on the Observer host>>).
+Run on `oracdb1` *and* `oracdb2` (Observer setup is covered in <<install-instant-client-on-observer,Step 4: Install Oracle Instant Client on the Observer host>>).
 
 [source,bash]
 ----
@@ -287,9 +287,9 @@ sudo reboot
 ----
 
 [[capture-iscsi-initiator-iqn]]
-=== Capture the iSCSI initiator name (IQN)
+=== Step 5: Capture the iSCSI initiator name (IQN)
 
-After the reboot, capture the IQN of each DB host. You will use these IQNs to create the GCNV host groups in <<create-host-groups,Create the host groups>>.
+After the reboot, capture the IQN of each DB host. You will use these IQNs to create the GCNV host groups in <<create-host-groups,Step 2: Create the host groups>>.
 
 [source,bash]
 ----
@@ -302,10 +302,10 @@ Repeat on `oracdb2`. Record each host’s IQN — one host group per host so a s
 *Cloned VMs:* If both hosts share the same IQN, regenerate on `oracdb2` (stop `iscsi`, clear `/var/lib/iscsi/nodes/*`, new `InitiatorName` in `/etc/iscsi/initiatorname.iscsi`, restart `iscsid`).
 
 [[provision-gcnv-iscsi-volumes]]
-== Step 2: Provision GCNV iSCSI volumes
+== Provision GCNV iSCSI volumes
 
 [[create-flex-unified-pool-per-zone]]
-=== Create one GCNV Flex Unified iSCSI storage pool per database zone
+=== Step 1: Create one GCNV Flex Unified iSCSI storage pool per database zone
 
 One *Flex Unified* pool per database zone (see <<architecture,Architecture>>).
 
@@ -326,12 +326,12 @@ Create *two pools* for this HA design (repeat the steps for each zone):
 * *PSA:* connected to `oracle-vpc`
 * *Capacity:* sized for workload; use *custom provisioned* throughput/IOPS when redo, backup, or restore exceeds default headroom (up to *5120 MiB/s* or *160K IOPS* per pool, per product limits)
 
-Wait for `READY`. Scale pool sizes to your database footprint (the sizes in <<create-gcnv-iscsi-volumes,Create the GCNV iSCSI volumes>> are examples).
+Wait for `READY`. Scale pool sizes to your database footprint (the sizes in <<create-gcnv-iscsi-volumes,Step 3: Create the GCNV iSCSI volumes>> are examples).
 
-*Default-mode (this guide):* Flex Unified pools use *Default-mode* (`--mode=default`). Create pools and iSCSI volumes with Cloud Console or `gcloud netapp`. *Volume replication*, snapshots, and clones use Google Cloud APIs (<<gcnv-standby-initialization,GCNV standby initialization>>).
+*Default-mode (this guide):* Flex Unified pools use *Default-mode* (`--mode=default`). Create pools and iSCSI volumes with Cloud Console or `gcloud netapp`. *Volume replication*, snapshots, and clones use Google Cloud APIs (<<gcnv-standby-initialization,Step 3: GCNV standby initialization>>).
 
 [[create-host-groups]]
-=== Create the host groups (one per DB host)
+=== Step 2: Create the host groups (one per DB host)
 
 Create *one host group per database host* so each VM only sees its own volumes — primary and standby must not share GCNV iSCSI volumes. The Observer has no GCNV resources. In the Cloud Console:
 
@@ -342,7 +342,7 @@ Create *one host group per database host* so each VM only sees its own volumes �
 . Repeat for `oracdb2-hg` with `oracdb2`’s IQN
 
 [[create-gcnv-iscsi-volumes]]
-=== Create the GCNV iSCSI volumes (per database host)
+=== Step 3: Create the GCNV iSCSI volumes (per database host)
 
 Each database host gets *five GCNV iSCSI volumes* in *its zone’s pool* — one for `/u01` and four ASM backing devices:
 
@@ -358,7 +358,7 @@ Each database host gets *five GCNV iSCSI volumes* in *its zone’s pool* — one
 
 Volume names: letters, numbers, underscores only (no hyphens).
 
-*Minimal layout (validation only):* Two LUNs per host (`*_data`, `*_reco`) with `arch_01p1`→`+RECO` and `arch_01p2`→`+FRA` is acceptable for lab; *production uses five volumes per <<create-gcnv-iscsi-volumes,Create the GCNV iSCSI volumes>>.*
+*Minimal layout (validation only):* Two LUNs per host (`*_data`, `*_reco`) with `arch_01p1`→`+RECO` and `arch_01p2`→`+FRA` is acceptable for lab; *production uses five volumes per <<create-gcnv-iscsi-volumes,Step 3: Create the GCNV iSCSI volumes>>.*
 
 *On* `oracdb1`*:* create all five volumes in `oracle-pool-a`, host group `oracdb1-hg`.
 
@@ -367,14 +367,14 @@ Volume names: letters, numbers, underscores only (no hyphens).
 *NetApp Volumes → Volumes → Create* — iSCSI, correct pool and host group, Linux. Record per pool:
 
 * *iSCSI portal IPs* → `<ISCSI_PORTAL_1>`, `<ISCSI_PORTAL_2>` (primary pool portals on `oracdb1`; standby pool portals on `oracdb2` — they may differ)
-* *Volume serial* from the Cloud Console — use with host-discovered WWID in <<configure-iscsi-and-multipath,Configure Linux iSCSI and multipath for GCNV iSCSI volumes>>
+* *Volume serial* from the Cloud Console — use with host-discovered WWID in <<configure-iscsi-and-multipath,Step 4: Configure Linux iSCSI and multipath for GCNV iSCSI volumes>>
 
 [[configure-iscsi-and-multipath]]
-=== Configure Linux iSCSI and multipath for GCNV iSCSI volumes
+=== Step 4: Configure Linux iSCSI and multipath for GCNV iSCSI volumes
 
 Run on `oracdb1` using that host’s pool portals, then on `oracdb2` using the standby pool portals.
 
-If host *egress* is restricted, allow *TCP/3260* from each database VM to its GCNV iSCSI portal IPs (in addition to inter-VM TCP/1521 from <<vpc-firewall-allow-1521,VPC firewall — allowlist TCP/1521 across all three zones>>).
+If host *egress* is restricted, allow *TCP/3260* from each database VM to its GCNV iSCSI portal IPs (in addition to inter-VM TCP/1521 from <<vpc-firewall-allow-1521,Step 2: VPC firewall — allowlist TCP/1521 across all three zones>>).
 
 . Discover targets, log in, and *persist* node startup:
 
@@ -454,7 +454,7 @@ ls -l /dev/mapper/ora_$(hostname -s)_*
 ----
 
 [[partition-asm-backing-devices]]
-=== Partition ASM backing devices on GCNV iSCSI volumes
+=== Step 5: Partition ASM backing devices on GCNV iSCSI volumes
 
 Partition the four *ASM backing devices* (not `u01`) with one GPT partition each. ASM consumes the raw partition. Run on each host:
 
@@ -488,7 +488,7 @@ ls -lL /dev/mapper/ora_${HOST}_*p1    # grid:asmadmin 0660
 ----
 
 [[format-and-mount-u01]]
-=== Format and mount `/u01` on the local GCNV iSCSI volume
+=== Step 6: Format and mount `/u01` on the local GCNV iSCSI volume
 
 The `ora_<host>_u01` *GCNV iSCSI volume* holds Grid home, Oracle home, and staging. Format XFS on the multipath device (not partitioned for ASM). Use *UUID* in `/etc/fstab` (not a shared filesystem label):
 
@@ -512,15 +512,15 @@ sudo chown -R oracle:oinstall /u01/app/oracle /u01/stage
 sudo chmod -R 775 /u01/app /u01/stage
 ----
 
-Reboot once and confirm `/u01` mounts before <<install-oracle-software,Step 3: Install Oracle software>>.
+Reboot once and confirm `/u01` mounts before <<install-oracle-software,Install Oracle software>>.
 
 [[install-oracle-software]]
-== Step 3: Install Oracle software
+== Install Oracle software
 
 Run *Grid* and then *database home* installation on each DB host before <<create-primary-database,Create the primary database>>.
 
 [[install-grid-infrastructure]]
-=== Install Oracle Grid Infrastructure (Oracle Restart) on each DB host
+=== Step 1: Install Oracle Grid Infrastructure (Oracle Restart) on each DB host
 
 Run all of this section on `oracdb1`, then repeat on `oracdb2`. Both hosts get their own Grid home, ASM instance, and disk groups — Data Guard replicates over Oracle Net, not over storage.
 
@@ -665,9 +665,9 @@ Expected *ONLINE:* `ora.DATA.dg`, `ora.RECO.dg`, `ora.FRA.dg`, `ora.LISTENER.lsn
 *Repeat this section on* `oracdb2`*.* The `HOST=$(hostname -s)` pattern in <<gridsetup-response-file,Single-shot `gridSetup` — full HA_CONFIG response file>> and <<create-reco-and-fra-disk-groups,Create `+RECO` and `+FRA` disk groups>> selects that host’s GCNV iSCSI devices automatically. Use the same ASM disk group names — Data Guard replicates over Oracle Net, not storage.
 
 [[install-oracle-db-home]]
-=== Install Oracle Database 26ai on each DB host
+=== Step 2: Install Oracle Database 26ai on each DB host
 
-Run this section on `oracdb1`, then on `oracdb2`. The standby database is created in <<create-standby-database,Step 4: Create the standby database>>.
+Run this section on `oracdb1`, then on `oracdb2`. The standby database is created in <<create-standby-database,Create the standby database>>.
 
 [[unzip-db-home-and-ru-patch]]
 ==== Unzip the DB home and the RU patch
@@ -739,7 +739,7 @@ export TNS_ADMIN=$ORACLE_HOME/network/admin
 EOF
 ----
 
-(Use `ORACLE_SID=orcls` on the standby host. The standby database is created in <<create-standby-database,Step 4: Create the standby database>>.)
+(Use `ORACLE_SID=orcls` on the standby host. The standby database is created in <<create-standby-database,Create the standby database>>.)
 
 [[create-primary-database]]
 == Create the primary database (`oracdb1` only)
@@ -769,7 +769,7 @@ dbca -silent -createDatabase \
 '
 ----
 
-Point archivelogs at `+RECO` (the standby uses matching settings in <<standby-init-ora-and-nomount,Standby: minimal init.ora pfile, password file, NOMOUNT>>):
+Point archivelogs at `+RECO` (the standby uses matching settings in <<standby-init-ora-and-nomount,Step 2: Standby: minimal init.ora pfile, password file, NOMOUNT>>):
 
 [source,bash]
 ----
@@ -820,12 +820,12 @@ srvctl status service -db orcl -service orclapp
 After Broker enable, `orclapp` runs only on *PRIMARY*. Multiplex control files across ASM disk groups; size memory to workload (this guide uses 4 GB / 3 GB SGA as examples).
 
 [[create-standby-database]]
-== Step 4: Create the standby database
+== Create the standby database
 
-Build `orcls` on `oracdb2` (dedicated volumes on `oracle-pool-b`). Complete the initial primary and standby setup, then <<gcnv-standby-initialization,GCNV standby initialization>>, the standby completion tasks, and <<broker-fsfo-observer,Step 5: Configure Data Guard Broker, FSFO, and Observer>>. Target: primary *READ WRITE*; standby *PHYSICAL STANDBY*, *MOUNTED*, MRP applying.
+Build `orcls` on `oracdb2` (dedicated volumes on `oracle-pool-b`). Complete the initial primary and standby setup, then <<gcnv-standby-initialization,Step 3: GCNV standby initialization>>, the standby completion tasks, and <<broker-fsfo-observer,Configure Data Guard Broker, FSFO, and Observer>>. Target: primary *READ WRITE*; standby *PHYSICAL STANDBY*, *MOUNTED*, MRP applying.
 
 [[primary-sys-password-and-dg-params]]
-=== Primary: SYS password, password file, and DG parameters
+=== Step 1: Primary: SYS password, password file, and DG parameters
 
 On `oracdb1` as `oracle`:
 
@@ -868,7 +868,7 @@ $GRID_HOME/bin/lsnrctl status
 `lsnrctl status` must list `<SID>` and `<SID>_DGMGRL`.
 
 [[standby-init-ora-and-nomount]]
-=== Standby: minimal init.ora pfile, password file, NOMOUNT
+=== Step 2: Standby: minimal init.ora pfile, password file, NOMOUNT
 
 Copy the primary password file to the standby (IAP `gcloud compute scp`):
 
@@ -941,14 +941,14 @@ SQL
 '
 ----
 
-NOMOUNT with no datafiles until <<gcnv-standby-initialization,GCNV standby initialization>>.
+NOMOUNT with no datafiles until <<gcnv-standby-initialization,Step 3: GCNV standby initialization>>.
 
 // TODO: A dedicated listener subsection/anchor may need to be restored later so the `orcls_DGMGRL` listener guidance has a precise xref target.
 
 [[gcnv-standby-initialization]]
-=== GCNV standby initialization
+=== Step 3: GCNV standby initialization
 
-Populate standby ASM volumes in *`oracle-pool-b`* using *Google Cloud NetApp Volumes replication* (SnapMirror-based, *Default-mode*), *volume snapshots*, or *clone*, then run <<oracle-finalize,Oracle finalize>>. iSCSI and ASM are the same as <<provision-gcnv-iscsi-volumes,Step 2: Provision GCNV iSCSI volumes>>.
+Populate standby ASM volumes in *`oracle-pool-b`* using *Google Cloud NetApp Volumes replication* (SnapMirror-based, *Default-mode*), *volume snapshots*, or *clone*, then run <<oracle-finalize,Oracle finalize>>. iSCSI and ASM are the same as <<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>.
 
 [cols="1,2",options="header"]
 |===
@@ -961,12 +961,12 @@ Populate standby ASM volumes in *`oracle-pool-b`* using *Google Cloud NetApp Vol
 [cols="1,4",options="header"]
 |===
 | Step | Action
-| 1 | Primary archivelog + force logging (<<primary-sys-password-and-dg-params,Primary: SYS password, password file, and DG parameters>>)
+| 1 | Primary archivelog + force logging (<<primary-sys-password-and-dg-params,Step 1: Primary: SYS password, password file, and DG parameters>>)
 | 2 | Quiesce: `BEGIN BACKUP`, record SCN, standby controlfile
 | 3 | Volume replication (<<create-volume-replications,Create volume replications>> and <<cutover-quiesce-stop-repl-attach,Cutover — quiesce, stop replication, attach standby LUNs>>) or snapshot (<<snapshot-seed,Alternative — snapshot seed>>)
-| 4 | On `oracdb2`: iSCSI, multipath, ASM mount (<<configure-iscsi-and-multipath,Configure Linux iSCSI and multipath for GCNV iSCSI volumes>>, <<partition-asm-backing-devices,Partition ASM backing devices on GCNV iSCSI volumes>>, and <<format-and-mount-u01,Format and mount `/u01` on the local GCNV iSCSI volume>>)
+| 4 | On `oracdb2`: iSCSI, multipath, ASM mount (<<configure-iscsi-and-multipath,Step 4: Configure Linux iSCSI and multipath for GCNV iSCSI volumes>>, <<partition-asm-backing-devices,Step 5: Partition ASM backing devices on GCNV iSCSI volumes>>, and <<format-and-mount-u01,Step 6: Format and mount `/u01` on the local GCNV iSCSI volume>>)
 | 5 | Oracle finalize — recover to SCN, *MOUNTED* (<<oracle-finalize,Oracle finalize>>)
-| 6 | SRL rebuild (<<standby-redo-log-files,Standby redo log files>>), MRP, broker (<<broker-fsfo-observer,Step 5: Configure Data Guard Broker, FSFO, and Observer>>)
+| 6 | SRL rebuild (<<standby-redo-log-files,Step 4: Standby redo log files>>), MRP, broker (<<broker-fsfo-observer,Configure Data Guard Broker, FSFO, and Observer>>)
 |===
 
 RMAN active duplicate remains valid for small labs. *GCNV replication is preferred* for production standby seeding.
@@ -1088,10 +1088,10 @@ STARTUP MOUNT;
 ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
 ----
 
-After convert, *rebuild standby redo logs* (replicated controlfile still has `+DATA/ORCL/…` SRL paths — causes `ORA-19527` / `ORA-16086` on primary). See <<standby-redo-log-files,Standby redo log files>>.
+After convert, *rebuild standby redo logs* (replicated controlfile still has `+DATA/ORCL/…` SRL paths — causes `ORA-19527` / `ORA-16086` on primary). See <<standby-redo-log-files,Step 4: Standby redo log files>>.
 
 [[standby-redo-log-files]]
-=== Standby redo log files
+=== Step 4: Standby redo log files
 
 Required on *both* hosts for FSFO. Size ≥ largest primary online redo; count = (online groups per thread) + 1.
 
@@ -1121,7 +1121,7 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT
 ----
 
 [[enable-flashback-on-standby]]
-=== Enable flashback on the standby and start managed recovery
+=== Step 5: Enable flashback on the standby and start managed recovery
 
 Enable flashback *before* starting managed recovery (flashback cannot be enabled while MRP is active).
 
@@ -1144,9 +1144,9 @@ SQL'
 `USING CURRENT LOGFILE` enables real-time apply (redo applied as it lands in SRLs).
 
 [[enable-redo-shipping-on-primary]]
-=== Enable redo shipping on the primary
+=== Step 6: Enable redo shipping on the primary
 
-`LOG_ARCHIVE_DEST_2` was deliberately set to `DEFER` in <<standby-init-ora-and-nomount,Standby: minimal init.ora pfile, password file, NOMOUNT>> so you didn’t see continuous `ORA-12154` errors while the standby was being created. Now switch it to `ENABLE` and force a log switch so the first round of redo ships immediately:
+`LOG_ARCHIVE_DEST_2` was deliberately set to `DEFER` in <<standby-init-ora-and-nomount,Step 2: Standby: minimal init.ora pfile, password file, NOMOUNT>> so you didn’t see continuous `ORA-12154` errors while the standby was being created. Now switch it to `ENABLE` and force a log switch so the first round of redo ships immediately:
 
 [source,bash]
 ----
@@ -1164,10 +1164,10 @@ SQL
 
 Expected: `dest_id=2`, `STATUS=VALID`, `ERROR` null.
 
-If `dest_2` shows `ORA-12154`, bounce the primary. After <<enable-broker-on-both-databases,Enable the broker on both databases>>, manage transport via DGMGRL.
+If `dest_2` shows `ORA-12154`, bounce the primary. After <<enable-broker-on-both-databases,Step 1: Enable the broker on both databases>>, manage transport via DGMGRL.
 
 [[verify-target-dg-state]]
-=== Verify the target Data Guard state
+=== Step 7: Verify the target Data Guard state
 
 On the *primary* (`oracdb1`):
 
@@ -1218,7 +1218,7 @@ SQL'
 ----
 
 [[register-standby-with-oracle-restart]]
-=== Register the standby database with Oracle Restart
+=== Step 8: Register the standby database with Oracle Restart
 
 Register the standby with Restart after GCNV seeding so reboots recover ASM, MOUNT, and apply.
 
@@ -1299,12 +1299,12 @@ srvctl status database -db orcls
 ----
 
 [[broker-fsfo-observer]]
-== Step 5: Configure Data Guard Broker, FSFO, and Observer
+== Configure Data Guard Broker, FSFO, and Observer
 
 After `ENABLE CONFIGURATION`, manage transport and roles through *DGMGRL* (not ad-hoc `LOG_ARCHIVE_DEST_*` SQL).
 
 [[enable-broker-on-both-databases]]
-=== Enable the broker on both databases
+=== Step 1: Enable the broker on both databases
 
 On the *primary* and *standby* database hosts:
 
@@ -1318,7 +1318,7 @@ EXIT
 SQL'
 ----
 
-On the *primary database host*, connect with OS authentication (the Observer wallet from <<start-observer-systemd,Start the Observer as a systemd unit>> is not required on DB hosts):
+On the *primary database host*, connect with OS authentication (the Observer wallet from <<start-observer-systemd,Step 5: Start the Observer as a systemd unit>> is not required on DB hosts):
 
 [source,bash]
 ----
@@ -1345,7 +1345,7 @@ DGMGRL> SHOW CONFIGURATION;
 -- Expect: Configuration Status: SUCCESS, both members SUCCESS.
 ----
 
-Run `VALIDATE DATABASE` immediately — it surfaces orphaned datafiles, missing SRLs, redo apply not running, and other common gotchas before you attempt a switchover. Any `WARNING` or non-NULL `ERROR` must be fixed before <<configure-fsfo-properties-and-enable,Configure FSFO properties and enable>>.
+Run `VALIDATE DATABASE` immediately — it surfaces orphaned datafiles, missing SRLs, redo apply not running, and other common gotchas before you attempt a switchover. Any `WARNING` or non-NULL `ERROR` must be fixed before <<configure-fsfo-properties-and-enable,Step 3: Configure FSFO properties and enable>>.
 
 [source]
 ----
@@ -1354,7 +1354,7 @@ DGMGRL> SHOW CONFIGURATION VERBOSE;
 ----
 
 [[confirm-flashback-required-for-fsfo]]
-=== Confirm flashback (required for FSFO auto-reinstate)
+=== Step 2: Confirm flashback (required for FSFO auto-reinstate)
 
 Confirm `flashback_on` on *both* hosts before enabling FSFO:
 
@@ -1381,7 +1381,7 @@ SQL'
 ----
 
 [[configure-fsfo-properties-and-enable]]
-=== Configure FSFO properties and enable
+=== Step 3: Configure FSFO properties and enable
 
 [source]
 ----
@@ -1402,10 +1402,10 @@ DGMGRL> ENABLE FAST_START FAILOVER;
 DGMGRL> SHOW FAST_START FAILOVER;
 ----
 
-Expected: Threshold 30 seconds, Target `orcls`, Observer none until <<start-observer-systemd,Start the Observer as a systemd unit>>.
+Expected: Threshold 30 seconds, Target `orcls`, Observer none until <<start-observer-systemd,Step 5: Start the Observer as a systemd unit>>.
 
 [[install-instant-client-on-observer]]
-=== Install Oracle Instant Client on the Observer host
+=== Step 4: Install Oracle Instant Client on the Observer host
 
 [source,bash]
 ----
@@ -1444,7 +1444,7 @@ sudo chown oracle:oracle /etc/oracle/network/admin/tnsnames.ora
 ----
 
 [[start-observer-systemd]]
-=== Start the Observer as a systemd unit
+=== Step 5: Start the Observer as a systemd unit
 
 Credentials live in an auto-login wallet — never on a `dgmgrl` command line (visible to `ps` / `journalctl`). Connect with `/@<tns_alias>` on the Observer only.
 
@@ -1561,7 +1561,7 @@ DGMGRL> SHOW CONFIGURATION;       -- Configuration Status: SUCCESS, FSFO: ENABLE
 ----
 
 [[test-fsfo-switchover-and-failover]]
-=== Test FSFO (switchover and failover)
+=== Step 6: Test FSFO (switchover and failover)
 
 *Planned switchover:*
 
