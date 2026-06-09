@@ -79,7 +79,7 @@ In this procedure, you complete the following tasks:
 [[deployment-options]]
 == Deployment options
 
-This section compares practical HA/DR deployment patterns for Oracle Database on Google Compute Engine (GCE) with Google Cloud NetApp Volumes (GCNV) iSCSI block storage. It also highlights how GCNV replication accelerates standby initialization. Use this matrix to choose a tier before you start. This guide implements Prod HA (Data Guard + FSFO) — the rightmost column.
+This section compares practical HA/DR deployment patterns for Oracle Database on Google Compute Engine (GCE) with Google Cloud NetApp Volumes (GCNV) iSCSI block storage. It also highlights how GCNV replication accelerates standby initialization. Use this matrix to choose a tier before you start. This guide implements Prod HA (Data Guard + FSFO) — the bottom row.
 
 [cols="1,1,1,1,1,1,1,1",options="header"]
 |===
