@@ -1578,7 +1578,8 @@ Credentials live in an auto-login wallet — never on a `dgmgrl` command line (v
 
 [NOTE]
 ====
-Prefer a dedicated Data Guard administrative account (for example `SYSDG`) in the wallet instead of `SYS`.
+* *Use a dedicated account:* Store credentials for a dedicated Data Guard administrative account (for example, `SYSDG`) in the wallet rather than `SYS`.
+* *Auto-login wallet required:* The Observer systemd service requires an auto-login wallet (`cwallet.sso`). If `cwallet.sso` is missing after running `mkstore`, use `orapki` from the Instant Client *tools* package or a database home to create the auto-login wallet, then re-add the stored credentials.
 ====
 
 . Create the wallet on the Observer with credentials for both members:
@@ -1619,11 +1620,6 @@ BASH
 sudo -iu oracle dgmgrl /@orcl  'SHOW CONFIGURATION;'
 sudo -iu oracle dgmgrl /@orcls 'SHOW CONFIGURATION;'
 ----
-
-[NOTE]
-====
-The Observer systemd service requires an *auto-login* wallet (`cwallet.sso`). If it is missing after `mkstore`, create an auto-login wallet with the Oracle wallet tooling available in your installed Instant Client *tools* package or a database home, then recreate or verify the stored credentials. Example (when `orapki` is available):
-====
 
 [source,bash]
 ----
