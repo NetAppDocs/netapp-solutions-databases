@@ -48,8 +48,6 @@ timedatectl
 ----
 
 
-*Oracle media:* <<appendix-a-oracle-media-and-patches,Appendix A>>. *Security:* <<appendix-b-security-posture,Appendix B>>.
-
 == Example configuration used in this guide
 
 This guide uses the following deployment assumptions:
@@ -198,7 +196,7 @@ GCNV replication runs a baseline copy, then incremental block updates per policy
 |===
 
 .Machine types
-Sample `n4-highmem-8` in this guide; OLTP workloads typically use `c4-standard-*` (<<appendix-c-machine-type-guidance,Appendix C>>).
+Sample `n4-highmem-8` in this guide; OLTP workloads typically use `c4-standard-*`.
 
 [[provision-compute-engine]]
 == Provision Compute Engine
@@ -314,7 +312,7 @@ chronyc tracking
 
 [NOTE]
 ====
-*Security posture (OL 10):* The commands below set SELinux to permissive and disable `firewalld`. This is a minimal lab posture only. See <<appendix-b-security-posture,Appendix B>> for hardened SELinux and firewall configuration.
+*Security posture (OL 10):* The commands below set SELinux to permissive and disable `firewalld`. This is a minimal lab posture only. For hardened SELinux and firewall configuration, consult your organization's security baseline.
 ====
 
 [source,bash]
@@ -584,7 +582,7 @@ Run all of this section on `oracdb1`, then repeat on `oracdb2`. Both hosts get t
 [source,bash]
 ----
 sudo chown oracle:oinstall /u01/stage && sudo chmod 775 /u01/stage
-# Upload GoldImages, RU, OPatch to /u01/stage — see <<appendix-a-oracle-media-and-patches,Appendix A>> for filenames.
+# Upload GoldImages, RU, OPatch to /u01/stage.
 ----
 
 [[unzip-grid-home]]
@@ -606,7 +604,7 @@ sudo chown -R grid:oinstall /u01/app/26ai/grid
 [[gridsetup-response-file]]
 ==== Single-shot `gridSetup` — full HA_CONFIG response file
 
-Build `/tmp/grid.rsp` on each host (`responseFileVersion` is mandatory; substitute `HOST` and strong passwords per <<appendix-b-security-posture,Appendix B>>):
+Build `/tmp/grid.rsp` on each host (`responseFileVersion` is mandatory; substitute `HOST` and use strong passwords):
 
 [source,bash]
 ----
@@ -735,7 +733,7 @@ unzip -q /u01/stage/p6880880_<base>_Linux-x86-64.zip                    # latest
 unzip -q /u01/stage/p<RU_PATCH>_<base>_Linux-x86-64.zip -d /u01/stage   # latest 26ai RU
 ----
 
-See <<appendix-a-oracle-media-and-patches,Appendix A>> for RU directory layout and `-applyRU` path.
+See the Oracle documentation for RU directory layout and `-applyRU` path.
 
 [[silent-db-home-install]]
 ==== Silent software-only install with the RU applied
@@ -767,7 +765,7 @@ cd /u01/app/oracle/product/26ai/db_1
 '
 ----
 
-On OL 8/9, omit `-applyOneOffs` from the `runInstaller` line (<<appendix-a-oracle-media-and-patches,Appendix A>>).
+On OL 8/9, omit `-applyOneOffs` from the `runInstaller` line.
 
 As `root`, run the post-install script:
 
