@@ -12,7 +12,7 @@ summary: "Deploy Oracle Database 26ai high availability on Google Compute Engine
 This guide shows how to provision compute instances and storage, install Oracle Grid Infrastructure and Oracle Database, initialize a standby database, and configure Oracle Data Guard with Fast-Start Failover.
 
 [[prerequisites]]
-== Prerequisites
+== Before you begin
 
 Before you begin, ensure that you have the following:
 
@@ -50,7 +50,7 @@ timedatectl
 
 *Oracle media:* <<appendix-a-oracle-media-and-patches,Appendix A>>. *Security:* <<appendix-b-security-posture,Appendix B>>.
 
-== Before you begin
+== Example configuration used in this guide
 
 This guide uses the following deployment assumptions:
 
