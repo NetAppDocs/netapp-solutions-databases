@@ -48,6 +48,7 @@ timedatectl
 ----
 
 
+[[example-configuration]]
 == Example configuration used in this guide
 
 This guide uses the following deployment assumptions:
@@ -63,6 +64,7 @@ This guide uses the following deployment assumptions:
 
 Replace all example values in commands with values from your environment, including host names, IP addresses, zones, project names, portal IPs, passwords, and Oracle media file names.
 
+[[objectives]]
 == Objectives
 
 In this procedure, you complete the following tasks:
@@ -118,11 +120,83 @@ This section compares practical HA/DR deployment patterns for Oracle Database on
 
 *HA / DR / Automation:* Yes = meets tier goal; No = not in scope; Partial = storage-level or manual steps only.
 
-*To use only part of this guide, stop at the section that matches your tier:*
+== Sections to read for your tier
 
-* *Dev/Test or Prod Basic (Restart):* Follow <<prerequisites,Prerequisites>> through <<create-primary-database,Create the primary database>>.
-* *Prod HA (no Data Guard):* Complete the above, then add <<gcnv-standby-initialization,Step 3: GCNV standby initialization>> for storage-layer seeding.
-* *Prod HA (Data Guard + FSFO):* Follow the full guide.
+Depending on the level of HA you want to achieve, read the sections in the matrix below. For example, if you want Prod HA with Data Guard and FSFO, read all sections. If you want Dev/Test or Prod Basic with Restart, read only the first column.
+
+[cols="1a,1a,1a",options="header"]
+|===
+| Dev/Test or Prod Basic (Restart) | Prod HA (no Data Guard) | Prod HA (Data Guard + FSFO)
+
+|
+<<prerequisites,Before you begin>>
+
+<<example-configuration,Example configuration used in this guide>>
+
+<<objectives,Objectives>>
+
+<<deployment-options,Deployment options>>
+
+<<overview,Overview>>
+
+<<architecture,Architecture>>
+
+<<provision-compute-engine,Provision Compute Engine>>
+
+<<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>
+
+<<install-oracle-software,Install Oracle software>>
+
+<<create-primary-database,Create the primary database>>
+
+|
+<<prerequisites,Before you begin>>
+
+<<example-configuration,Example configuration used in this guide>>
+
+<<objectives,Objectives>>
+
+<<deployment-options,Deployment options>>
+
+<<overview,Overview>>
+
+<<architecture,Architecture>>
+
+<<provision-compute-engine,Provision Compute Engine>>
+
+<<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>
+
+<<install-oracle-software,Install Oracle software>>
+
+<<create-primary-database,Create the primary database>>
+
+<<create-standby-database,Create the standby database>> (through <<gcnv-standby-initialization,Step 3: GCNV standby initialization>> only)
+
+|
+<<prerequisites,Before you begin>>
+
+<<example-configuration,Example configuration used in this guide>>
+
+<<objectives,Objectives>>
+
+<<deployment-options,Deployment options>>
+
+<<overview,Overview>>
+
+<<architecture,Architecture>>
+
+<<provision-compute-engine,Provision Compute Engine>>
+
+<<provision-gcnv-iscsi-volumes,Provision GCNV iSCSI volumes>>
+
+<<install-oracle-software,Install Oracle software>>
+
+<<create-primary-database,Create the primary database>>
+
+<<create-standby-database,Create the standby database>>
+
+<<broker-fsfo-observer,Configure Data Guard Broker, FSFO, and Observer>>
+|===
 
 [[overview]]
 == Overview
