@@ -105,6 +105,9 @@ sidebar:
             - title: "Overview: Oracle database with Google Cloud NetApp Volumes"
               pdf-filename: "Overview: Oracle Database with Google Cloud NetApp Volumes"
               url: /oracle/gcp-oracle-gcnv-overview.html
+            - title: "Deploy Oracle Database 26ai high availability with Google Cloud NetApp Volumes"
+              pdf-filename: "Deploy Oracle Database 26ai High Availability with Google Cloud NetApp Volumes"
+              url: /oracle/gcnv-oracle-deployment.html
 
         - title: "On-premises and hybrid cloud"
           entries:
