@@ -1,0 +1,41 @@
+---
+sidebar: sidebar
+permalink: oracle/gcnv-oracle-access-and-apis.html
+keywords: oracle database, google cloud netapp volumes, gcnv, access, api, permissions, psa, iap, networking
+summary: "Review required access, API enablement, networking prerequisites, and time synchronization before deploying Oracle Database 26ai high availability on Google Cloud NetApp Volumes."
+---
+= Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes
+:icons: font
+:imagesdir: ../media/
+
+[.lead]
+Confirm required access, API enablement, networking prerequisites, and time synchronization before provisioning Oracle Database 26ai high availability on Google Cloud NetApp Volumes.
+
+== Access and APIs
+
+Use this checklist to verify permissions and platform readiness before starting host and storage provisioning.
+
+* [ ] GCP roles are assigned for Compute Engine VMs, VPC firewall (or Firewall Policies), NetApp Volumes, and PSA networking (including Shared VPC host-project sign-off, if applicable).
+* [ ] *NetApp Volumes API* is enabled (Cloud Console -> APIs & Services, or command below).
+* [ ] VPC and subnet are configured with a *PSA range* for GCNV: https://cloud.google.com/netapp/volumes/docs/get-started/configure-access/networking[Configure networking for NetApp Volumes].
+* [ ] Time is synchronized on all three VMs (commands below).
++
+[source,bash]
+----
+gcloud services enable netapp.googleapis.com
+chronyc tracking
+timedatectl
+----
+
+[cols="1,2",options="header"]
+|===
+| Task | Required access
+| Create Compute Engine VMs | Compute Instance Admin (or equivalent)
+| Firewall / Firewall Policies | Network Admin or delegated policy admin
+| Create GCNV pools and volumes | NetApp Volumes Admin
+| Configure PSA | Network admin in host project
+| SSH via IAP | IAP-secured Tunnel User + OS Login (if used)
+|===
+
+== What's next?
+Continue with xref:gcnv-oracle-provision-compute.adoc[Provision Google Compute Engine instances for Oracle Database 26ai].

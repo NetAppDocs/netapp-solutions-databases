@@ -1,0 +1,138 @@
+---
+sidebar: sidebar
+permalink: oracle/gcnv-oracle-deployment-options.html
+keywords: oracle database, google cloud netapp volumes, gcnv, deployment options, high availability, disaster recovery, data guard, fsfo
+summary: "Deployment options for Oracle Database 26ai on Google Compute Engine with Google Cloud NetApp Volumes, from dev/test to production high availability."
+---
+= Learn about Oracle Database 26ai deployment configuration and options on Google Cloud NetApp Volumes
+:icons: font
+:imagesdir: ../media/
+
+[.lead]
+Compare practical deployment tiers for Oracle Database 26ai on Google Compute Engine with Google Cloud NetApp Volumes iSCSI storage, from lower-cost dev/test patterns to production high availability with Data Guard and Fast-Start Failover.
+
+[[deployment-requirements]]
+== Deployment requirements
+
+Ensure that you have the following items in place before provisioning the Oracle Database 26ai high availability solution:
+
+* A Google Cloud project with permissions for Compute Engine, VPC networking, firewall configuration, IAM, and NetApp Volumes
++
+[cols="1,2",options="header"]
+|===
+| Task | Required access
+| Create Compute Engine VMs | Compute Instance Admin (or equivalent)
+| Firewall / Firewall Policies | Network Admin or delegated policy admin
+| Create GCNV pools and volumes | NetApp Volumes Admin
+| Configure PSA | Network admin in host project
+| SSH via IAP | IAP-secured Tunnel User + OS Login (if used)
+|===
+
+* The NetApp Volumes API enabled
+* A VPC and subnet configured for the target region
+* Private Services Access (PSA) configured for Google Cloud NetApp Volumes
+* Oracle Linux 10 for all required virtual machines
+* DNS and hostname resolution is configured for the database hosts and Observer host
+* Oracle installation media and patch files available for Oracle Database 26ai and Grid Infrastructure
+* Familiarity with Oracle Data Guard, Oracle Restart, and iSCSI storage concepts
+* Time synchronization is configured for all virtual machines.
++
+You can use the following commands:
++
+
+[source,bash]
+----
+gcloud services enable netapp.googleapis.com
+chronyc tracking
+timedatectl
+----
+
+[[example-configuration]]
+== Example deployment configuration
+
+This solution uses the following deployment configuration:
+
+* Three Google Compute Engine virtual machines:
+** `oracdb1` for the primary database
+** `oracdb2` for the standby database
+** `oradg-obs` for the Fast-Start Failover Observer
+* One GCNV Flex Unified storage pool per database zone
+* Five GCNV iSCSI volumes per database host
+* Oracle Data Guard Broker and Fast-Start Failover for automatic failover
+* Dedicated storage per database host; primary and standby hosts do not share iSCSI volumes
+
+Replace all example values in the commands with values from your environment, including host names, IP addresses, zones, project names, portal IPs, passwords, and Oracle media file names.
+
+== Deployment options
+
+The following table compares HA and DR deployment patterns and highlights where automation provides the most operational benefit.
+
+[cols="1,1,1,1,1,1,1",options="header"]
+|===
+| Environment | Requirement | Recommended architecture | HA | DR | Automation | Key benefit
+
+| Dev/Test
+| Lowest cost
+| Single instance
+| No
+| Yes
+| No
+| Snapshot clone
+
+| Prod Basic (Restart)
+| Reduce downtime from crashes
+| + Oracle Restart
+| No
+| Yes
+| Local only
+| Auto-restart
+
+| Prod HA (no DG)
+| Manual DR acceptable
+| + Snapshots / RMAN
+| Partial
+| Yes
+| Partial
+| GCNV clone recovery
+
+| Prod HA (DG + FSFO)
+| True HA (no DBA)
+| Data Guard + FSFO
+| Yes
+| Yes
+| Full
+| True HA + fast failover
+|===
+
+.HA/DR/Automation
+* Yes = meets tier goal
+* No = not in scope
+* Partial = storage-level or manual steps only
+
+[[deployment-tasks-by-ha-tier]]
+== Deployment tasks by HA tier
+
+All HA tiers follow this base deployment task sequence, regardless of the HA level you choose:
+
+. xref:gcnv-oracle-provision-compute.adoc[Provision Google Compute Engine instances for Oracle Database 26ai]
+. xref:gcnv-oracle-provision-storage.adoc[Provision GCNV iSCSI storage for Oracle Database 26ai]
+. xref:gcnv-oracle-install-software.adoc[Install Oracle Grid Infrastructure and Oracle Database 26ai]
+. xref:gcnv-oracle-primary-database.adoc[Create the primary database]
+
+Add the tier-specific deployment tasks shown below for the Prod HA tiers. 
+
+The Dev/Test and Prod Basic (Restart) tiers do not require additional tasks.
+
+[cols="1,2",options="header"]
+|===
+| Tier | Additional deployment tasks
+
+| Prod HA (no Data Guard)
+| xref:gcnv-oracle-standby-database.adoc[Create the standby database] (through xref:gcnv-oracle-standby-database.adoc#gcnv-standby-initialization[Step 3: GCNV standby initialization] only)
+
+| Prod HA (Data Guard + FSFO)
+| xref:gcnv-oracle-standby-database.adoc[Create the standby database] and xref:gcnv-oracle-data-guard.adoc[Configure Data Guard Broker, FSFO, and Observer]
+|===
+
+== What's next?
+Continue with xref:gcnv-oracle-access-and-apis.adoc[Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes].

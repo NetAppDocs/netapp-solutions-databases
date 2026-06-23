@@ -1,0 +1,182 @@
+---
+sidebar: sidebar
+permalink: oracle/gcnv-oracle-provision-compute.html
+keywords: oracle database, google cloud netapp volumes, gcnv, compute engine, iscsi, virtual machine, oracle linux, iqn
+summary: "Provision the Google Compute Engine virtual machines for Oracle Database 26ai high availability on Google Cloud NetApp Volumes. This procedure covers creating the primary and standby database hosts and the Fast-Start Failover Observer VM, configuring VPC firewall rules for Oracle Net, setting up hostname resolution, preparing the OS, and capturing iSCSI initiator names for storage provisioning."
+---
+= Provision Google Compute Engine instances for Oracle Database 26ai
+:icons: font
+:imagesdir: ../media/
+
+[.lead]
+Provision the Google Compute Engine virtual machines for Oracle Database 26ai high availability on Google Cloud NetApp Volumes. This procedure covers creating the primary and standby database hosts and the Fast-Start Failover Observer VM, configuring VPC firewall rules for Oracle Net, setting up hostname resolution, preparing the OS, and capturing iSCSI initiator names for storage provisioning.
+
+[[provision-compute-engine]]
+== Step 1: Create the VMs
+
+Create three Google Compute Engine VMs in different zones of the same region for zonal failure isolation. Use the Cloud Console, `gcloud`, Terraform, or your standard provisioning workflow.
+
+. Create the three VMs with the specifications shown in the table below. 
++
+Prefer a lower-carbon region for TCO and sustainability where it meets latency and compliance needs (for example `us-west1` vs `us-central1`):
++
+[cols="1,1,1,2,2,2",options="header"]
+|===
+| VM | Zone | Machine type | Boot disk | Network | Purpose
+| `oracdb1` | `us-west1-a` | `n4-highmem-8` (sample) or `c4-standard-*` | OL 10, 50 GB Hyperdisk Balanced (OS only) | `oracle-vpc` / `oracle-subnet`, gVNIC | Primary DB
+| `oracdb2` | `us-west1-b` | Same as primary | OL 10, 50 GB Hyperdisk Balanced (OS only) | Same | Standby DB
+| `oradg-obs` | `us-west1-c` | `e2-medium` | OL 10, 20 GB Hyperdisk Balanced | Same | FSFO Observer (Instant Client only)
+|===
++
+Use Premium network tier when latency or egress (>~200 GiB/month) matters; use Standard for lower TCO in dev/test.
+
+. Enable Shielded VM features and verify the boot disk configuration: 
++
+Enable *Secure Boot*, *vTPM*, and *Integrity Monitoring* on all three VMs. 
++
+The boot disk holds the OS only. `/u01`, Grid/DB homes, staging, and all ASM data use GCNV iSCSI volumes (see xref:gcnv-oracle-provision-storage.adoc#provision-gcnv-iscsi-volumes[Provision GCNV iSCSI volumes]) 
++
+Do *not* attach a separate GCE data disk for `/u01`.
+
+[[vpc-firewall-allow-1521]]
+== Step 2: VPC firewall — allowlist TCP/1521 across all three zones
+
+Create VPC firewall rules to allow TCP/1521 between all three VMs for Oracle Net redo transport and Observer connectivity. Missing rules break Data Guard replication.
+
+. Create a VPC firewall ingress rule to allow TCP/1521 between all three VM internal IPs. Use VPC firewall rules or Firewall Policies with the same allowlist:
++
+*Cloud Console:* VPC network → Firewall → Create rule `allow-oracle-net-dbhosts` on `oracle-vpc` — Ingress, Allow, sources = three `/32` IPs, TCP 1521. Mirror egress if required.
+
+. Validate connectivity from each VM to verify the firewall rules are in place:
++
+[source,bash]
+----
+sudo dnf install -y nmap-ncat
+
+for tgt in <oracdb1-ip> <oracdb2-ip> <oradg-obs-ip>; do
+  nc -zv -w 5 "$tgt" 22
+  nc -zv -w 5 "$tgt" 1521
+done
+----
++
+[cols="1,1,3",options="header"]
+|===
+| Port | Expected | Meaning
+| `22` | Connected | SSH path works
+| `1521` | Connection refused | Firewall open; Grid listener starts during xref:gcnv-oracle-install-software.adoc#install-grid-infrastructure[Step 1: Install Oracle Grid Infrastructure (Oracle Restart) on each DB host]
+| Either | Timeout | Fix firewall or routing
+|===
++
+Run from all three VMs toward each peer IP.
+
+[[hostname-dns-and-etchosts]]
+== Step 3: Hostname, DNS, and `/etc/hosts`
+
+Configure hostname and DNS resolution on all three VMs so forward and reverse name resolution works for Oracle Net, the Data Guard Broker, and the Observer.
+
+. Set the hostname and add `/etc/hosts` entries on all three hosts. Substitute the GCE internal IP addresses (visible in the *Compute Engine → VM instances* list, _Internal IP_ column):
++
+[source,bash]
+----
+# Run on each VM, substituting the local short name (oracdb1, oracdb2, oradg-obs)
+sudo hostnamectl set-hostname <this-host>.example.internal
+
+# Run on every VM (same content)
+sudo tee -a /etc/hosts >/dev/null <<EOF
+
+# Oracle DG peers + FSFO Observer
+<oracdb1-ip>    oracdb1.example.internal    oracdb1
+<oracdb2-ip>    oracdb2.example.internal    oracdb2
+<oradg-obs-ip>  oradg-obs.example.internal  oradg-obs
+EOF
+----
+
+. Validate name resolution from each host:
++
+[source,bash]
+----
+ping -c 1 oracdb1 && ping -c 1 oracdb2 && ping -c 1 oradg-obs
+----
+
+[[os-baseline-db-hosts-only]]
+== Step 4: OS baseline (DB hosts only)
+
+Prepare the OS on `oracdb1` and `oracdb2` for Oracle Database 26ai by installing the preinstall package, creating users and groups, installing iSCSI and multipath packages, and configuring the iSCSI initiator. Observer setup is covered in xref:gcnv-oracle-data-guard.adoc#install-instant-client-on-observer[Step 4: Install Oracle Instant Client on the Observer host].
+
+[NOTE]
+====
+*Prerequisite:* Outbound HTTPS to `yum.oracle.com` (Cloud NAT or internal mirror on private subnets).
+====
+
+. Install the Oracle Database preinstall package, create the `grid` user and ASM groups, and add the `oracle` user to ASM groups:
++
+[source,bash]
+----
+# Oracle 26ai preinstall (package name varies by repo)
+sudo dnf install -y oracle-ai-database-preinstall-26ai \
+  || sudo dnf install -y oracle-database-preinstall-26ai \
+  || sudo dnf install -y oracle-database-preinstall-23ai
+
+# grid user + asm groups
+sudo groupadd -g 54327 asmadmin; sudo groupadd -g 54328 asmdba; sudo groupadd -g 54329 asmoper
+sudo useradd -u 54322 -g oinstall -G dba,oper,asmadmin,asmdba,asmoper grid
+sudo passwd -l grid; sudo passwd -l oracle
+sudo usermod -a -G asmdba,asmadmin oracle
+----
+
+. Install iSCSI, multipath, and JDK packages, then verify THP and time synchronization:
++
+[source,bash]
+----
+sudo dnf install -y iscsi-initiator-utils device-mapper-multipath sg3_utils \
+  java-21-openjdk-headless libxcrypt-compat
+
+# THP and time
+cat /sys/kernel/mm/transparent_hugepage/enabled   # expect [never]
+timedatectl
+chronyc tracking
+----
+
+. Configure SELinux, firewall, and iSCSI initiator settings, then reboot:
++
+[NOTE]
+====
+*Security posture (OL 10):* The commands below set SELinux to permissive and disable `firewalld`. This is a minimal lab posture only. For hardened SELinux and firewall configuration, consult your organization's security baseline.
+====
++
+[source,bash]
+----
+sudo setenforce 0
+sudo sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
+sudo systemctl disable --now firewalld
+
+sudo cp -n /etc/iscsi/iscsid.conf /etc/iscsi/iscsid.conf.orig
+sudo sed -i '/^[#[:space:]]*node\.session\.timeo\.replacement_timeout/d' /etc/iscsi/iscsid.conf
+echo "node.session.timeo.replacement_timeout = 120" | sudo tee -a /etc/iscsi/iscsid.conf
+sudo systemctl enable --now iscsid
+
+sudo reboot
+----
+
+[[capture-iscsi-initiator-iqn]]
+== Step 5: Capture the iSCSI initiator name (IQN)
+
+Capture the iSCSI initiator name (IQN) from each database host after the reboot. You will use these IQNs to create the GCNV host groups in xref:gcnv-oracle-provision-storage.adoc#create-host-groups[Step 2: Create the host groups].
+
+. Capture the IQN from `oracdb1` and record it:
++
+[source,bash]
+----
+sudo cat /etc/iscsi/initiatorname.iscsi
+# InitiatorName=iqn.1994-05.com.redhat:abc123def456
+----
+
+. Repeat on `oracdb2` and record its IQN. Use one host group per host so a single host's reboot or IQN regeneration cannot affect another host's GCNV iSCSI volume visibility:
++
+[NOTE]
+====
+*Cloned VMs:* If both hosts share the same IQN, regenerate on `oracdb2` (stop `iscsi`, clear `/var/lib/iscsi/nodes/*`, new `InitiatorName` in `/etc/iscsi/initiatorname.iscsi`, restart `iscsid`).
+====
+
+== What's next?
+xref:gcnv-oracle-provision-storage.adoc[Provision Google Cloud NetApp Volumes iSCSI pools, host groups, and volumes].
