@@ -94,4 +94,4 @@ This topology places primary, standby, and observer roles across separate zones 
 Sample `n4-highmem-8` in this solution; OLTP workloads typically use `c4-standard-*`.
 
 == What's next?
-Continue with xref:gcnv-oracle-deployment-options.adoc[Learn about deployment options for Oracle Database 26ai on Google Cloud NetApp Volumes].
+To choose the deployment path that matches your recovery and availability goals, continue with xref:gcnv-oracle-deployment-options.adoc[Learn about deployment options for Oracle Database 26ai on Google Cloud NetApp Volumes].

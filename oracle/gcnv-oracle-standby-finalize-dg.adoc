@@ -166,4 +166,4 @@ SQL'
 ----
 
 == What's next?
-Continue with xref:gcnv-oracle-data-guard.adoc[Configure Oracle Data Guard Broker, Fast-Start Failover, and the Observer].
+To activate automated role management and failover protection, continue with xref:gcnv-oracle-data-guard.adoc[Configure Oracle Data Guard Broker, Fast-Start Failover, and the Observer].

@@ -4,7 +4,7 @@ permalink: oracle/gcnv-oracle-deployment-options.html
 keywords: oracle database, google cloud netapp volumes, gcnv, deployment options, high availability, disaster recovery, data guard, fsfo
 summary: "Deployment options for Oracle Database 26ai on Google Compute Engine with Google Cloud NetApp Volumes, from dev/test to production high availability."
 ---
-= Learn about Oracle Database 26ai deployment configuration and options on Google Cloud NetApp Volumes
+= Learn about Oracle Database 26ai deployment rconfiguration and options on Google Cloud NetApp Volumes
 :icons: font
 :imagesdir: ../media/
 
@@ -135,4 +135,4 @@ The Dev/Test and Prod Basic (Restart) tiers do not require additional tasks.
 |===
 
 == What's next?
-Continue with xref:gcnv-oracle-access-and-apis.adoc[Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes].
+To prepare your environment before deployment starts, continue with xref:gcnv-oracle-access-and-apis.adoc[Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes].

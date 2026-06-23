@@ -383,5 +383,5 @@ srvctl status database -db orcls
 
 *Tier-specific:*
 
-* *Prod HA (no Data Guard):* Standby initialization is complete. The standby database is registered with Oracle Restart and will be managed as a backup instance for storage-level recovery workflows.
-* *Prod HA (Data Guard + FSFO):* Continue with xref:gcnv-oracle-standby-finalize-dg.adoc[Finalize the standby database for Data Guard].
+* *Prod HA (no Data Guard):* To maintain a storage-replication-based recovery target, standby initialization is complete and the standby database is registered with Oracle Restart as a backup instance.
+* *Prod HA (Data Guard + FSFO):* To enable broker-managed switchover and fast-start failover, continue with xref:gcnv-oracle-standby-finalize-dg.adoc[Finalize the standby database for Data Guard].

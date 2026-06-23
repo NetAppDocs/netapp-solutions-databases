@@ -316,4 +316,6 @@ DGMGRL> SWITCHOVER TO 'orcl';        -- restore topology
 Use a VM *Reset* (crash-style test); a normal *Stop* may not trigger FSFO. Tail `/var/log/dgmgrl-observer.log` on `oradg-obs` to monitor failover progress; restore topology when done.
 
 == What's next?
-Review the end-to-end architecture and workflow in xref:gcnv-oracle-deployment.adoc[Learn about Oracle Database 26ai high availability on Google Cloud NetApp Volumes].
+
+You are complete. Oracle Data Guard Broker, Fast-Start Failover, and Observer configuration is now in place for this deployment.
+

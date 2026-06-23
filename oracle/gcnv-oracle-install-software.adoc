@@ -206,4 +206,4 @@ EOF
 The standby database is created in xref:gcnv-oracle-standby-database.adoc#create-standby-database[Create the standby database].
 
 == What's next?
-xref:gcnv-oracle-primary-database.adoc[Create the Oracle primary database] on `oracdb1`.
+To create the production primary instance for your HA deployment, proceed to xref:gcnv-oracle-primary-database.adoc[Create the Oracle primary database] on `oracdb1`.

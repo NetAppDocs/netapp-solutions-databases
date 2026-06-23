@@ -92,4 +92,4 @@ srvctl status service -db orcl -service orclapp
 After the Data Guard Broker is enabled, `orclapp` runs only on the PRIMARY. Multiplex control files across ASM disk groups and size memory to workload.
 
 == What's next?
-xref:gcnv-oracle-standby-database.adoc[Create the Oracle standby database] on `oracdb2`.
+To establish standby protection and readiness for failover, proceed to xref:gcnv-oracle-standby-database.adoc[Create the Oracle standby database] on `oracdb2`.

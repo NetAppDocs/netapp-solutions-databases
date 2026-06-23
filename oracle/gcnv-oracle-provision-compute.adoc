@@ -179,4 +179,4 @@ sudo cat /etc/iscsi/initiatorname.iscsi
 ====
 
 == What's next?
-xref:gcnv-oracle-provision-storage.adoc[Provision Google Cloud NetApp Volumes iSCSI pools, host groups, and volumes].
+To provide shared storage for Oracle binaries and ASM disk groups, proceed to xref:gcnv-oracle-provision-storage.adoc[Provision Google Cloud NetApp Volumes iSCSI pools, host groups, and volumes].

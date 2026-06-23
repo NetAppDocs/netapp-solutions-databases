@@ -38,4 +38,4 @@ timedatectl
 |===
 
 == What's next?
-Continue with xref:gcnv-oracle-provision-compute.adoc[Provision Google Compute Engine instances for Oracle Database 26ai].
+To provision Oracle host infrastructure for high availability, continue with xref:gcnv-oracle-provision-compute.adoc[Provision Google Compute Engine instances for Oracle Database 26ai].
