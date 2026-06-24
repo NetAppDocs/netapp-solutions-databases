@@ -4,7 +4,7 @@ permalink: oracle/gcnv-oracle-deployment.html
 keywords: oracle database, google cloud netapp volumes, gcnv, iscsi, data guard, fsfo, high availability, disaster recovery, google compute engine, oracle 26ai, architecture
 summary: "Use Google Cloud NetApp Volumes iSCSI block storage to deploy high availability Oracle Database 26ai on Google Compute Engine with Oracle Data Guard and Fast-Start Failover. This workflow guides you through the solution architecture, storage topology, deployment options from dev/test to production HA, and GCNV's replication advantage for faster standby initialization."
 ---
-= Use Google Cloud NetApp Volumes to deploy high availability Oracle Database 26ai
+= Google Cloud NetApp Volumes workflow to deploy high availability Oracle Database 26ai
 :hardbreaks:
 :nofooter:
 :icons: font

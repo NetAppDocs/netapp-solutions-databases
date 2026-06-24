@@ -9,7 +9,7 @@ summary: "Deployment options for Google Cloud NetApp Volumes with Oracle Databas
 :imagesdir: ../media/
 
 [.lead]
-Google Cloud NetApp Volumes supports Oracle Database 26ai across multiple deployment tiers, from dev/test environments to production high availability configurations with Data Guard and Fast-Start Failover. Review deployment requirements, compare practical tiers, and identify the task sequence for your chosen architecture on GCNV.
+Google Cloud NetApp Volumes supports Oracle Database 26ai across multiple deployment tiers, from dev/test environments to production high availability configurations with Data Guard and Fast-Start Failover. Review deployment requirements, compare HA tiers, and identify the task sequence for your chosen architecture on Google Cloud NetApp Volumes.
 
 [[deployment-requirements]]
 == Deployment requirements
