@@ -112,27 +112,35 @@ The following table compares HA and DR deployment patterns and highlights where 
 [[deployment-tasks-by-ha-tier]]
 == Deployment tasks by HA tier
 
-All HA tiers follow this base deployment task sequence, regardless of the HA level you choose:
+The xref:gcnv-oracle-deployment.html[deployment workflow] provides a numbered step sequence for all deployment tiers. All tiers complete the base deployment tasks shown below, then add tier-specific tasks for production high availability:
 
-. xref:gcnv-oracle-provision-compute.adoc[Provision Google Compute Engine instances for Oracle Database 26ai]
-. xref:gcnv-oracle-provision-storage.adoc[Provision GCNV iSCSI storage for Oracle Database 26ai]
-. xref:gcnv-oracle-install-software.adoc[Install Oracle Grid Infrastructure and Oracle Database 26ai]
-. xref:gcnv-oracle-primary-database.adoc[Create the primary database]
+*Base deployment (all tiers):*
 
-Add the tier-specific deployment tasks shown below for the Prod HA tiers. 
+. xref:gcnv-oracle-solution-architecture.html[Review the solution architecture]
+. Review deployment options and requirements (this page)
+. xref:gcnv-oracle-access-and-apis.html[Verify access and APIs]
+. xref:gcnv-oracle-provision-compute.html[Provision Google Compute Engine instances]
+. xref:gcnv-oracle-provision-storage.html[Provision GCNV iSCSI storage]
+. xref:gcnv-oracle-install-software.html[Install Oracle Grid Infrastructure and Oracle Database 26ai]
+. xref:gcnv-oracle-primary-database.html[Create the primary database]
+. xref:gcnv-oracle-standby-database.html[Create the standby database]
 
-The Dev/Test and Prod Basic (Restart) tiers do not require additional tasks.
+*Tier-specific tasks (Prod HA only):*
 
 [cols="1,2",options="header"]
 |===
 | Tier | Additional deployment tasks
 
 | Prod HA (no Data Guard)
-| xref:gcnv-oracle-standby-database.adoc[Create the standby database] (through xref:gcnv-oracle-standby-database.adoc#gcnv-standby-initialization[Step 3: GCNV standby initialization] only)
+| Complete base deployment through Step 8. Standby initialization using GCNV replication stops at xref:gcnv-oracle-standby-database.adoc#gcnv-standby-initialization[Step 3: GCNV standby initialization].
 
 | Prod HA (Data Guard + FSFO)
-| xref:gcnv-oracle-standby-database.adoc[Create the standby database] and xref:gcnv-oracle-data-guard.adoc[Configure Data Guard Broker, FSFO, and Observer]
+| Complete all base deployment steps, then add: +
+Step 9: xref:gcnv-oracle-standby-finalize-dg.html[Finalize standby database for Data Guard] +
+Step 10: xref:gcnv-oracle-data-guard.html[Configure Data Guard Broker and Fast-Start Failover]
 |===
+
+*Dev/Test and Prod Basic (Restart) tiers* complete base deployment steps 1-7 only. No standby database is required.
 
 == What's next?
 To prepare your environment before deployment starts, continue with xref:gcnv-oracle-access-and-apis.adoc[Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes].
