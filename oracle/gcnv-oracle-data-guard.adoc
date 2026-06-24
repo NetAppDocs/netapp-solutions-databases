@@ -317,5 +317,5 @@ Use a VM *Reset* (crash-style test); a normal *Stop* may not trigger FSFO. Tail 
 
 == What's next?
 
-You are complete. Oracle Data Guard Broker, Fast-Start Failover, and Observer configuration is now in place for this deployment.
+Oracle Data Guard Broker, Fast-Start Failover, and Observer configuration is now in place for this deployment.
 
