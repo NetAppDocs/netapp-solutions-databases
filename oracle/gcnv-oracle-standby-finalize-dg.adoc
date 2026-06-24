@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-standby-finalize-dg.html
 keywords: oracle database, standby database, data guard, standby redo logs, flashback database, redo transport, managed recovery
-summary: "Finalize the standby database for Data Guard by creating standby redo log files, enabling flashback database, activating redo shipping, and verifying Data Guard state. This procedure is required only for Prod HA (Data Guard + FSFO) tier."
+summary: "Finalize the standby database for Data Guard on Google Cloud NetApp Volumes by creating standby redo log files, enabling flashback database, activating redo shipping, and verifying Data Guard state. This procedure is required only for Prod HA (Data Guard + FSFO) tier."
 ---
-= Finalize the standby database for Data Guard
+= Finalize the standby database for Data Guard on Google Cloud NetApp Volumes
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Finalize the standby database for Oracle Data Guard by creating standby redo log files, enabling flashback database, activating redo shipping, and verifying Data Guard state. 
+Finalize the standby database for Oracle Data Guard on Google Cloud NetApp Volumes by creating standby redo log files, enabling flashback database, activating redo shipping, and verifying Data Guard state. 
 
 *Tier-specific:* This procedure is required only for *Prod HA (Data Guard + FSFO)* tier.
 

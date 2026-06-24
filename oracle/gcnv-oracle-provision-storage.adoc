@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-provision-storage.html
 keywords: oracle database, google cloud netapp volumes, gcnv, iscsi, multipath, asm, storage pool, host group, iSCSI initiator
-summary: "Provision the Google Cloud NetApp Volumes iSCSI storage required for Oracle Database 26ai high availability on Google Compute Engine. This procedure covers creating Flex Unified storage pools, defining host groups, creating iSCSI volumes for each database host, configuring Linux iSCSI and multipath, partitioning ASM backing devices, and mounting the /u01 filesystem."
+summary: "Provision Google Cloud NetApp Volumes iSCSI storage for Oracle Database 26ai high availability on Google Compute Engine. This procedure covers creating Flex Unified storage pools, defining host groups, creating iSCSI volumes for each database host, configuring Linux iSCSI and multipath, partitioning ASM backing devices, and mounting the /u01 filesystem."
 ---
 = Provision Google Cloud NetApp Volumes iSCSI storage for Oracle Database 26ai
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Provision the Google Cloud NetApp Volumes iSCSI storage required for Oracle Database 26ai high availability on Google Compute Engine. This procedure covers creating Flex Unified storage pools, defining host groups, creating iSCSI volumes for each database host, configuring Linux iSCSI and multipath, partitioning ASM backing devices, and mounting the `/u01` filesystem.
+Provision Google Cloud NetApp Volumes iSCSI block storage for Oracle Database 26ai high availability on Google Compute Engine. This procedure covers creating GCNV Flex Unified storage pools, defining host groups, creating iSCSI volumes for each database host, configuring Linux iSCSI and multipath, partitioning ASM backing devices, and mounting the `/u01` filesystem.
 
 [[provision-gcnv-iscsi-volumes]]
 == Step 1: Create GCNV iSCSI pools

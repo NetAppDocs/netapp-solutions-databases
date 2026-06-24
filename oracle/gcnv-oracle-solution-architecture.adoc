@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-solution-architecture.html
 keywords: oracle database, google cloud netapp volumes, gcnv, iscsi, data guard, fsfo, architecture, topology, standby initialization
-summary: "Learn about the Oracle Database 26ai high availability solution architecture on Google Cloud NetApp Volumes, including reference data paths, platform responsibilities, and storage topology."
+summary: "Learn about Google Cloud NetApp Volumes architecture for high availability Oracle Database 26ai, including iSCSI block storage design, Data Guard integration, storage-layer replication for accelerated standby initialization, and platform responsibilities."
 ---
-= Solution architecture for Oracle Database 26ai high availability on Google Cloud NetApp Volumes
+= Learn about Google Cloud NetApp Volumes architecture for high availability Oracle Database 26ai
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Learn about the Oracle Database 26ai high availability architecture on Google Cloud NetApp Volumes, including reference data paths, platform responsibilities, and storage topology for primary, standby, and observer components.
+Google Cloud NetApp Volumes provides high-performance iSCSI block storage for Oracle Database 26ai high availability architectures, with storage-layer replication that significantly accelerates standby database initialization compared to traditional Oracle RMAN methods. Explore GCNV's integration with Oracle Data Guard, including reference data paths, storage topology, and the division of responsibilities between GCNV's block storage and Data Guard's continuous synchronization.
 
 == Architecture overview
 This architecture deploys *Oracle Database 26ai* HA on Google Cloud using *Google Cloud NetApp Volumes (GCNV)* iSCSI storage and *Oracle Data Guard*. 
@@ -94,4 +94,4 @@ This topology places primary, standby, and observer roles across separate zones 
 Sample `n4-highmem-8` in this solution; OLTP workloads typically use `c4-standard-*`.
 
 == What's next?
-To choose the deployment path that matches your recovery and availability goals, continue with xref:gcnv-oracle-deployment-options.adoc[Learn about deployment options for Oracle Database 26ai on Google Cloud NetApp Volumes].
+To choose the deployment path that matches your recovery and availability goals, go to xref:gcnv-oracle-deployment-options.adoc[Learn about deployment options for Oracle Database 26ai on Google Cloud NetApp Volumes].

@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-provision-compute.html
 keywords: oracle database, google cloud netapp volumes, gcnv, compute engine, iscsi, virtual machine, oracle linux, iqn
-summary: "Provision the Google Compute Engine virtual machines for Oracle Database 26ai high availability on Google Cloud NetApp Volumes. This procedure covers creating the primary and standby database hosts and the Fast-Start Failover Observer VM, configuring VPC firewall rules for Oracle Net, setting up hostname resolution, preparing the OS, and capturing iSCSI initiator names for storage provisioning."
+summary: "Provision Google Compute Engine virtual machines to host Oracle Database 26ai on Google Cloud NetApp Volumes iSCSI storage. This procedure covers creating the primary and standby database hosts and the Fast-Start Failover Observer VM, configuring VPC firewall rules for Oracle Net, setting up hostname resolution, preparing the OS, and capturing iSCSI initiator names for GCNV storage provisioning."
 ---
-= Provision Google Compute Engine instances for Oracle Database 26ai
+= Provision Google Compute Engine instances for Google Cloud NetApp Volumes
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Provision the Google Compute Engine virtual machines for Oracle Database 26ai high availability on Google Cloud NetApp Volumes. This procedure covers creating the primary and standby database hosts and the Fast-Start Failover Observer VM, configuring VPC firewall rules for Oracle Net, setting up hostname resolution, preparing the OS, and capturing iSCSI initiator names for storage provisioning.
+Provision Google Compute Engine virtual machines to host Oracle Database 26ai on Google Cloud NetApp Volumes iSCSI storage. This procedure covers creating the primary and standby database hosts and the Fast-Start Failover Observer VM, configuring VPC firewall rules for Oracle Net, setting up hostname resolution, preparing the OS, and capturing iSCSI initiator names for GCNV storage provisioning.
 
 [[provision-compute-engine]]
 == Step 1: Create the VMs

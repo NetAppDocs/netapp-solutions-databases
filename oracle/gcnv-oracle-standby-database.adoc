@@ -2,16 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-standby-database.html
 keywords: oracle database, standby database, data guard, gcnv replication, iscsi, asm, oracle restart, managed recovery, physical standby
-summary: "Create the Oracle physical standby database using Google Cloud NetApp Volumes replication, snapshots, or clones to seed the standby at the storage layer for faster initialization. This procedure covers configuring the listener and standby pfile, seeding standby volumes, finalizing the Oracle instance, building standby redo logs, enabling redo apply with managed recovery, and registering the standby with Oracle Restart."
+summary: "Create the Oracle physical standby database using Google Cloud NetApp Volumes storage-layer replication, snapshots, or clones to accelerate standby initialization. This procedure covers configuring the listener and standby pfile, seeding standby volumes with GCNV replication, finalizing the Oracle instance, building standby redo logs, enabling redo apply with managed recovery, and registering the standby with Oracle Restart."
 ---
-= Create the Oracle standby database with Google Cloud NetApp Volumes
+= Create the Oracle standby database with Google Cloud NetApp Volumes storage-layer seeding
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Create the Oracle physical standby database on Google Cloud NetApp Volumes, using GCNV volume replication, snapshots, or clones to seed the standby at the storage layer for faster initialization. 
-
-This procedure covers configuring the listener, creating the standby pfile, seeding standby volumes, finalizing the Oracle instance, and registering the standby with Oracle Restart. All HA tiers complete these steps. For *Prod HA (Data Guard + FSFO)* tier, continue with xref:gcnv-oracle-standby-finalize-dg.adoc[Data Guard finalization] before configuring xref:gcnv-oracle-data-guard.adoc#broker-fsfo-observer[Data Guard Broker, Fast-Start Failover, and the Observer].
+Create the Oracle physical standby database using Google Cloud NetApp Volumes storage-layer replication, snapshots, or clones to accelerate standby initialization compared to traditional RMAN methods. This procedure covers configuring the listener, creating the standby pfile, seeding standby volumes with GCNV replication, finalizing the Oracle instance, and registering the standby with Oracle Restart. All HA tiers complete these steps. For *Prod HA (Data Guard + FSFO)* tier, continue with xref:gcnv-oracle-standby-finalize-dg.adoc[Data Guard finalization] before configuring xref:gcnv-oracle-data-guard.adoc#broker-fsfo-observer[Data Guard Broker, Fast-Start Failover, and the Observer].
 
 
 

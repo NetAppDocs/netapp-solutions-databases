@@ -2,9 +2,9 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-deployment.html
 keywords: oracle database, google cloud netapp volumes, gcnv, iscsi, data guard, fsfo, high availability, disaster recovery, google compute engine, oracle 26ai, architecture
-summary: "Discover how to deploy Oracle Database 26ai high availability on Google Compute Engine using Google Cloud NetApp Volumes iSCSI block storage and Oracle Data Guard with Fast-Start Failover. Learn about the solution architecture, storage topology, deployment options from dev/test to production HA, and the GCNV replication advantage for faster standby initialization."
+summary: "Use Google Cloud NetApp Volumes iSCSI block storage to deploy high availability Oracle Database 26ai on Google Compute Engine with Oracle Data Guard and Fast-Start Failover. This workflow guides you through the solution architecture, storage topology, deployment options from dev/test to production HA, and GCNV's replication advantage for faster standby initialization."
 ---
-= Deployment workflow for Oracle Database 26ai high availability on Google Cloud NetApp Volumes
+= Use Google Cloud NetApp Volumes to deploy high availability Oracle Database 26ai
 :hardbreaks:
 :nofooter:
 :icons: font
@@ -12,7 +12,7 @@ summary: "Discover how to deploy Oracle Database 26ai high availability on Googl
 :imagesdir: ../media/
 
 [.lead]
-Get started with deploying Oracle Database 26ai high availability with Google Cloud NetApp Volumes iSCSI storage and Oracle Data Guard. This workflow guides you through understanding deployment options and requirements, provisioning infrastructure, installing Oracle software, and configuring high availability.
+Use Google Cloud NetApp Volumes iSCSI block storage to deploy high availability Oracle Database 26ai with Oracle Data Guard on Google Compute Engine. This workflow guides you through deployment options, infrastructure provisioning, Oracle software installation, and high availability configuration, leveraging GCNV's storage-layer replication for accelerated standby initialization.
 
 .image:https://raw.githubusercontent.com/NetAppDocs/common/main/media/number-1.png[One]link:gcnv-oracle-solution-architecture.html[Review the solution architecture]
 [role="quick-margin-para"]

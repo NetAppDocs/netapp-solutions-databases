@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-install-software.html
 keywords: oracle database, grid infrastructure, oracle restart, asm, asm disk groups, oracle database 26ai, silent install, gridsetup
-summary: "Install Oracle Grid Infrastructure with Oracle Restart and ASM on each database host, then install the Oracle Database 26ai software. This procedure covers staging and unzipping the Oracle Grid Infrastructure GoldImage, running the gridSetup response file, creating ASM disk groups, and performing a silent software-only installation of the Oracle Database home."
+summary: "Install Oracle Grid Infrastructure with Oracle Restart and ASM on Google Cloud NetApp Volumes iSCSI storage for each database host, then install Oracle Database 26ai software. This procedure covers staging and unzipping the Oracle Grid Infrastructure GoldImage, running the gridSetup response file, creating ASM disk groups on GCNV volumes, and performing a silent software-only installation of the Oracle Database home."
 ---
-= Install Oracle Grid Infrastructure and Oracle Database 26ai
+= Install Oracle Grid Infrastructure and Oracle Database 26ai on Google Cloud NetApp Volumes
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Install Oracle Grid Infrastructure with Oracle Restart and ASM on each database host, then install the Oracle Database 26ai software. Run Grid installation first, then the database home installation on each DB host before xref:gcnv-oracle-primary-database.adoc#create-primary-database[creating the primary database].
+Install Oracle Grid Infrastructure with Oracle Restart and ASM on Google Cloud NetApp Volumes iSCSI storage for each database host, then install Oracle Database 26ai software. Run Grid installation first to configure ASM disk groups on GCNV volumes, then install the database home on each DB host before xref:gcnv-oracle-primary-database.adoc#create-primary-database[creating the primary database].
 
 [[install-oracle-software]]
 [[install-grid-infrastructure]]

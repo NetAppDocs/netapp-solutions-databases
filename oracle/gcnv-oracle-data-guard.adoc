@@ -4,7 +4,7 @@ permalink: oracle/gcnv-oracle-data-guard.html
 keywords: oracle data guard, fast-start failover, fsfo, dgmgrl, observer, data guard broker, oracle 26ai, systemd, auto-login wallet
 summary: "For Prod HA (Data Guard + FSFO) tier only, configure Oracle Data Guard Broker and Fast-Start Failover with a dedicated Observer for Oracle Database 26ai on Google Cloud NetApp Volumes. This procedure covers enabling the broker, creating the Data Guard configuration, enabling FSFO, installing Oracle Instant Client on the Observer host, starting the Observer as a systemd service, and testing switchover and failover."
 ---
-= Configure Data Guard Broker and Fast-Start Failover for Oracle Database 26ai
+= Configure Data Guard Broker and Fast-Start Failover for Oracle Database 26ai on Google Cloud NetApp Volumes
 :icons: font
 :imagesdir: ../media/
 

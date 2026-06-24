@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-access-and-apis.html
 keywords: oracle database, google cloud netapp volumes, gcnv, access, api, permissions, psa, iap, networking
-summary: "Review required access, API enablement, networking prerequisites, and time synchronization before deploying Oracle Database 26ai high availability on Google Cloud NetApp Volumes."
+summary: "Review required access, API enablement, networking prerequisites, and time synchronization for Google Cloud NetApp Volumes before deploying Oracle Database 26ai high availability."
 ---
-= Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes
+= Verify Google Cloud NetApp Volumes access and APIs for Oracle Database 26ai
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Confirm required access, API enablement, networking prerequisites, and time synchronization before provisioning Oracle Database 26ai high availability on Google Cloud NetApp Volumes.
+Verify Google Cloud NetApp Volumes access, API enablement, networking prerequisites, and time synchronization before provisioning GCNV iSCSI storage for Oracle Database 26ai high availability on Google Compute Engine.
 
 == Access and APIs
 

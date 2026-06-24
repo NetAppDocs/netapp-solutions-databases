@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-primary-database.html
 keywords: oracle database, dbca, asm, cdb, pdb, oracle restart, srvctl, oracle 26ai, primary database
-summary: "Create the Oracle primary database on Google Cloud NetApp Volumes iSCSI storage using Oracle Database Configuration Assistant in silent mode. This procedure covers running dbca to create the container database and pluggable database, configuring archive log destinations, and adding a role-based application service for transparent failover."
+summary: "Create the Oracle primary database on Google Cloud NetApp Volumes iSCSI storage using Oracle Database Configuration Assistant in silent mode. This procedure covers running dbca to create the container database and pluggable database on GCNV-backed ASM disk groups, configuring archive log destinations, and adding a role-based application service for transparent failover."
 ---
 = Create the Oracle primary database on Google Cloud NetApp Volumes
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Create the Oracle primary database on Google Cloud NetApp Volumes iSCSI storage using Oracle Database Configuration Assistant in silent mode. This procedure covers running `dbca` to create the container database and pluggable database on ASM, configuring archive log destinations, and adding a role-based application service for transparent failover after Data Guard is enabled.
+Create the Oracle primary database on Google Cloud NetApp Volumes iSCSI storage using Oracle Database Configuration Assistant in silent mode. This procedure covers running `dbca` to create the container database and pluggable database on GCNV-backed ASM disk groups, configuring archive log destinations, and adding a role-based application service for transparent failover after Data Guard is enabled.
 
 [[create-primary-database]]
 .Steps
@@ -92,4 +92,4 @@ srvctl status service -db orcl -service orclapp
 After the Data Guard Broker is enabled, `orclapp` runs only on the PRIMARY. Multiplex control files across ASM disk groups and size memory to workload.
 
 == What's next?
-To establish standby protection and readiness for failover, proceed to xref:gcnv-oracle-standby-database.adoc[Create the Oracle standby database] on `oracdb2`.
+To establish standby protection and readiness for failover, go to xref:gcnv-oracle-standby-database.adoc[Create the Oracle standby database] on `oracdb2`.

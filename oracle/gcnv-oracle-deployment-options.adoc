@@ -2,14 +2,14 @@
 sidebar: sidebar
 permalink: oracle/gcnv-oracle-deployment-options.html
 keywords: oracle database, google cloud netapp volumes, gcnv, deployment options, high availability, disaster recovery, data guard, fsfo
-summary: "Deployment options for Oracle Database 26ai on Google Compute Engine with Google Cloud NetApp Volumes, from dev/test to production high availability."
+summary: "Deployment options for Google Cloud NetApp Volumes with Oracle Database 26ai, from dev/test to production high availability tiers."
 ---
-= Learn about Oracle Database 26ai deployment options and tasks on Google Cloud NetApp Volumes
+= Learn about Google Cloud NetApp Volumes deployment options for Oracle Database 26ai
 :icons: font
 :imagesdir: ../media/
 
 [.lead]
-Review deployment requirements, compare practical deployment tiers from dev/test to production high availability, and identify the task sequence for your chosen tier. Select the appropriate architecture and understand which deployment steps apply to your Oracle Database 26ai environment on Google Cloud NetApp Volumes.
+Google Cloud NetApp Volumes supports Oracle Database 26ai across multiple deployment tiers, from dev/test environments to production high availability configurations with Data Guard and Fast-Start Failover. Review deployment requirements, compare practical tiers, and identify the task sequence for your chosen architecture on GCNV.
 
 [[deployment-requirements]]
 == Deployment requirements
@@ -129,10 +129,13 @@ The xref:gcnv-oracle-deployment.html[deployment workflow] provides a numbered st
 
 [cols="1,2",options="header"]
 |===
-| Tier | Additional deployment tasks
+| Tier | Deployment steps
+
+| Dev/Test and Prod Basic (Restart) tiers
+| Complete base deployment Step 1 through Step 7 only. No standby database is required.
 
 | Prod HA (no Data Guard)
-| Complete base deployment through Step 8. Standby initialization using GCNV replication stops at xref:gcnv-oracle-standby-database.adoc#gcnv-standby-initialization[Step 3: GCNV standby initialization].
+| Complete base deployment Step 1 through Step 8. 
 
 | Prod HA (Data Guard + FSFO)
 | Complete all base deployment steps, then add: +
@@ -140,7 +143,5 @@ Step 9: xref:gcnv-oracle-standby-finalize-dg.html[Finalize standby database for 
 Step 10: xref:gcnv-oracle-data-guard.html[Configure Data Guard Broker and Fast-Start Failover]
 |===
 
-*Dev/Test and Prod Basic (Restart) tiers* complete base deployment steps 1-7 only. No standby database is required.
-
 == What's next?
-To prepare your environment before deployment starts, continue with xref:gcnv-oracle-access-and-apis.adoc[Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes].
+To prepare your environment before deployment, continue with xref:gcnv-oracle-access-and-apis.adoc[Access and APIs for Oracle Database 26ai on Google Cloud NetApp Volumes].
