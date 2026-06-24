@@ -39,8 +39,10 @@ Use *GCNV replicate, snapshot, or clone* to initialize the standby database, the
 | Apps | Service orclapp (Step 8.2)
 |===
 
-.Zoning
-Deploy one GCNV Flex Unified pool per database zone and assign dedicated volumes to each host. Use boot disks for the operating system only. *Out of scope:* TDE, RAC, NVMe/TCP, OEM, and Active Data Guard (the standby remains *MOUNTED*).
+=== Zoning
+Deploy one GCNV Flex Unified pool per database zone and assign dedicated volumes to each host. Use boot disks for the operating system only. 
+
+*Out of scope:* TDE, RAC, NVMe/TCP, OEM, and Active Data Guard (the standby remains *MOUNTED*).
 
 
 [[reference-diagram]]
@@ -48,7 +50,7 @@ Deploy one GCNV Flex Unified pool per database zone and assign dedicated volumes
 
 The solution architecture provides three independent data paths. Storage replication and Data Guard redo transport are separate paths.
 
-image::oracle-26ai-ha.png[alt="Oracle 26ai HA on GCNV reference architecture"]
+image::gcnv-oracle-26ai-ha.png[alt="GCNV reference architecture"]
 
 .Storage replication does not equal redo replication 
 * Path 1 moves datafiles at the GCNV layer for standby initialization. 

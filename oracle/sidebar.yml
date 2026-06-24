@@ -1,9 +1,9 @@
 section: gcnv-oracle
-title: "Oracle Database 26ai on Google Cloud NetApp Volumes"
+title: "Google Cloud NetApp Volumes for Oracle Database 26ai"
 entries:
   - title: Deployment workflow
     url: /oracle/gcnv-oracle-deployment.html
-  - title: "Learn about Oracle Database 26ai HA"
+  - title: "Learn about Google Cloud NetApp Volumes for Oracle HA"
     entries:
       - title: "Solution architecture"
         url: /oracle/gcnv-oracle-solution-architecture.html
@@ -12,7 +12,7 @@ entries:
       - title: "Access and APIs"
         url: /oracle/gcnv-oracle-access-and-apis.html
     url: /oracle/gcnv-oracle-deployment.html
-  - title: "Deploy Oracle Database 26ai HA"
+  - title: "Deploy Oracle Database 26ai HA on Google Cloud NetApp Volumes"
     pdf-filename: "Deploy Oracle Database 26ai HA with Google Cloud NetApp Volumes"
     entries:
       - title: "Provision Compute Engine instances"
