@@ -2,9 +2,8 @@
 sidebar: sidebar
 permalink: mssql/sql-srv-anf-factors-to-consider.html
 keywords: performance, redundancy, high availability, storage configuration, continuously available shares, validation,
-summary: This section describes the different issues you should consider when Azure NetApp Files with SQL Server in the cloud.
+summary: This section describes the different issues you should consider when using Azure NetApp Files with SQL Server in the cloud.
 ---
-
 = Factors to consider
 :hardbreaks:
 :nofooter:

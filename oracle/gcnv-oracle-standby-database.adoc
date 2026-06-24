@@ -9,7 +9,7 @@ summary: "Create the Oracle physical standby database using Google Cloud NetApp 
 :imagesdir: ../media/
 
 [.lead]
-Create the Oracle physical standby database using Google Cloud NetApp Volumes storage-layer replication, snapshots, or clones to accelerate standby initialization compared to traditional RMAN methods. This procedure covers configuring the listener, creating the standby pfile, seeding standby volumes with GCNV replication, finalizing the Oracle instance, and registering the standby with Oracle Restart. All HA tiers complete these steps. For *Prod HA (Data Guard + FSFO)* tier, continue with xref:gcnv-oracle-standby-finalize-dg.adoc[Data Guard finalization] before configuring xref:gcnv-oracle-data-guard.adoc#broker-fsfo-observer[Data Guard Broker, Fast-Start Failover, and the Observer].
+Create the Oracle physical standby database using Google Cloud NetApp Volumes storage-layer replication, snapshots, or clones to accelerate standby initialization compared to traditional RMAN methods. This procedure covers configuring the listener, creating the standby pfile, seeding standby volumes with GCNV replication, finalizing the Oracle instance, and registering the standby with Oracle Restart. All HA tiers complete these steps. For *Prod HA (Data Guard + FSFO)* tier, continue with xref:gcnv-oracle-standby-finalize-dg.adoc[Data Guard finalization] before configuring xref:gcnv-oracle-data-guard.adoc[Data Guard Broker, Fast-Start Failover, and the Observer].
 
 
 

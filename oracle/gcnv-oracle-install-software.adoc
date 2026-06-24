@@ -9,7 +9,7 @@ summary: "Install Oracle Grid Infrastructure with Oracle Restart and ASM on Goog
 :imagesdir: ../media/
 
 [.lead]
-Install Oracle Grid Infrastructure with Oracle Restart and ASM on Google Cloud NetApp Volumes iSCSI storage for each database host, then install Oracle Database 26ai software. Run Grid installation first to configure ASM disk groups on GCNV volumes, then install the database home on each DB host before xref:gcnv-oracle-primary-database.adoc#create-primary-database[creating the primary database].
+Install Oracle Grid Infrastructure with Oracle Restart and ASM on Google Cloud NetApp Volumes iSCSI storage for each database host, then install Oracle Database 26ai software. This procedure includes staging Oracle GoldImages, running silent installations with response files, creating ASM disk groups on GCNV volumes, and preparing both primary and standby hosts with identical Oracle software before database creation.
 
 [[install-oracle-software]]
 [[install-grid-infrastructure]]
@@ -203,7 +203,7 @@ export TNS_ADMIN=$ORACLE_HOME/network/admin
 EOF
 ----
 +
-The standby database is created in xref:gcnv-oracle-standby-database.adoc#create-standby-database[Create the standby database].
+The standby database is created in xref:gcnv-oracle-standby-database.adoc[Create the standby database].
 
 == What's next?
 To create the production primary instance for your HA deployment, go to xref:gcnv-oracle-primary-database.adoc[Create the Oracle primary database] on `oracdb1`.

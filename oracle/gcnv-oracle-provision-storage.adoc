@@ -248,7 +248,7 @@ sudo chown -R oracle:oinstall /u01/app/oracle /u01/stage
 sudo chmod -R 775 /u01/app /u01/stage
 ----
 +
-Reboot once and confirm `/u01` mounts before xref:gcnv-oracle-install-software.adoc#install-oracle-software[Install Oracle software].
+Reboot once and confirm `/u01` mounts before xref:gcnv-oracle-install-software.adoc[installing Oracle software].
 
 == What's next?
 To install Oracle Grid Infrastructure and Database binaries on prepared hosts, go to xref:gcnv-oracle-install-software.adoc[Install the Oracle Grid Infrastructure and Oracle Database software] on both hosts.
