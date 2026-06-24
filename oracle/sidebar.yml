@@ -12,8 +12,8 @@ entries:
       - title: "Access and APIs"
         url: /oracle/gcnv-oracle-access-and-apis.html
     url: /oracle/gcnv-oracle-deployment.html
-  - title: "Deploy Oracle Database 26ai HA on Google Cloud NetApp Volumes"
-    pdf-filename: "Deploy Oracle Database 26ai HA with Google Cloud NetApp Volumes"
+  - title: "Deploy Google Cloud NetApp Volumes with Oracle HA"
+    pdf-filename: "Deploy Google Cloud NetApp Volumes with Oracle HA"
     entries:
       - title: "Provision Compute Engine instances"
         url: /oracle/gcnv-oracle-provision-compute.html
