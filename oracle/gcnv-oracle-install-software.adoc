@@ -13,7 +13,7 @@ Install Oracle Grid Infrastructure with Oracle Restart and ASM on each database 
 
 [[install-oracle-software]]
 [[install-grid-infrastructure]]
-== Step 1: Install Oracle Grid Infrastructure (Oracle Restart) on each DB host
+== Step 1: Install Grid Infrastructure on each DB host
 
 Install the Oracle Grid Infrastructure GoldImage on each database host to enable Oracle Restart and ASM. Both hosts require their own Grid home, ASM instance, and disk groups; Data Guard replicates data over Oracle Net, not over shared storage. Complete all steps on `oracdb1` before repeating on `oracdb2`.
 
@@ -138,7 +138,7 @@ sudo /u01/app/26ai/grid/bin/crsctl stat res -t
 Use the same ASM disk group names — Data Guard replicates over Oracle Net, not storage.
 
 [[install-oracle-db-home]]
-== Step 2: Install Oracle Database 26ai on each DB host
+== Step 2: Install Oracle Database on each DB host
 
 Install the Oracle Database 26ai software home on each database host using a silent, software-only installation with the latest Release Update applied. Complete all steps on `oracdb1` before repeating on `oracdb2`.
 
@@ -206,4 +206,4 @@ EOF
 The standby database is created in xref:gcnv-oracle-standby-database.adoc#create-standby-database[Create the standby database].
 
 == What's next?
-To create the production primary instance for your HA deployment, proceed to xref:gcnv-oracle-primary-database.adoc[Create the Oracle primary database] on `oracdb1`.
+To create the production primary instance for your HA deployment, go to xref:gcnv-oracle-primary-database.adoc[Create the Oracle primary database] on `oracdb1`.
