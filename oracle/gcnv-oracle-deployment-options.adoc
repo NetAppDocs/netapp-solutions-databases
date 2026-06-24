@@ -14,7 +14,7 @@ Google Cloud NetApp Volumes supports Oracle Database 26ai across multiple deploy
 [[deployment-requirements]]
 == Deployment requirements
 
-Ensure that you have the following items in place before provisioning the Oracle Database 26ai high availability solution:
+Ensure that you have the following items in place before provisioning Google Cloud NetApp Volumes for Oracle Database 26ai high availability:
 
 * A Google Cloud project with permissions for Compute Engine, VPC networking, firewall configuration, IAM, and NetApp Volumes
 +
