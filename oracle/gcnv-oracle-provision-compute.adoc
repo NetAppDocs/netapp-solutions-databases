@@ -39,7 +39,7 @@ The boot disk holds the OS only. `/u01`, Grid/DB homes, staging, and all ASM dat
 Do *not* attach a separate GCE data disk for `/u01`.
 
 [[vpc-firewall-allow-1521]]
-== Step 2: VPC firewall — allowlist TCP/1521 across all three zones
+== Step 2: Configure VPC firewall for TCP 1521
 
 Create VPC firewall rules to allow TCP/1521 between all three VMs for Oracle Net redo transport and Observer connectivity. Missing rules break Data Guard replication.
 
@@ -70,7 +70,7 @@ done
 Run from all three VMs toward each peer IP.
 
 [[hostname-dns-and-etchosts]]
-== Step 3: Hostname, DNS, and `/etc/hosts`
+== Step 3: Configure hostname, DNS, and `/etc/hosts`
 
 Configure hostname and DNS resolution on all three VMs so forward and reverse name resolution works for Oracle Net, the Data Guard Broker, and the Observer.
 
@@ -99,7 +99,7 @@ ping -c 1 oracdb1 && ping -c 1 oracdb2 && ping -c 1 oradg-obs
 ----
 
 [[os-baseline-db-hosts-only]]
-== Step 4: OS baseline (DB hosts only)
+== Step 4: Prepare the OS on DB hosts only
 
 Prepare the OS on `oracdb1` and `oracdb2` for Oracle Database 26ai by installing the preinstall package, creating users and groups, installing iSCSI and multipath packages, and configuring the iSCSI initiator. Observer setup is covered in xref:gcnv-oracle-data-guard.adoc#install-instant-client-on-observer[Step 4: Install Oracle Instant Client on the Observer host].
 
@@ -159,7 +159,7 @@ sudo reboot
 ----
 
 [[capture-iscsi-initiator-iqn]]
-== Step 5: Capture the iSCSI initiator name (IQN)
+== Step 5: Capture the iSCSI initiator name IQN
 
 Capture the iSCSI initiator name (IQN) from each database host after the reboot. You will use these IQNs to create the GCNV host groups in xref:gcnv-oracle-provision-storage.adoc#create-host-groups[Step 2: Create the host groups].
 
@@ -179,4 +179,4 @@ sudo cat /etc/iscsi/initiatorname.iscsi
 ====
 
 == What's next?
-To provide shared storage for Oracle binaries and ASM disk groups, proceed to xref:gcnv-oracle-provision-storage.adoc[Provision Google Cloud NetApp Volumes iSCSI pools, host groups, and volumes].
+To provide shared storage for Oracle binaries and ASM disk groups, go to xref:gcnv-oracle-provision-storage.adoc[Provision Google Cloud NetApp Volumes iSCSI pools, host groups, and volumes].

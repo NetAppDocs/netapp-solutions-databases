@@ -12,7 +12,7 @@ summary: "Provision the Google Cloud NetApp Volumes iSCSI storage required for O
 Provision the Google Cloud NetApp Volumes iSCSI storage required for Oracle Database 26ai high availability on Google Compute Engine. This procedure covers creating Flex Unified storage pools, defining host groups, creating iSCSI volumes for each database host, configuring Linux iSCSI and multipath, partitioning ASM backing devices, and mounting the `/u01` filesystem.
 
 [[provision-gcnv-iscsi-volumes]]
-== Step 1: Create one GCNV Flex Unified iSCSI storage pool per database zone
+== Step 1: Create GCNV iSCSI pools
 
 Create two Flex Unified storage pools, one in each database zone, to provide iSCSI volumes for the primary and standby hosts. Each database host uses volumes from its local zone's pool.
 
@@ -41,7 +41,7 @@ Create two Flex Unified storage pools, one in each database zone, to provide iSC
 ====
 
 [[create-host-groups]]
-== Step 2: Create the host groups (one per DB host)
+== Step 2: Create host groups
 
 Create one host group per database host so each VM sees only its own volumes. The primary and standby hosts must not share GCNV iSCSI volumes to maintain independent storage.
 
@@ -60,7 +60,7 @@ Create one host group per database host so each VM sees only its own volumes. Th
 . Repeat the process for `oracdb2` with the name `oracdb2-hg` and `oracdb2`'s IQN. The Observer host requires no GCNV resources.
 
 [[create-gcnv-iscsi-volumes]]
-== Step 3: Create the GCNV iSCSI volumes (per database host)
+== Step 3: Create GCNV iSCSI volumes
 
 Create five GCNV iSCSI volumes for each database host: one for `/u01` and four for ASM backing devices. Each host's volumes must be created in its local zone's storage pool with its corresponding host group.
 
@@ -89,7 +89,7 @@ Volume names: letters, numbers, underscores only (no hyphens).
 * Volume serial from the Cloud Console — use with host-discovered WWID in <<configure-iscsi-and-multipath,Step 4: Configure Linux iSCSI and multipath for GCNV iSCSI volumes>>
 
 [[configure-iscsi-and-multipath]]
-== Step 4: Configure Linux iSCSI and multipath for GCNV iSCSI volumes
+== Step 4: Configure iSCSI and multipath
 
 Configure iSCSI and device-mapper-multipath on each database host to access the GCNV volumes through both storage portal IPs. Run these steps on `oracdb1` using the primary pool's portal IPs, then repeat on `oracdb2` using the standby pool's portal IPs. If host egress is restricted, allow TCP/3260 from each database VM to its GCNV iSCSI portal IPs (in addition to inter-VM TCP/1521 from xref:gcnv-oracle-provision-compute.adoc#vpc-firewall-allow-1521[Step 2: VPC firewall — allowlist TCP/1521 across all three zones]).
 
@@ -171,7 +171,7 @@ ls -l /dev/mapper/ora_$(hostname -s)_*
 ----
 
 [[partition-asm-backing-devices]]
-== Step 5: Partition ASM backing devices on GCNV iSCSI volumes
+== Step 5: Partition ASM devices
 
 Partition the four ASM backing devices (excluding `u01`) with one GPT partition each for ASM consumption, then configure udev rules for grid ownership. Run these steps on each database host.
 
@@ -212,7 +212,7 @@ ls -lL /dev/mapper/ora_${HOST}_*p1    # grid:asmadmin 0660
 ----
 
 [[format-and-mount-u01]]
-== Step 6: Format and mount `/u01` on the local GCNV iSCSI volume
+== Step 6: Format and mount `/u01`
 
 Format the `ora_<host>_u01` GCNV volume with XFS and mount it persistently using UUID in `/etc/fstab`. The `/u01` filesystem holds Grid home, Oracle home, and staging files.
 
@@ -251,4 +251,4 @@ sudo chmod -R 775 /u01/app /u01/stage
 Reboot once and confirm `/u01` mounts before xref:gcnv-oracle-install-software.adoc#install-oracle-software[Install Oracle software].
 
 == What's next?
-To install Oracle Grid Infrastructure and Database binaries on prepared hosts, proceed to xref:gcnv-oracle-install-software.adoc[Install the Oracle Grid Infrastructure and Oracle Database software] on both hosts.
+To install Oracle Grid Infrastructure and Database binaries on prepared hosts, go to xref:gcnv-oracle-install-software.adoc[Install the Oracle Grid Infrastructure and Oracle Database software] on both hosts.
