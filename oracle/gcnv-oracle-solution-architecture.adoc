@@ -12,7 +12,7 @@ summary: "Learn about Google Cloud NetApp Volumes architecture for high availabi
 Google Cloud NetApp Volumes provides high-performance iSCSI block storage for Oracle Database 26ai high availability architectures, with storage-layer replication that significantly accelerates standby database initialization compared to traditional Oracle RMAN methods. Explore GCNV's integration with Oracle Data Guard, including reference data paths, storage topology, and the division of responsibilities between GCNV's block storage and Data Guard's continuous synchronization.
 
 == Architecture overview
-This architecture deploys *Oracle Database 26ai* HA on Google Cloud using *Google Cloud NetApp Volumes (GCNV)* iSCSI storage and *Oracle Data Guard*. 
+This architecture uses *Google Cloud NetApp Volumes (GCNV)* iSCSI block storage to provide high availability for *Oracle Database 26ai* on Google Cloud with *Oracle Data Guard*. 
 
 GCNV provides high-performance block storage and accelerates standby database initialization using storage-layer *replication, snapshots, and clones*. 
 

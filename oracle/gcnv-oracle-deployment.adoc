@@ -16,7 +16,7 @@ Use Google Cloud NetApp Volumes iSCSI block storage to deploy high availability 
 
 .image:https://raw.githubusercontent.com/NetAppDocs/common/main/media/number-1.png[One]link:gcnv-oracle-solution-architecture.html[Review the solution architecture]
 [role="quick-margin-para"]
-Understand the Oracle Database 26ai HA architecture, including reference data paths, platform roles, and storage topology.
+Understand the Google Cloud NetApp Volumes architecture for Oracle Database 26ai high availability, including GCNV iSCSI block storage design, Data Guard integration, and storage topology.
 
 .image:https://raw.githubusercontent.com/NetAppDocs/common/main/media/number-2.png[Two]link:gcnv-oracle-deployment-options.html[Review deployment options and requirements]
 [role="quick-margin-para"]
