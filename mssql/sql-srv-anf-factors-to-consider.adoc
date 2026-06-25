@@ -2,9 +2,8 @@
 sidebar: sidebar
 permalink: mssql/sql-srv-anf-factors-to-consider.html
 keywords: performance, redundancy, high availability, storage configuration, continuously available shares, validation,
-summary: This section describes the different issues you should consider when Azure NetApp Files with SQL Server in the cloud.
+summary: This section describes the different issues you should consider when using Azure NetApp Files with SQL Server in the cloud.
 ---
-
 = Factors to consider
 :hardbreaks:
 :nofooter:
@@ -58,7 +57,7 @@ The benefits of using Azure NetApp Files for SQL Server include the following:
 *Notes:*
 
 * To increase redundancy and high availability, SQL Server VMs should either be in the same https://docs.microsoft.com/en-us/azure/virtual-machines/availability-set-overview[availability set^] or in different https://docs.microsoft.com/en-us/azure/availability-zones/az-overview[availability zones^].  Consider file path requirements if user-defined data files are required; in which case, select SQL FCI over SQL AOAG.
-* The following UNC path is supported: file:///\\ANFSMB-b4ca.anf.test\SQLDB%20and%20\\ANFSMB-b4ca.anf.test\SQLDB\[\\ANFSMB-b4ca.anf.test\SQLDB and \\ANFSMB-b4ca.anf.test\SQLDB\^].
+* The following UNC paths are supported: `\\ANFSMB-b4ca.anf.test\SQLDB` and `\\ANFSMB-b4ca.anf.test\SQLDB\`.
 * The loopback UNC path is not supported.
 * For sizing, use historic data from your on-premises environment. For OLTP workloads, match the target IOPS with performance requirements using workloads at average and peak times along with the disk reads/sec and disk writes/sec performance counters. For data warehouse and reporting workloads, match the target throughput using workloads at average and peak times and the disk read bytes/sec and disk write bytes/sec. Average values can be used in conjunction with volume reshaping capabilities.
 
