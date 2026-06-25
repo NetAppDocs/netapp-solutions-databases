@@ -137,8 +137,6 @@ SQL
 +
 The standby instance is now in NOMOUNT mode with no datafiles until <<gcnv-standby-initialization,Step 3: Initialize standby storage with GCNV>>.
 
-// TODO: A dedicated listener subsection/anchor may need to be restored later so the `orcls_DGMGRL` listener guidance has a precise xref target.
-
 [[gcnv-standby-initialization]]
 == Step 3: Initialize standby storage with GCNV
 
