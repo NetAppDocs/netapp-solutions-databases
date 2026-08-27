@@ -513,7 +513,7 @@ netsh advfirewall firewall add rule name="Allow SQL Server replication" dir=in a
 ----
 
 +
-For detailed firewall requirements, refer to link:https://learn.microsoft.com/en-us/troubleshoot/windows-server/high-availability/service-overview-and-network-port-requirements[Windows Server service and network port requirements^].
+For detailed firewall requirements, refer to link:https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/service-overview-and-network-port-requirements[Windows Server service and network port requirements^].
 
 . Run validation checks on both nodes before creating the cluster:
 +

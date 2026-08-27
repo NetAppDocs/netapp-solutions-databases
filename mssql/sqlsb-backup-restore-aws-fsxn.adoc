@@ -523,9 +523,9 @@ image:sqlsb-aws-093.png["Figure showing input/output dialog or representing writ
 
 To learn more about the information that is described in this document, review the following documents and/or websites:
 
-* https://www.netapp.com/pdf.html?item=/media/12400-tr4714pdf.pdf[TR-4714: Best Practices Guide for Microsoft SQL Server using NetApp SnapCenter^]
+* https://www.netapp.com/pdf.html?item=/media/12400-tr4714.pdf[TR-4714: Best Practices Guide for Microsoft SQL Server using NetApp SnapCenter^]
 +
-https://www.netapp.com/pdf.html?item=/media/12400-tr4714pdf.pdf[https://www.netapp.com/pdf.html?item=/media/12400-tr4714pdf.pdf^] 
+https://www.netapp.com/pdf.html?item=/media/12400-tr4714.pdf[https://www.netapp.com/pdf.html?item=/media/12400-tr4714pdf.pdf^] 
 
 * https://docs.netapp.com/us-en/snapcenter-45/protect-scsql/concept_requirements_for_restoring_a_database.html[Requirements for restoring a database^]
 +
