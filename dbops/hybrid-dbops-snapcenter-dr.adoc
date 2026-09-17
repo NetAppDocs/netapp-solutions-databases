@@ -161,7 +161,7 @@ image:snapctr-sql-dr-012.png["Figure showing input/output dialog or representing
 . Reverse replication from the cloud to on-premises and rebuild the failed on-premises database server.
 
 == Where to go for help?
-If you need help with this solution and use cases, please join the link:https://netapppub.slack.com/archives/C021R4WC0LC[NetApp Solution Automation community support Slack channel] and look for the solution-automation channel to post your questions or inquires.
+If you need help with the toolkit, visit the link:https://community.netapp.com/[NetApp Community^] and post your questions.
 
 
 // NetApp Solutions restructuring (jul 2025) - renamed from databases/hybrid_dbops_snapcenter_dr.adoc
