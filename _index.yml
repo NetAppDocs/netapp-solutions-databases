@@ -64,13 +64,13 @@ indexpage:
         - title: "Migrate on-prem SQL workload to FSx ONTAP"
           url: /mssql/customer-usecase-mssql-fsx1.html
         - title: "SAP with Microsoft SQL Server on Windows using clustered data ONTAP"
-          url: https://www.netapp.com/pdf.html?item=/media/16865-tr-4467pdf.pdf
+          url: https://www.netapp.com/pdf.html?item=/media/16865-tr-4467.pdf
         - title: "Modernize Microsoft SQL Server"
           url: https://www.netapp.com/pdf.html?item=/media/15613-na-446.pdf
         - title: "Best practices for Microsoft SQL Server with ONTAP"
           url: https://www.netapp.com/pdf.html?item=/media/8585-tr4590.pdf
         - title: "Best practices for Microsoft SQL Server with EF-Series"
-          url: https://www.netapp.com/pdf.html?item=/media/17086-tr4764pdf.pdf
+          url: https://www.netapp.com/pdf.html?item=/media/17086-tr4764.pdf
 #
     - title: "Hybrid cloud database solutions"
       links:
@@ -85,7 +85,7 @@ indexpage:
         - title: "Deploy Oracle19c on ONTAP with automation"
           url: /automation/db-protection-overview.html
         - title: "Run Oracle databases on NetApp EF-Series"
-          url: https://www.netapp.com/pdf.html?item=/media/17248-tr4794pdf.pdf
+          url: https://www.netapp.com/pdf.html?item=/media/17248-tr4794.pdf
 #
     - title: "Open source databases"
       links:

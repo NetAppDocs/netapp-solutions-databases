@@ -70,7 +70,7 @@ Retrieve the toolkit from repository link:https://netapp.sharepoint.com/sites/CI
 
 The toolkit consists of a web-based HTML parser and two SQL scripts to gather Oracle database information. The output is then input into an Excel template to generate sizing guidance of computing and storage for the Oracle database server.
 
-* Use an link:https://app.atroposs.com/#/awr-module[HTML parser^] AWR module to retrieve sizing information of a current Oracle database from an AWR report. 
+* Use an HTML parser AWR module to retrieve sizing information of a current Oracle database from an AWR report. 
 
 * Execute ora_db_data_szie.sql as a DBA to retrieve physical Oracle data file size from database.
 
