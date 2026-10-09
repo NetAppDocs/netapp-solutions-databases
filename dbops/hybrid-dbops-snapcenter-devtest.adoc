@@ -133,9 +133,5 @@ image:snapctr-sql-clone-010.png["Figure showing input/output dialog or represent
 
 . Shutdown the clone database, run a clone refresh command by using the CLI. See the following SnapCenter documentation for details: link:https://docs.netapp.com/us-en/snapcenter/protect-sco/task_refresh_a_clone.html[Refresh a clone^].
 
-== Where to go for help?
-
-If you need help with this solution and use cases, join the link:https://netapppub.slack.com/archives/C021R4WC0LC[NetApp Solution Automation community support Slack channel] and look for the solution-automation channel to post your questions or inquires.
-
 
 // NetApp Solutions restructuring (jul 2025) - renamed from databases/hybrid_dbops_snapcenter_devtest.adoc
