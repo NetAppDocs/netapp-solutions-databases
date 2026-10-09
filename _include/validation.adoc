@@ -82,6 +82,3 @@ CDB2_PDB1
 +
 This confirms that Oracle listener is working properly.
 
-=== Where to go for help?
-
-If you need help with the toolkit, please join the link:https://netapppub.slack.com/archives/C021R4WC0LC[NetApp Solution Automation community support slack channel] and look for the solution-automation channel to post your questions or inquires.
