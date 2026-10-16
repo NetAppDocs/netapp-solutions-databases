@@ -376,7 +376,7 @@ It's recommended to leverage NetApp automation toolkit to deploy Oracle in VCF w
 
 . Login to Ansible controller VM as admin user via ssh and clone a copy of automation toolkit for Oracle on NFS. 
 +
-[source, cli] 
+[source, cli]
 git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_deploy_nfs.git
 
 . Stage the following Oracle installation files in /tmp/archive folder on database VM. The folder should allow all user access with 777 permission.

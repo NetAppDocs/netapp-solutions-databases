@@ -437,7 +437,7 @@ It's recommended to leverage NetApp automation toolkit to deploy Oracle RAC in V
 
 . Login to Ansible controller VM as admin user via ssh and clone a copy of automation toolkit for Oracle RAC deployment in VCF with vVols. 
 +
-[source, cli] 
+[source, cli]
 git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_deploy_rac.git
 
 . Stage the following Oracle installation files in /tmp/archive folder on RAC node 1 database VM. The folder should allow all user access with 777 permission.
