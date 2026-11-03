@@ -1,0 +1,955 @@
+---
+sidebar: sidebar
+permalink: mssql/sql-smb3-aff.html
+keywords: Microsoft SQL server, SMB 3, AFF, ONTAP
+summary:
+---
+
+== Deploy Microsoft SQL Server 2025 on Windows Server 2025 Using SMB 3 Continuously Available Shares on NetApp AFF
+:icons: font
+:experimental:
+:hardbreaks:
+:nofooter:
+:source-highlighter: highlight.js
+:cluster: SAPCC-A50-01-02
+:svm: a50-sql
+:cifs: A50-SQL
+:domain: SAPCC
+:fqdn-domain: sapcc.stl.netapp.com
+:host: sql-1
+:svc-account: SAPCC\sql1admin
+:imagesdir: ../media/
+
+
+
+[.lead]
+This guide describes, step by step, how to deploy Microsoft SQL Server 2025 on Windows Server 2025 (Desktop Experience) with all user databases, transaction logs, TempDB and backups stored on SMB 3 continuously available (CA) shares hosted on a NetApp AFF system running ONTAP.
+It covers the ONTAP storage configuration, the creation and configuration of the storage VM (SVM), the volume and share layout, the SQL Server installation, and data protection with NetApp SnapCenter.
+
+[[introduction]]
+== Introduction
+
+Microsoft SQL Server has supported placing database files on SMB file shares since SQL Server 2012.
+With SMB 3 and its continuously available (CA) shares, a file share is a fully supported, high-performance and highly available storage option for mission-critical SQL Server databases, as an alternative to block storage (iSCSI, FC or NVMe/TCP LUNs).
+
+NetApp ONTAP implements SMB 3 natively on AFF all-flash systems.
+Together with SQL Server 2025 and Windows Server 2025, this gives a storage architecture that is simple to deploy and simple to operate, that tolerates failures, and that integrates with NetApp data protection.
+
+[[intro-audience]]
+=== Purpose and audience
+
+This document is a practical, screenshot-based deployment guide.
+It is intended for:
+
+* *Storage administrators*, who configure the ONTAP cluster, the SVM, the volumes and the SMB shares.
+* *Windows and Active Directory administrators*, who prepare the Windows Server 2025 host, the service accounts and the network.
+* *Database administrators*, who install and configure SQL Server 2025 and set up backup and recovery.
+
+Basic knowledge of ONTAP System Manager, Windows Server and SQL Server administration is assumed.
+
+[[intro-why]]
+=== Why SQL Server on SMB 3 with NetApp ONTAP
+
+[cols="1,3",options="header"]
+|===
+|Benefit |Description
+
+|Simple provisioning
+|There are no LUNs, igroups, MPIO, disk initialization or drive letters to manage.
+A database file location is just a UNC path such as `+\\a50-sql\sql1_data+`.
+
+|Online capacity management
+|You grow (or shrink) a volume online in ONTAP, and SQL Server sees the new capacity immediately.
+No Windows disk or partition operations are required, and autogrow can do it automatically.
+
+|Nondisruptive operations
+|CA shares keep SQL Server running during ONTAP takeover/giveback, nondisruptive upgrades (NDU), LIF migrations and volume moves.
+
+|Performance and resiliency
+|SMB multichannel spreads the I/O across several network paths and NICs and survives the loss of a single path.
+AFF systems deliver consistently low latency.
+
+|Storage efficiency
+|Inline deduplication, compression and compaction, together with thin provisioning, reduce the physical capacity used by databases and backups.
+
+|Integrated data protection
+|ONTAP snapshots, SnapRestore, FlexClone and SnapMirror, orchestrated by NetApp SnapCenter, provide backups in seconds, restores in minutes and instant database clones.
+
+|Flexibility
+|Databases can be moved between hosts by simply attaching them on another server, without remapping storage.
+The same SVM can also serve home directories, file services or other applications.
+|===
+
+[[intro-architecture]]
+=== Solution overview
+
+The solution consists of the following components:
+
+[cols="1,3",options="header"]
+|===
+|Component |Role
+
+|Windows Server 2025 host (`{host}`)
+|Runs SQL Server 2025. The SQL Server binaries and system databases are on the local disk; all user databases, logs, TempDB and backups are accessed over SMB 3.
+
+|SQL Server 2025
+|Database Engine, running under a domain service account (`{svc-account}`) that has access to the SMB shares.
+
+|Active Directory and DNS
+|Authenticates the SQL Server service account and the CIFS server (Kerberos) and provides name resolution and time synchronization.
+
+|NetApp AFF A50 HA pair
+|Two controllers with shared NVMe storage. If one controller fails or is upgraded, the partner takes over its storage and network interfaces.
+
+|Storage VM `{svm}`
+|A dedicated, Active Directory-joined CIFS server with one SMB data LIF per node, hosting four NTFS volumes with CA shares.
+
+|NetApp SnapCenter (optional)
+|Creates application-consistent snapshot backups and provides restore, clone and replication.
+|===
+
+.Solution architecture
+image::sql25_smb_bp_001.svg[Solution architecture: SQL Server 2025 on SMB 3 CA shares with NetApp AFF,width=1000]
+
+[[intro-design]]
+=== Design principles
+
+The design follows the NetApp best practices for SQL Server over SMB:
+
+* *Separate volumes per file type.* Data, transaction log, TempDB and backups are placed on separate FlexVol volumes and shares.
+Each volume can have its own size, QoS, efficiency, snapshot and replication settings.
+TempDB is excluded from backups.
+* *Volumes distributed across both nodes.* Data and backup volumes are on node 1, and log and TempDB volumes are on node 2, so that both controllers do useful work.
+* *One SMB data LIF per node.* The host always has a direct path to the node that owns a volume, and SMB multichannel can use both paths.
+* *NTFS security style and CA shares.* These are mandatory for SQL Server over SMB on ONTAP.
+* *No scheduled ONTAP snapshots on the database volumes.* Backups must be application-consistent; they are created by SnapCenter.
+
+.Storage layout
+image::sql25_smb_bp_002.svg[Storage layout: SQL Server files to SMB shares, volumes and aggregates,width=1000]
+
+[[intro-ca]]
+=== How continuous availability works
+
+With a standard SMB share, a controller failover closes the open file handles.
+SQL Server then marks the affected databases as suspect, and they must be recovered manually.
+
+With a CA share, ONTAP keeps the state of the open files (persistent handles) mirrored to the HA partner.
+During a takeover, the SMB LIF of the failed node migrates to the partner.
+The SMB 3 client on the SQL Server host reconnects automatically and reclaims its handles.
+SQL Server only sees a short I/O pause of a few seconds; the databases stay online and no transactions are lost.
+The same applies to planned events such as ONTAP upgrades, giveback, LIF migrations and volume moves.
+
+.SMB 3 continuous availability during an ONTAP takeover
+image::sql25_smb_bp_003.svg[How SMB 3 continuous availability protects SQL Server,width=1000]
+
+[[intro-scope]]
+=== Scope and document structure
+
+This document covers a standalone SQL Server 2025 instance on a single Windows Server 2025 host.
+The same storage design applies to SQL Server failover cluster instances (FCI) and Always On availability groups, but their cluster-specific configuration is not covered.
+SQL Server performance tuning and sizing are also out of scope.
+
+The document is organized as follows:
+
+* <<overview>> and <<prerequisites>> describe the lab environment and the requirements.
+* <<cluster-prep>> to <<ca-shares>> describe the storage configuration: SVM, volumes, volume settings and CA shares.
+* <<windows-prep>> to <<post-install>> describe the Windows preparation, the SQL Server installation and the verification.
+* <<snapcenter>> describes data protection with NetApp SnapCenter.
+* The appendices contain a complete ONTAP CLI script and references.
+
+[[overview]]
+== Overview and lab environment
+
+The screenshots in this guide were taken in the following lab environment.
+Replace the values with the values of your environment.
+
+[cols="1,2",options="header"]
+|===
+|Component |Value used in this guide
+
+|Storage system
+|NetApp AFF A50 HA pair, cluster `{cluster}`, ONTAP 9.19.1
+
+|Storage VM (SVM)
+|`{svm}` (CIFS server name `{cifs}`)
+
+|SMB data LIFs
+|192.168.175.138 (node 1), 192.168.175.139 (node 2)
+
+|Active Directory domain
+|`{domain}` (`{fqdn-domain}`)
+
+|SQL Server host
+|`{host}.{fqdn-domain}`, Windows Server 2025 Datacenter (Desktop Experience)
+
+|SQL Server
+|SQL Server 2025 Enterprise Edition (17.0.1000.7), default instance `MSSQLSERVER`
+
+|SQL Server service account
+|`{svc-account}` (domain account)
+|===
+
+.Volume and share layout
+[cols="1,1,1,2",options="header"]
+|===
+|Volume / share |Size |UNC path |Content
+
+|`sql1_data`
+|1024 GiB
+|`+\\a50-sql\sql1_data+`
+|User database data files (`.mdf`, `.ndf`)
+
+|`sql1_log`
+|512 GiB
+|`+\\a50-sql\sql1_log+`
+|User database transaction log files (`.ldf`)
+
+|`sql1_tempdb`
+|500 GiB
+|`+\\a50-sql\sql1_tempdb+`
+|TempDB data and log files
+
+|`sql1_backups`
+|2000 GiB
+|`+\\a50-sql\sql1_backups+`
+|Native SQL Server backup files (`.bak`, `.trn`)
+|===
+
+TIP: Use separate volumes for data, log, TempDB and backups.
+This lets you apply different QoS, snapshot, efficiency and replication settings per volume.
+It also keeps TempDB, which changes constantly, out of the snapshots of your user databases.
+
+[[prerequisites]]
+== Prerequisites
+
+Make sure that the following requirements are met before you start:
+
+*NetApp ONTAP*
+
+* The AFF HA pair is installed, and the cluster is set up and healthy.
+* The CIFS (SMB) license is installed. It is included in ONTAP One.
+* At least one data aggregate (local tier) exists on each node.
+* Time is synchronized between the cluster and Active Directory through NTP. The maximum allowed clock skew for Kerberos is 5 minutes.
+* The data network ports, broadcast domain and (optionally) VLANs for the SMB LIFs are configured.
+
+*Active Directory and DNS*
+
+* An Active Directory domain is available, and the DNS servers can be reached from the SVM data LIFs.
+* You have an account with permission to create computer objects in the target OU, for the CIFS server.
+* A dedicated domain user account (or gMSA) is available for the SQL Server Database Engine and SQL Server Agent services.
+
+IMPORTANT: SQL Server must run under a *domain account* when its files are on an SMB share.
+Built-in virtual accounts (`NT SERVICE\MSSQLSERVER`) and local accounts cannot be granted access to a remote file share.
+
+*Windows Server*
+
+* Windows Server 2025 (Desktop Experience) is installed, patched and joined to the domain.
+* The SQL Server 2025 installation media (ISO) and a valid product key (or a free edition) are available.
+
+*SMB requirements and restrictions for SQL Server on ONTAP*
+
+* SMB 3.0 or later must be enabled on the SVM.
+* All volumes that host CA shares must use the *NTFS* security style and must have been NTFS from the start.
+* SMB Direct (RDMA) is not supported.
+* ReFS is not supported. The file system is provided by ONTAP (WAFL).
+
+[[cluster-prep]]
+== Prepare the ONTAP cluster (storage configuration)
+
+. Open a web browser and connect to ONTAP System Manager at `+https://<cluster-management-IP>+`.
+Log in with the cluster administrator account.
++
+.ONTAP System Manager login
+image::sql25_smb_bp_004.png[ONTAP System Manager login,width=800]
+
+. On the *Dashboard*, verify that the cluster is healthy and check the ONTAP version, the available capacity and the network configuration.
++
+.System Manager dashboard
+image::sql25_smb_bp_005.png[System Manager dashboard,width=800]
+
+. Verify the base cluster services from the CLI (SSH to the cluster management LIF):
++
+[source,console]
+----
+cluster::> cluster show
+cluster::> storage aggregate show
+cluster::> cluster time-service ntp server show
+cluster::> network port broadcast-domain show
+cluster::> license show -package CIFS
+----
++
+If NTP isn't configured yet, add your domain controllers or the corporate NTP servers:
++
+[source,console]
+----
+cluster::> cluster time-service ntp server create -server <NTP-server-IP>
+----
+
+[[svm]]
+== Create and configure the storage VM (SVM)
+
+Use a dedicated SVM for SQL Server.
+The SVM joins Active Directory as a CIFS server and provides one SMB data LIF on each node of the HA pair.
+
+[[svm-gui]]
+=== Create the SVM with System Manager
+
+. In System Manager, go to menu:Cluster[Storage VMs] and click *+ Add*.
++
+image::sql25_smb_bp_006.png[Cluster > Storage VMs > Add,width=800]
+
+
+. Enter the *Storage VM name* `{svm}`.
+In *Access protocol*, select the *SMB/CIFS, NFS, S3* tab and select *Enable SMB/CIFS*.
++
+image::sql25_smb_bp_007.png[Add storage VM - name and protocol,width=800]
+
+. Enter the Active Directory information:
+** *Administrator name* and *Password*: an account that can join computers to the domain
+** *Server name*: `{cifs}` (the CIFS server name, which is the NetBIOS name used in the UNC paths)
+** *Active Directory domain*: `{fqdn-domain}`
+** *Organizational unit*: for example `CN=Computers`, or a dedicated OU for storage systems
++
+Select *Encrypt data while accessing all shares of this SVM* only if your security policy requires it.
+In that case, test the performance impact first.
++
+. Enter the *Domains* and *Name servers* (DNS) for the SVM.
++
+
+. Under *Network interface*, configure one data LIF on *each* node:
+** Node 1: IP address `192.168.175.138`, subnet mask, home port (or broadcast domain)
+** Node 2: IP address `192.168.175.139`, subnet mask, home port (or broadcast domain)
++
+TIP: One LIF per node gives SQL Server a direct (local) path to each node, and it is a prerequisite for SMB multichannel and for nondisruptive failover.
+Use 25 GbE or faster ports, and use the same MTU end to end.
++
+
+
+
+. Click *Save*.
+System Manager creates the SVM, the root volume, the LIFs and the DNS configuration, and it joins the CIFS server to the domain.
++
+. Verify the SVM root volume (`a50_sql_root` in the lab).
+It must use the *NTFS* security style.
+Go to menu:Storage[Volumes], select the root volume, and click *Edit* to review its settings.
++
+.SVM root volume settings (security style NTFS)
+image::sql25_smb_bp_012.png[Edit SVM root volume a50_sql_root,width=800]
+
+[[svm-cli]]
+=== Equivalent ONTAP CLI
+
+The following commands create the same configuration from the CLI.
+Replace the placeholder values in angle brackets.
+
+[source,console]
+----
+cluster::> vserver create -vserver a50-sql -rootvolume a50_sql_root -aggregate <aggr_node1> -rootvolume-security-style ntfs
+
+cluster::> vserver modify -vserver a50-sql -allowed-protocols cifs
+
+cluster::> network interface create -vserver a50-sql -lif a50-sql_smb_n1 -service-policy default-data-files -home-node <node1> -home-port <port> -address 192.168.175.138 -netmask <netmask>
+cluster::> network interface create -vserver a50-sql -lif a50-sql_smb_n2 -service-policy default-data-files -home-node <node2> -home-port <port> -address 192.168.175.139 -netmask <netmask>
+
+cluster::> vserver services name-service dns create -vserver a50-sql -domains sapcc.stl.netapp.com -name-servers <dns1>,<dns2>
+
+cluster::> vserver cifs create -vserver a50-sql -cifs-server A50-SQL -domain sapcc.stl.netapp.com -ou CN=Computers
+----
+
+[[svm-smb-options]]
+=== Configure the SMB server options
+
+Verify that the SMB options required for SQL Server are enabled on the SVM:
+
+[source,console]
+----
+cluster::> set -privilege advanced
+cluster::*> vserver cifs options show -vserver a50-sql -fields smb3-enabled,is-multichannel-enabled,is-large-mtu-enabled,copy-offload-enabled,shadowcopy-enabled
+cluster::*> vserver cifs options modify -vserver a50-sql -smb3-enabled true -is-multichannel-enabled true -is-large-mtu-enabled true -copy-offload-enabled true -shadowcopy-enabled true
+cluster::*> set -privilege admin
+----
+
+[cols="1,3",options="header"]
+|===
+|Option |Purpose
+
+|`smb3-enabled`
+|SMB 3.x is required for continuously available shares.
+
+|`is-multichannel-enabled`
+|SMB multichannel uses several TCP connections and network paths for higher throughput and resiliency.
+
+|`is-large-mtu-enabled`
+|Allows SMB reads and writes of up to 1 MB.
+
+|`copy-offload-enabled`
+|ODX copy offload; copies are performed inside the storage system.
+
+|`shadowcopy-enabled`
+|Remote VSS for SMB shares. Required by backup applications that use VSS for SMB shares.
+|===
+
+Finally, verify that the CIFS server is registered in DNS and can be resolved from the SQL Server host:
+
+[source,powershell]
+----
+PS C:\> Resolve-DnsName a50-sql.sapcc.stl.netapp.com
+----
+
+[[volumes]]
+== Create the SQL Server volumes and SMB shares
+
+Create one volume and one SMB share for each file type.
+System Manager creates the share together with the volume.
+
+. In System Manager, expand *Storage* and click *Volumes*.
++
+.Storage menu
+image::sql25_smb_bp_013.png[Storage menu in System Manager,width=800]
+
+. The volume list opens.
+You can type the naming prefix (here `sql1-`) into the search field to filter the list.
+Click *+ Add*.
++
+.Volumes page
+image::sql25_smb_bp_014.png[Volumes page with filter,width=800]
+
+[[vol-data]]
+=== Data volume (sql1_data)
+
+. In the *Add volume* dialog, enter the following values:
+** *Name*: `sql1_data`
+** *Storage VM*: `{svm}`
+** *Capacity*: `1024 GiB`
+** *Performance service level*: *Custom*, *Assign QoS policy group*: *Existing* > `none`
+** *Access permissions*: select *Share via SMB/CIFS*. Share name `sql1_data`, grant access to user(s) `Everyone`, permission *Full control*.
+** *Protection*: leave *Enable snapshots (local)* cleared. Application-consistent backups are created by NetApp SnapCenter (see <<snapcenter>>).
++
+Click *Save*.
++
+.Add volume sql1_data
+image::sql25_smb_bp_015.png[Add volume sql1_data,width=450]
+
+. The volume is created and shows as *Online*.
+Expand the volume row to review the details: NTFS security style, SMB access paths through both LIFs (`+\\192.168.175.138\sql1_data+` and `+\\192.168.175.139\sql1_data+`), and the QoS policy group.
++
+.Volume sql1_data created
+image::sql25_smb_bp_016.png[Volume sql1_data created with SMB share,width=800]
+
+[[vol-log]]
+=== Log volume (sql1_log)
+
+. Click *+ Add* again and enter:
+** *Name*: `sql1_log`
+** *Storage VM*: `{svm}`
+** *Capacity*: `512 GiB`
+** *Performance service level*: *Custom*, *Assign QoS policy group*: *Existing* > `none`
+** *Share via SMB/CIFS*: share name `sql1_log`, `Everyone`, *Full control*
+** *Protection*: no local snapshots
++
+Click *Save*.
++
+.Add volume sql1_log
+image::sql25_smb_bp_017.png[Add volume sql1_log,width=450]
+
+. Verify that `sql1_log` is online.
++
+.Volume sql1_log created
+image::sql25_smb_bp_018.png[Volume sql1_log created,width=800]
+
+[[vol-tempdb]]
+=== TempDB volume (sql1_tempdb)
+
+. Click *+ Add* and enter:
+** *Name*: `sql1_tempdb`
+** *Storage VM*: `{svm}`
+** *Capacity*: `500 GiB`
+** *Performance service level*: *Custom*, QoS policy group `none`
+** *Share via SMB/CIFS*: share name `sql1_tempdb`, `Everyone`, *Full control*
+** *Protection*: no local snapshots (TempDB is re-created at every SQL Server start and never needs to be backed up)
++
+Click *Save*.
++
+.Add volume sql1_tempdb
+image::sql25_smb_bp_019.png[Add volume sql1_tempdb,width=450]
+
+. Verify that `sql1_tempdb` is online.
++
+.Volume sql1_tempdb created
+image::sql25_smb_bp_020.png[Volume sql1_tempdb created,width=800]
+
+[[vol-backups]]
+=== Backup volume (sql1_backups)
+
+. Click *+ Add* and enter:
+** *Name*: `sql1_backups`
+** *Storage VM*: `{svm}`
+** *Capacity*: `2000 GiB`
+** *Performance service level*: *Custom*, QoS policy group `none`
+** *Share via SMB/CIFS*: share name `sql1_backups`, `Everyone`, *Full control*
++
+Click *Save*.
++
+.Add volume sql1_backups
+image::sql25_smb_bp_021.png[Add volume sql1_backups,width=450]
+
+. All four volumes are now online on SVM `{svm}`.
++
+.All SQL Server volumes created
+image::sql25_smb_bp_022.png[All four SQL Server volumes online,width=800]
+
+WARNING: The lab grants *Everyone / Full control* on the share level for simplicity.
+In production, restrict the share ACL to the SQL Server service account, the SQL Server Agent account and the DBA administration group, for example:
+
+[source,console]
+----
+cluster::> vserver cifs share access-control create -vserver a50-sql -share sql1_data -user-or-group SAPCC\sql1admin -permission Full_Control
+cluster::> vserver cifs share access-control create -vserver a50-sql -share sql1_data -user-or-group "SAPCC\SQL Admins" -permission Full_Control
+cluster::> vserver cifs share access-control delete -vserver a50-sql -share sql1_data -user-or-group Everyone
+----
+
+Repeat the commands for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
+The service account also needs *Full Control* on the NTFS permissions of the share root.
+SQL Server Setup checks this, as shown in <<sql-dbengine>>.
+
+[[volume-settings]]
+== Adjust the volume settings
+
+Review and adjust the space and snapshot settings of each SQL Server volume.
+
+. In the volume list, hover over the volume and click the pencil icon (*Edit*).
++
+.Edit a volume
+image::sql25_smb_bp_023.png[Edit icon in the volume list,width=800]
+
+. Configure the volume as follows (shown for `sql1_data`):
+** *Enable thin provisioning*: selected
+** *Resize automatically*: selected, *Autogrow mode*: *Grow*, *Maximum size*: for example `1.3 TiB` (about 125–130 % of the volume size)
+** *Enable fractional reserve (100%)*: cleared
+** *Security type*: `NTFS`
+** *Snapshot reserve %*: `5`
+** *Schedule snapshots*: cleared. Snapshots that are not application-consistent are of no use for SQL Server; use NetApp SnapCenter instead.
+** *Show the snapshots directory to clients*: optional (the lab left it selected; clearing it hides `~snapshot` from the share)
++
+Click *Save*, and repeat for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
++
+.Edit volume sql1_data: space and snapshot settings
+image::sql25_smb_bp_024.png[Edit volume sql1_data settings,width=450]
+
+.Equivalent ONTAP CLI
+[source,console]
+----
+cluster::> volume modify -vserver a50-sql -volume sql1_data -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 1.3TB
+----
+
+TIP: Keep storage efficiency (deduplication, compression, compaction) enabled on AFF.
+It is inline and has no measurable impact on SQL Server performance.
+
+[[ca-shares]]
+== Enable continuous availability on the SMB shares
+
+Continuous availability is the most important setting for SQL Server on SMB.
+Without it, SQL Server loses its open file handles during an ONTAP takeover or LIF migration, and the databases go suspect.
+
+. Go to menu:Storage[SMB shares].
+The list shows the four new shares and the default administrative shares `c$` and `ipc$`.
++
+.SMB shares list
+image::sql25_smb_bp_025.png[SMB shares list,width=800]
+
+. Click the more icon (*⋮*) next to the share `sql1_data` and select *Edit*.
++
+.Edit share
+image::sql25_smb_bp_026.png[Share context menu with Edit,width=800]
+
+. Under *Share properties*, set the following:
+** *Enable continuous availability*: *selected*
+** *Allow clients to access the snapshots directory*: cleared
+** *Encrypt data while accessing this share*: cleared (optional, depending on your security requirements)
+** *Enable oplocks*: selected
+** *Enable change notify*: selected
+** *Enable access-based enumeration (ABE)*: cleared
++
+Click *Save*.
++
+.Share properties: enable continuous availability
+image::sql25_smb_bp_027.png[Edit share with continuous availability enabled,width=450]
+
+. Repeat these steps for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
+
+.Equivalent ONTAP CLI
+[source,console]
+----
+cluster::> vserver cifs share properties add -vserver a50-sql -share-name sql1_data -share-properties continuously-available
+cluster::> vserver cifs share properties add -vserver a50-sql -share-name sql1_log -share-properties continuously-available
+cluster::> vserver cifs share properties add -vserver a50-sql -share-name sql1_tempdb -share-properties continuously-available
+cluster::> vserver cifs share properties add -vserver a50-sql -share-name sql1_backups -share-properties continuously-available
+
+cluster::> vserver cifs share show -vserver a50-sql -fields share-name,path,share-properties
+----
+
+[[windows-prep]]
+== Prepare Windows Server 2025
+
+Perform the following steps on the SQL Server host `{host}` as a domain administrator.
+
+. Verify that the server is joined to the domain and that the CIFS server can be resolved (see <<svm-smb-options>>).
+
+. Make sure that the SQL Server service account exists in Active Directory, for example `{svc-account}`.
+Use the same account for the Database Engine and for SQL Server Agent, or use a separate account for each.
+Whichever you choose, grant each account access to all four shares.
+
+. Test access to the shares in the security context of the service account:
++
+[source,powershell]
+----
+PS C:\> runas /user:SAPCC\sql1admin "cmd /c dir \\a50-sql\sql1_data && echo test > \\a50-sql\sql1_data\write-test.txt && del \\a50-sql\sql1_data\write-test.txt"
+----
+
+. Open the SQL Server port in the Windows firewall:
++
+[source,powershell]
+----
+PS C:\> New-NetFirewallRule -DisplayName "SQL Server (TCP 1433)" -Direction Inbound -Protocol TCP -LocalPort 1433 -Action Allow
+----
+
+. Verify the SMB connection to the SVM.
+The dialect must be 3.x and `ContinuouslyAvailable` must be `True`:
++
+[source,powershell]
+----
+PS C:\> dir \\a50-sql\sql1_data | Out-Null
+PS C:\> Get-SmbConnection -ServerName a50-sql | Format-Table ServerName,ShareName,Dialect,ContinuouslyAvailable,Encrypted,Signed
+PS C:\> Get-SmbMultichannelConnection -ServerName a50-sql
+----
+
+NOTE: By default, Windows Server 2025 requires SMB signing for all outbound SMB connections.
+ONTAP supports SMB signing and negotiates it automatically.
+Signing adds CPU overhead on both sides, so include it in your performance tests.
+Don't disable signing without a security review.
+
+[[sql-install]]
+== Install SQL Server 2025
+
+[[sql-setup-start]]
+=== Start the setup
+
+. Mount the SQL Server 2025 ISO image.
+In File Explorer, open the DVD drive (`D:` in the lab) and double-click *setup*.
++
+.SQL Server 2025 installation media
+image::sql25_smb_bp_028.png[SQL Server 2025 installation media in File Explorer,width=800]
+
+. Wait while SQL Server Setup prepares the current operation.
++
+.Setup is starting
+image::sql25_smb_bp_029.png[SQL Server 2025 setup starting,width=800]
+
+. The *SQL Server Installation Center* opens.
+Select *Installation* in the left pane and click *New SQL Server standalone installation or add features to an existing installation*.
++
+.SQL Server Installation Center
+image::sql25_smb_bp_030.png[SQL Server Installation Center,width=600]
++
+.Starting the standalone installation
+image::sql25_smb_bp_031.png[Standalone installation is starting,width=600]
+
+[[sql-edition]]
+=== Edition and license terms
+
+. On the *Edition* page, select *Enter the product key* and enter your product key, or select a free edition (Evaluation, Enterprise Developer, Standard Developer or Express).
+Select the license type that applies to you (*I have a SQL Server license only* in the lab) and click *Next*.
++
+.Edition
+image::sql25_smb_bp_032.png[Edition page,width=600]
+
+. On the *License Terms* page, read the terms, select *I accept the license terms and Privacy Statement*, and click *Next*.
++
+.License terms
+image::sql25_smb_bp_033.png[License terms page,width=600]
+
+. On the *Microsoft Update* page, select *Use Microsoft Update to check for updates (recommended)* and click *Next*.
+Setup then runs the *Global Rules*, *Product Updates*, *Install Setup Files* and *Install Rules* checks.
++
+.Microsoft Update
+image::sql25_smb_bp_034.png[Microsoft Update page,width=600]
+
+[[sql-features]]
+=== Feature selection and instance configuration
+
+. On the *Feature Selection* page, select *Database Engine Services* and any additional features you need (the lab also selected *SQL Server Replication*).
+Leave the *Instance root directory* and *Shared feature directory* on the local disk `C:`.
+The binaries are installed locally; only the database files go to the SMB shares.
++
+.Feature selection
+image::sql25_smb_bp_035.png[Feature selection page,width=600]
+
+. On the *Instance Configuration* page, select *Default instance* (`MSSQLSERVER`), or enter a named instance, and click *Next*.
++
+.Instance configuration
+image::sql25_smb_bp_036.png[Instance configuration page,width=600]
+
+[[sql-service-accounts]]
+=== Service accounts
+
+. On the *Server Configuration* page, *Service Accounts* tab, enter the domain account and password for *SQL Server Agent* and *SQL Server Database Engine*, and set the *Startup Type* to *Automatic*.
++
+IMPORTANT: Use the domain account that has Full Control on the SMB shares.
+The screenshot shows two different spellings (`SAPCC\sql1_admin` and `SAPCC\sql1admin`).
+Make sure that every account you enter exists in Active Directory and has access to all four shares.
++
+TIP: Select *Grant Perform Volume Maintenance Task privilege to SQL Server Database Engine Service*.
+This enables instant file initialization, which speeds up database creation, file growth and restores considerably.
++
+.Server configuration: service accounts
+image::sql25_smb_bp_037.png[Server configuration - service accounts,width=600]
+
+[[sql-dbengine]]
+=== Database Engine configuration
+
+. On the *Database Engine Configuration* page, *Server Configuration* tab, select the authentication mode.
+The lab uses *Mixed Mode* with a strong password for the `sa` account.
+Click *Add Current User* and *Add...* to add the SQL Server administrators (users or, preferably, an AD group).
++
+TIP: Use *Windows authentication mode* unless applications require SQL Server logins.
++
+.Database Engine configuration: server configuration
+image::sql25_smb_bp_038.png[Database Engine configuration - authentication,width=600]
+
+. On the *Data Directories* tab, enter the UNC paths of the SMB shares:
++
+[cols="1,2",options="header"]
+|===
+|Setting |Value
+
+|Data root directory
+|`C:\Program Files\Microsoft SQL Server\` (local; system databases stay on `C:`)
+
+|User database directory
+|`+\\a50-sql\sql1_data+`
+
+|User database log directory
+|`+\\a50-sql\sql1_log+`
+
+|Backup directory
+|`+\\a50-sql\sql1_backups+`
+|===
++
+NOTE: To place the system databases (`master`, `model`, `msdb`) on the SMB share as well, set *Data root directory* to a UNC path, for example `+\\a50-sql\sql1_data+`.
++
+.Data directories on SMB shares
+image::sql25_smb_bp_039.png[Data directories with UNC paths,width=600]
+
+. On the *TempDB* tab, select the default local data directory and click *Remove*.
++
+.TempDB: remove the default local directory
+image::sql25_smb_bp_040.png[TempDB tab - remove default directory,width=600]
+
+. Click *Add...*. In the *Browse For Folder* dialog, type the UNC path `+\\a50-sql\sql1_tempdb+` into the *Folder* field and click *OK*.
++
+.TempDB: add the SMB share
+image::sql25_smb_bp_041.png[TempDB tab - browse for folder with UNC path,width=600]
+
+. Set the *Log directory* to the same share (click *...*).
+The lab uses `+\\a50-sql\sql1_tempdb\data+` for both TempDB data files and the TempDB log file.
+The yellow warnings, which say that a file server was specified as the data directory, are expected.
++
+TIP: Use one TempDB data file per logical CPU core, up to 8 files.
+Set the initial sizes to the expected TempDB working set so that TempDB doesn't need to grow during operation.
+All data files must have the same size and autogrowth.
++
+.TempDB on the SMB share
+image::sql25_smb_bp_042.png[TempDB configured on SMB share with warnings,width=600]
+
+. Configure the *MaxDOP* and *Memory* tabs according to your sizing (the recommended defaults are a good starting point) and click *Next*.
+
+. For each UNC path, Setup displays a dialog asking you to verify that the SQL Server service account has Full Control share permissions on the file server.
+After you have verified the permissions (see <<volumes>> and <<windows-prep>>), click *Yes*.
++
+.Confirm the file server permissions
+image::sql25_smb_bp_043.png[File server permission confirmation dialog,width=600]
+
+[[sql-ready]]
+=== Install
+
+. On the *Ready to Install* page, review the summary and click *Install*.
++
+TIP: Copy the `ConfigurationFile.ini` shown under *Configuration file path*.
+You can use it for unattended installations of additional SQL Server hosts (`setup.exe /ConfigurationFile=<path>`).
++
+.Ready to install
+image::sql25_smb_bp_044.png[Ready to Install summary,width=600]
+
+. Wait while the installation runs.
++
+.Installation progress
+image::sql25_smb_bp_045.png[Installation progress,width=600]
+
+. When the installation is finished, verify that all features show *Succeeded* and click *Close*.
++
+.Installation complete
+image::sql25_smb_bp_046.png[Installation complete,width=600]
+
+[[post-install]]
+== Verify the installation and create a database
+
+. Install SQL Server Management Studio (SSMS) from the *Install SQL Server Management Tools* link in the Installation Center, or from the Microsoft website.
+
+. Start SSMS and connect to the instance (`{host}`) with Windows authentication.
+
+. Right-click *Databases* and select *New Database...*.
+Enter a database name (`SQ1` in the lab), set the initial file sizes, and click *OK*.
+The data and log file paths default to `+\\a50-sql\sql1_data+` and `+\\a50-sql\sql1_log+`.
++
+.New database on the SMB shares
+image::sql25_smb_bp_047.png[New Database dialog with UNC paths,width=800]
+
+. The new database appears in *Object Explorer*.
++
+.SSMS connected to SQL Server 2025 with database SQ1
+image::sql25_smb_bp_048.png[SSMS Object Explorer with database SQ1,width=800]
+
+. Verify the file locations with T-SQL:
++
+[source,sql]
+----
+SELECT DB_NAME(database_id) AS database_name,
+       type_desc,
+       name AS logical_name,
+       physical_name,
+       size * 8 / 1024 AS size_mb
+FROM   sys.master_files
+ORDER  BY database_id, type_desc;
+----
+
+. Optional: verify the continuous availability of the open files on ONTAP:
++
+[source,console]
+----
+cluster::> vserver cifs session show -vserver a50-sql
+cluster::> vserver cifs session file show -vserver a50-sql -fields share,path,continuously-available
+----
++
+All SQL Server files must show `continuously-available: Yes`.
+
+[[snapcenter]]
+== Back up SQL Server with NetApp SnapCenter
+
+NetApp SnapCenter is a self-managed (on-premises) data protection software for applications and databases on ONTAP.
+For SQL Server, it uses the *SnapCenter Plug-in for SQL Server* and the *SnapCenter Plug-in for Windows* on the database host to create *application-consistent ONTAP snapshot backups*.
+SnapCenter coordinates SQL Server and ONTAP, so a backup takes seconds, no matter how large the database is, and creates no backup I/O on the host.
+
+[[snapcenter-architecture]]
+=== Architecture
+
+The SnapCenter Server, a Windows server, manages policies, schedules, the backup catalog and role-based access.
+It deploys the plug-ins to the SQL Server host and communicates with them over HTTPS (port 8145).
+To create and manage snapshots, SnapRestore and FlexClone operations, SnapCenter calls the ONTAP REST API of the SVM or cluster.
+SQL Server itself continues to access its files over SMB 3.
+
+.SnapCenter architecture for SQL Server on SMB 3 shares
+image::sql25_smb_bp_049.svg[NetApp SnapCenter for SQL Server on SMB 3 shares,width=1000]
+
+[[snapcenter-workflow]]
+=== How a SnapCenter backup works
+
+. SnapCenter starts the backup job, either scheduled or on demand.
+. The plug-in uses the SQL Server VDI/VSS interface to freeze the write I/O of the databases for a few seconds.
+. SnapCenter creates ONTAP snapshots of the data and log volumes (`sql1_data`, `sql1_log`). No data is copied.
+. The databases resume, and the backup is recorded in the SQL Server backup history (`msdb`) and in the SnapCenter catalog.
+. Optional: the backup is verified with `DBCC CHECKDB` on a FlexClone mounted to a verification host.
+. Optional: SnapCenter updates SnapMirror or SnapVault relationships to a secondary ONTAP system or the cloud.
+. Transaction log backups run at short intervals (for example every 15 minutes) to `+\\a50-sql\sql1_backups+` and allow point-in-time recovery.
+
+.SnapCenter backup workflow
+image::sql25_smb_bp_050.svg[SnapCenter backup workflow for SQL Server,width=1000]
+
+[[snapcenter-benefits]]
+=== Major benefits
+
+* *Backups in seconds.* A snapshot backup takes seconds for databases of any size; backup windows practically disappear.
+* *No performance impact.* No data is read or copied on the host or across the network. SQL Server is quiesced for only a few seconds.
+* *Restores in minutes.* SnapRestore reverts the database files to the backup state almost instantly. Combined with log backups, you can recover to any point in time or to a specific transaction.
+* *Space-efficient backups.* Snapshots store only changed blocks, so you can keep many restore points with little additional capacity.
+* *Instant clones.* FlexClone creates writable copies of production databases in seconds for development, test, reporting or troubleshooting. They use no additional capacity until data changes.
+* *Verified backups without production load.* `DBCC CHECKDB` runs against a clone on a separate host.
+* *3-2-1 protection.* Integrated SnapMirror and SnapVault replication to a secondary site or to the cloud (Cloud Volumes ONTAP, Amazon FSx for NetApp ONTAP, Azure NetApp Files) transfers only changed blocks.
+* *Central management.* Policies, schedules, retention, role-based access control (RBAC), reporting and notifications for all SQL Server instances are in one place, with GUI, REST API and PowerShell.
+* *Always On aware.* SnapCenter supports availability groups, including backups on the preferred replica.
+
+[[snapcenter-steps]]
+=== High-level configuration steps
+
+. Install the SnapCenter Server on a dedicated Windows server and log in to the SnapCenter GUI.
+. Under menu:Storage Systems[New], add the ONTAP cluster or the SVM `{svm}` with credentials that have the required ONTAP privileges.
+. Under menu:Hosts[Add], add the SQL Server host `{host}` with the host type *Windows* and select the *Microsoft SQL Server* plug-in.
+SnapCenter pushes and installs the plug-ins and discovers the instance and its databases on the SMB shares.
+. Configure *Run As credentials* for the SQL Server instance, if required.
+. Under menu:Settings[Policies], create a backup policy, for example:
+** *Full backup and log backup*, schedule *hourly* and *daily*, retention for example 3 days
+** *Log backup* every 15 minutes
+** Optional: *SnapMirror/SnapVault update after backup*, and *verification* on a secondary host
+. Under menu:Resources[Microsoft SQL Server], select the databases or the instance, create a *resource group*, assign the policies and schedules, and set up email notifications.
+. Run a first backup on demand and check the job in menu:Monitor[Jobs].
+. Test a restore (for example to an alternate database name) and a clone to make sure the end-to-end process works.
+
+IMPORTANT: Before you deploy, check the https://imt.netapp.com/matrix/[NetApp Interoperability Matrix Tool (IMT)] to confirm that your SnapCenter version supports SQL Server 2025, Windows Server 2025, ONTAP 9.19.1 and databases on SMB shares.
+
+[[appendix-cli]]
+[appendix]
+== Complete ONTAP CLI reference
+
+The following script contains the complete storage configuration from this guide.
+Replace the values in angle brackets before you run it.
+
+[source,console]
+----
+# --- SVM -----------------------------------------------------------------
+vserver create -vserver a50-sql -rootvolume a50_sql_root -aggregate <aggr_node1> -rootvolume-security-style ntfs
+vserver modify -vserver a50-sql -allowed-protocols cifs
+
+network interface create -vserver a50-sql -lif a50-sql_smb_n1 -service-policy default-data-files -home-node <node1> -home-port <port> -address 192.168.175.138 -netmask <netmask>
+network interface create -vserver a50-sql -lif a50-sql_smb_n2 -service-policy default-data-files -home-node <node2> -home-port <port> -address 192.168.175.139 -netmask <netmask>
+
+vserver services name-service dns create -vserver a50-sql -domains sapcc.stl.netapp.com -name-servers <dns1>,<dns2>
+vserver cifs create -vserver a50-sql -cifs-server A50-SQL -domain sapcc.stl.netapp.com -ou CN=Computers
+
+set -privilege advanced
+vserver cifs options modify -vserver a50-sql -smb3-enabled true -is-multichannel-enabled true -is-large-mtu-enabled true -copy-offload-enabled true -shadowcopy-enabled true
+set -privilege admin
+
+# --- Volumes -------------------------------------------------------------
+volume create -vserver a50-sql -volume sql1_data    -aggregate <aggr_node1> -size 1TB   -security-style ntfs -junction-path /sql1_data    -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 1.3TB
+volume create -vserver a50-sql -volume sql1_log     -aggregate <aggr_node2> -size 512GB -security-style ntfs -junction-path /sql1_log     -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 650GB
+volume create -vserver a50-sql -volume sql1_tempdb  -aggregate <aggr_node2> -size 500GB -security-style ntfs -junction-path /sql1_tempdb  -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 0 -snapshot-policy none -autosize-mode grow -max-autosize 650GB
+volume create -vserver a50-sql -volume sql1_backups -aggregate <aggr_node1> -size 2000GB -security-style ntfs -junction-path /sql1_backups -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 2600GB
+
+# --- CA shares -----------------------------------------------------------
+vserver cifs share create -vserver a50-sql -share-name sql1_data    -path /sql1_data    -share-properties oplocks,browsable,changenotify,continuously-available
+vserver cifs share create -vserver a50-sql -share-name sql1_log     -path /sql1_log     -share-properties oplocks,browsable,changenotify,continuously-available
+vserver cifs share create -vserver a50-sql -share-name sql1_tempdb  -path /sql1_tempdb  -share-properties oplocks,browsable,changenotify,continuously-available
+vserver cifs share create -vserver a50-sql -share-name sql1_backups -path /sql1_backups -share-properties oplocks,browsable,changenotify,continuously-available
+
+# --- Share permissions (repeat for each share) ----------------------------
+vserver cifs share access-control create -vserver a50-sql -share sql1_data -user-or-group SAPCC\sql1admin -permission Full_Control
+vserver cifs share access-control delete -vserver a50-sql -share sql1_data -user-or-group Everyone
+
+# --- Verification ----------------------------------------------------------
+vserver cifs show -vserver a50-sql
+vserver cifs share show -vserver a50-sql -fields share-name,path,share-properties
+vserver cifs session file show -vserver a50-sql -fields share,path,continuously-available
+----
+
+TIP: Distribute the volumes across the aggregates of both nodes, for example data and backups on node 1, and log and TempDB on node 2.
+This uses the resources of both controllers.
+
+[[references]]
+[appendix]
+== References
+
+* NetApp: https://docs.netapp.com/us-en/ontap-apps-dbs/microsoft/win_smb.html[Microsoft SQL Server and SMB with ONTAP]
+* NetApp: https://docs.netapp.com/us-en/ontap/smb-hyper-v-sql/configure-solutions-concept.html[Configure ONTAP for Microsoft Hyper-V and SQL Server over SMB solutions]
+* NetApp: https://docs.netapp.com/us-en/ontap/smb-hyper-v-sql/server-volume-requirements-sql-serve-concept.html[SMB server and volume requirements for SQL Server over SMB]
+* Microsoft: https://learn.microsoft.com/en-us/sql/database-engine/install-windows/install-sql-server-with-smb-fileshare-as-a-storage-option[Install SQL Server with SMB fileshare storage]
+* NetApp: https://docs.netapp.com/us-en/snapcenter/protect-scsql/concept_snapcenter_plug_in_for_microsoft_sql_server_overview.html[SnapCenter Plug-in for Microsoft SQL Server overview]
+* NetApp: https://imt.netapp.com/matrix/[Interoperability Matrix Tool (IMT)]
