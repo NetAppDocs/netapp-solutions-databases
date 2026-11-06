@@ -154,7 +154,6 @@ The document is organized as follows:
 * <<overview>> and <<prerequisites>> describe the lab environment and the requirements.
 * <<cluster-prep>> to <<ca-shares>> describe the storage configuration: SVM, volumes, volume settings and CA shares.
 * <<windows-prep>> to <<post-install>> describe the Windows preparation, the SQL Server installation and the verification.
-* <<snapcenter>> describes data protection with NetApp SnapCenter.
 * The appendices contain a complete ONTAP CLI script and references.
 
 [[overview]]
@@ -290,7 +289,7 @@ image:sql25_smb_bp_006.png[Cluster > Storage VMs > Add]
 . Enter the *Storage VM name* `{svm}`.
 In *Access protocol*, select the *SMB/CIFS, NFS, S3* tab and select *Enable SMB/CIFS*.
 +
-image:sql25_smb_bp_007.png[Add storage VM - name and protocol,width=800]
+image:sql25_smb_bp_007.png[Add storage VM - name and protocol]
 + 
 NOTE: The Storage VM name is the SMB name of the CIFS server.
 
@@ -381,7 +380,7 @@ System Manager creates the share together with the volume.
 . In System Manager, expand *Storage* and click *Volumes*.
 +
 .Storage menu
-image:sql25_smb_bp_013.png[Storage menu in System Manager,width=800]
+image:sql25_smb_bp_013.png[Storage menu in System Manager]
 
 . The volume list opens.
 You can type the naming prefix (here `sql1-`) into the search field to filter the list.
@@ -412,64 +411,7 @@ Expand the volume row to review the details: NTFS security style, SMB access pat
 .Volume sql1_data created
 image:sql25_smb_bp_016.png[Volume sql1_data created with SMB share]
 
-[[vol-log]]
-=== Log volume (sql1_log)
-
-. Click *+ Add* again and enter:
-** *Name*: `sql1_log`
-** *Storage VM*: `{svm}`
-** *Capacity*: `512 GiB`
-** *Performance service level*: *Custom*, *Assign QoS policy group*: *Existing* > `none`
-** *Share via SMB/CIFS*: share name `sql1_log`, `Everyone`, *Full control*
-** *Protection*: no local snapshots
-+
-Click *Save*.
-+
-.Add volume sql1_log
-image:sql25_smb_bp_017.png[Add volume sql1_log,width=450]
-
-. Verify that `sql1_log` is online.
-+
-.Volume sql1_log created
-image:sql25_smb_bp_018.png[Volume sql1_log created,width=800]
-
-[[vol-tempdb]]
-=== TempDB volume (sql1_tempdb)
-
-. Click *+ Add* and enter:
-** *Name*: `sql1_tempdb`
-** *Storage VM*: `{svm}`
-** *Capacity*: `500 GiB`
-** *Performance service level*: *Custom*, QoS policy group `none`
-** *Share via SMB/CIFS*: share name `sql1_tempdb`, `Everyone`, *Full control*
-** *Protection*: no local snapshots (TempDB is re-created at every SQL Server start and never needs to be backed up)
-+
-Click *Save*.
-+
-.Add volume sql1_tempdb
-image:sql25_smb_bp_019.png[Add volume sql1_tempdb,width=450]
-
-. Verify that `sql1_tempdb` is online.
-+
-.Volume sql1_tempdb created
-image:sql25_smb_bp_020.png[Volume sql1_tempdb created,width=800]
-
-[[vol-backups]]
-=== Backup volume (sql1_backups)
-
-. Click *+ Add* and enter:
-** *Name*: `sql1_backups`
-** *Storage VM*: `{svm}`
-** *Capacity*: `2000 GiB`
-** *Performance service level*: *Custom*, QoS policy group `none`
-** *Share via SMB/CIFS*: share name `sql1_backups`, `Everyone`, *Full control*
-+
-Click *Save*.
-+
-.Add volume sql1_backups
-image:sql25_smb_bp_021.png[Add volume sql1_backups,width=450]
-
-. All four volumes are now online on SVM `{svm}`.
+. Repeat the steps for the other volumes.
 +
 .All SQL Server volumes created
 image:sql25_smb_bp_022.png[All four SQL Server volumes online,width=800]
@@ -496,7 +438,7 @@ Review and adjust the space and snapshot settings of each SQL Server volume.
 . In the volume list, hover over the volume and click the pencil icon (*Edit*).
 +
 .Edit a volume
-image:sql25_smb_bp_023.png[Edit icon in the volume list,width=800]
+image:sql25_smb_bp_023.png[Edit icon in the volume list]
 
 . Configure the volume as follows (shown for `sql1_data`):
 ** *Enable thin provisioning*: selected
@@ -614,12 +556,12 @@ Don't disable signing without a security review.
 In File Explorer, open the DVD drive (`D:` in the lab) and double-click *setup*.
 +
 .SQL Server 2025 installation media
-image:sql25_smb_bp_028.png[SQL Server 2025 installation media in File Explorer,width=800]
+image:sql25_smb_bp_028.png[SQL Server 2025 installation media in File Explorer]
 
 . Wait while SQL Server Setup prepares the current operation.
 +
 .Setup is starting
-image:sql25_smb_bp_029.png[SQL Server 2025 setup starting,width=800]
+image:sql25_smb_bp_029.png[SQL Server 2025 setup starting]
 
 . The *SQL Server Installation Center* opens.
 Select *Installation* in the left pane and click *New SQL Server standalone installation or add features to an existing installation*.
@@ -711,7 +653,7 @@ image:sql25_smb_bp_038.png[Database Engine configuration - authentication,width=
 |`+\\a50-sql\sql1_backups+`
 |===
 +
-NOTE: To place the system databases (`master`, `model`, `msdb`) on the SMB share as well, set *Data root directory* to a UNC path, for example `+\\a50-sql\sql1_data+`.
+NOTE: To place the system databases (`master`, `model`, `msdb`) on the SMB share as well, set *Data root directory* to a UNC path. Create a new volume and share for the system databases if this is desired.
 +
 .Data directories on SMB shares
 image:sql25_smb_bp_039.png[Data directories with UNC paths,width=600]
@@ -808,68 +750,6 @@ cluster::> vserver cifs session file show -vserver a50-sql -fields share,path,co
 +
 All SQL Server files must show `continuously-available: Yes`.
 
-[[snapcenter]]
-== Back up SQL Server with NetApp SnapCenter
-
-NetApp SnapCenter is a self-managed (on-premises) data protection software for applications and databases on ONTAP.
-For SQL Server, it uses the *SnapCenter Plug-in for SQL Server* and the *SnapCenter Plug-in for Windows* on the database host to create *application-consistent ONTAP snapshot backups*.
-SnapCenter coordinates SQL Server and ONTAP, so a backup takes seconds, no matter how large the database is, and creates no backup I/O on the host.
-
-[[snapcenter-architecture]]
-=== Architecture
-
-The SnapCenter Server, a Windows server, manages policies, schedules, the backup catalog and role-based access.
-It deploys the plug-ins to the SQL Server host and communicates with them over HTTPS (port 8145).
-To create and manage snapshots, SnapRestore and FlexClone operations, SnapCenter calls the ONTAP REST API of the SVM or cluster.
-SQL Server itself continues to access its files over SMB 3.
-
-.SnapCenter architecture for SQL Server on SMB 3 shares
-image:sql25_smb_bp_049.svg[NetApp SnapCenter for SQL Server on SMB 3 shares,width=1000]
-
-[[snapcenter-workflow]]
-=== How a SnapCenter backup works
-
-. SnapCenter starts the backup job, either scheduled or on demand.
-. The plug-in uses the SQL Server VDI/VSS interface to freeze the write I/O of the databases for a few seconds.
-. SnapCenter creates ONTAP snapshots of the data and log volumes (`sql1_data`, `sql1_log`). No data is copied.
-. The databases resume, and the backup is recorded in the SQL Server backup history (`msdb`) and in the SnapCenter catalog.
-. Optional: the backup is verified with `DBCC CHECKDB` on a FlexClone mounted to a verification host.
-. Optional: SnapCenter updates SnapMirror or SnapVault relationships to a secondary ONTAP system or the cloud.
-. Transaction log backups run at short intervals (for example every 15 minutes) to `+\\a50-sql\sql1_backups+` and allow point-in-time recovery.
-
-.SnapCenter backup workflow
-image:sql25_smb_bp_050.svg[SnapCenter backup workflow for SQL Server,width=1000]
-
-[[snapcenter-benefits]]
-=== Major benefits
-
-* *Backups in seconds.* A snapshot backup takes seconds for databases of any size; backup windows practically disappear.
-* *No performance impact.* No data is read or copied on the host or across the network. SQL Server is quiesced for only a few seconds.
-* *Restores in minutes.* SnapRestore reverts the database files to the backup state almost instantly. Combined with log backups, you can recover to any point in time or to a specific transaction.
-* *Space-efficient backups.* Snapshots store only changed blocks, so you can keep many restore points with little additional capacity.
-* *Instant clones.* FlexClone creates writable copies of production databases in seconds for development, test, reporting or troubleshooting. They use no additional capacity until data changes.
-* *Verified backups without production load.* `DBCC CHECKDB` runs against a clone on a separate host.
-* *3-2-1 protection.* Integrated SnapMirror and SnapVault replication to a secondary site or to the cloud (Cloud Volumes ONTAP, Amazon FSx for NetApp ONTAP, Azure NetApp Files) transfers only changed blocks.
-* *Central management.* Policies, schedules, retention, role-based access control (RBAC), reporting and notifications for all SQL Server instances are in one place, with GUI, REST API and PowerShell.
-* *Always On aware.* SnapCenter supports availability groups, including backups on the preferred replica.
-
-[[snapcenter-steps]]
-=== High-level configuration steps
-
-. Install the SnapCenter Server on a dedicated Windows server and log in to the SnapCenter GUI.
-. Under menu:Storage Systems[New], add the ONTAP cluster or the SVM `{svm}` with credentials that have the required ONTAP privileges.
-. Under menu:Hosts[Add], add the SQL Server host `{host}` with the host type *Windows* and select the *Microsoft SQL Server* plug-in.
-SnapCenter pushes and installs the plug-ins and discovers the instance and its databases on the SMB shares.
-. Configure *Run As credentials* for the SQL Server instance, if required.
-. Under menu:Settings[Policies], create a backup policy, for example:
-** *Full backup and log backup*, schedule *hourly* and *daily*, retention for example 3 days
-** *Log backup* every 15 minutes
-** Optional: *SnapMirror/SnapVault update after backup*, and *verification* on a secondary host
-. Under menu:Resources[Microsoft SQL Server], select the databases or the instance, create a *resource group*, assign the policies and schedules, and set up email notifications.
-. Run a first backup on demand and check the job in menu:Monitor[Jobs].
-. Test a restore (for example to an alternate database name) and a clone to make sure the end-to-end process works.
-
-IMPORTANT: Before you deploy, check the https://imt.netapp.com/matrix/[NetApp Interoperability Matrix Tool (IMT)] to confirm that your SnapCenter version supports SQL Server 2025, Windows Server 2025, ONTAP 9.19.1 and databases on SMB shares.
 
 [[appendix-cli]]
 [appendix]
