@@ -103,12 +103,8 @@ The solution consists of the following components:
 
 |Storage VM `{svm}`
 |A dedicated, Active Directory-joined CIFS server with one SMB data LIF per node, hosting four NTFS volumes with CA shares.
-
-|NetApp SnapCenter (optional)
-|Creates application-consistent snapshot backups and provides restore, clone and replication.
 |===
 
-.Solution architecture
 image:sql25_smb_bp_001.svg[Solution architecture: SQL Server 2025 on SMB 3 CA shares with NetApp AFF,width=1000]
 
 [[intro-design]]
@@ -124,7 +120,6 @@ TempDB is excluded from backups.
 * *NTFS security style and CA shares.* These are mandatory for SQL Server over SMB on ONTAP.
 * *No scheduled ONTAP snapshots on the database volumes.* Backups must be application-consistent; they are created by SnapCenter.
 
-.Storage layout
 image:sql25_smb_bp_002.svg[Storage layout: SQL Server files to SMB shares, volumes and aggregates,width=1000]
 
 [[intro-ca]]
@@ -139,7 +134,6 @@ The SMB 3 client on the SQL Server host reconnects automatically and reclaims it
 SQL Server only sees a short I/O pause of a few seconds; the databases stay online and no transactions are lost.
 The same applies to planned events such as ONTAP upgrades, giveback, LIF migrations and volume moves.
 
-.SMB 3 continuous availability during an ONTAP takeover
 image:sql25_smb_bp_003.svg[How SMB 3 continuous availability protects SQL Server,width=1000]
 
 [[intro-scope]]
@@ -188,7 +182,7 @@ Replace the values with the values of your environment.
 |`{svc-account}` (domain account)
 |===
 
-.Volume and share layout
+Volume and share layout
 [cols="1,1,1,2",options="header"]
 |===
 |Volume / share |Size |UNC path |Content
@@ -258,12 +252,10 @@ Built-in virtual accounts (`NT SERVICE\MSSQLSERVER`) and local accounts cannot b
 . Open a web browser and connect to ONTAP System Manager at `+https://<cluster-management-IP>+`.
 Log in with the cluster administrator account.
 +
-.ONTAP System Manager login
 image:sql25_smb_bp_004.png["ONTAP System Manager login"]
 
-. The *Dashboard*, vis your entry point for the further configuration using system manager
+. The *Dashboard*, vis your entry point for the further configuration using System Manager
 +
-.System Manager dashboard
 image:sql25_smb_bp_005.png[System Manager dashboard]
 . If NTP isn't configured yet, add your domain controllers or the corporate NTP servers using the CLI (SSH to the cluster management LIF):
 +
@@ -308,7 +300,6 @@ System Manager creates the SVM, the root volume, the LIFs and the DNS configurat
 It must use the *NTFS* security style as otherwise SMB shares will not work.
 Go to menu:Storage[Volumes], select the root volume, and click *Edit* to review its settings.
 +
-.SVM root volume settings (security style NTFS)
 image:sql25_smb_bp_012.png[Edit SVM root volume a50_sql_root]
 
 [[svm-cli]]
@@ -379,14 +370,13 @@ System Manager creates the share together with the volume.
 
 . In System Manager, expand *Storage* and click *Volumes*.
 +
-.Storage menu
+
 image:sql25_smb_bp_013.png[Storage menu in System Manager]
 
 . The volume list opens.
 You can type the naming prefix (here `sql1-`) into the search field to filter the list.
 Click *+ Add*.
 +
-.Volumes page
 image:sql25_smb_bp_014.png[Volumes page with filter]
 
 [[vol-data]]
@@ -402,18 +392,15 @@ image:sql25_smb_bp_014.png[Volumes page with filter]
 +
 Click *Save*.
 +
-.Add volume sql1_data
 image:sql25_smb_bp_015.png[Add volume sql1_data,width=450]
 
 . The volume is created and shows as *Online*.
 Expand the volume row to review the details: NTFS security style, SMB access paths through both LIFs (`+\\192.168.175.138\sql1_data+` and `+\\192.168.175.139\sql1_data+`), and the QoS policy group.
 +
-.Volume sql1_data created
 image:sql25_smb_bp_016.png[Volume sql1_data created with SMB share]
 
 . Repeat the steps for the other volumes.
 +
-.All SQL Server volumes created
 image:sql25_smb_bp_022.png[All four SQL Server volumes online,width=800]
 
 WARNING: The lab grants *Everyone / Full control* on the share level for simplicity.
@@ -437,7 +424,6 @@ Review and adjust the space and snapshot settings of each SQL Server volume.
 
 . In the volume list, hover over the volume and click the pencil icon (*Edit*).
 +
-.Edit a volume
 image:sql25_smb_bp_023.png[Edit icon in the volume list]
 
 . Configure the volume as follows (shown for `sql1_data`):
@@ -451,10 +437,8 @@ image:sql25_smb_bp_023.png[Edit icon in the volume list]
 +
 Click *Save*, and repeat for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
 +
-.Edit volume sql1_data: space and snapshot settings
 image:sql25_smb_bp_024.png[Edit volume sql1_data settings,width=450]
 
-.Equivalent ONTAP CLI
 [source,console]
 ----
 cluster::> volume modify -vserver a50-sql -volume sql1_data -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 1.3TB
@@ -555,21 +539,17 @@ Don't disable signing without a security review.
 . Mount the SQL Server 2025 ISO image.
 In File Explorer, open the DVD drive (`D:` in the lab) and double-click *setup*.
 +
-.SQL Server 2025 installation media
 image:sql25_smb_bp_028.png[SQL Server 2025 installation media in File Explorer]
 
 . Wait while SQL Server Setup prepares the current operation.
 +
-.Setup is starting
 image:sql25_smb_bp_029.png[SQL Server 2025 setup starting]
 
 . The *SQL Server Installation Center* opens.
 Select *Installation* in the left pane and click *New SQL Server standalone installation or add features to an existing installation*.
 +
-.SQL Server Installation Center
 image:sql25_smb_bp_030.png[SQL Server Installation Center,width=600]
 +
-.Starting the standalone installation
 image:sql25_smb_bp_031.png[Standalone installation is starting,width=600]
 
 [[sql-edition]]
@@ -583,13 +563,11 @@ image:sql25_smb_bp_032.png[Edition page,width=600]
 
 . On the *License Terms* page, read the terms, select *I accept the license terms and Privacy Statement*, and click *Next*.
 +
-.License terms
 image:sql25_smb_bp_033.png[License terms page,width=600]
 
 . On the *Microsoft Update* page, select *Use Microsoft Update to check for updates (recommended)* and click *Next*.
 Setup then runs the *Global Rules*, *Product Updates*, *Install Setup Files* and *Install Rules* checks.
 +
-.Microsoft Update
 image:sql25_smb_bp_034.png[Microsoft Update page,width=600]
 
 [[sql-features]]
@@ -599,12 +577,10 @@ image:sql25_smb_bp_034.png[Microsoft Update page,width=600]
 Leave the *Instance root directory* and *Shared feature directory* on the local disk `C:`.
 The binaries are installed locally; only the database files go to the SMB shares.
 +
-.Feature selection
 image:sql25_smb_bp_035.png[Feature selection page,width=600]
 
 . On the *Instance Configuration* page, select *Default instance* (`MSSQLSERVER`), or enter a named instance, and click *Next*.
 +
-.Instance configuration
 image:sql25_smb_bp_036.png[Instance configuration page,width=600]
 
 [[sql-service-accounts]]
@@ -619,7 +595,6 @@ Make sure that every account you enter exists in Active Directory and has access
 TIP: Select *Grant Perform Volume Maintenance Task privilege to SQL Server Database Engine Service*.
 This enables instant file initialization, which speeds up database creation, file growth and restores considerably.
 +
-.Server configuration: service accounts
 image:sql25_smb_bp_037.png[Server configuration - service accounts,width=600]
 
 [[sql-dbengine]]
@@ -631,7 +606,6 @@ Click *Add Current User* and *Add...* to add the SQL Server administrators (user
 +
 TIP: Use *Windows authentication mode* unless applications require SQL Server logins.
 +
-.Database Engine configuration: server configuration
 image:sql25_smb_bp_038.png[Database Engine configuration - authentication,width=600]
 
 . On the *Data Directories* tab, enter the UNC paths of the SMB shares:
@@ -655,17 +629,14 @@ image:sql25_smb_bp_038.png[Database Engine configuration - authentication,width=
 +
 NOTE: To place the system databases (`master`, `model`, `msdb`) on the SMB share as well, set *Data root directory* to a UNC path. Create a new volume and share for the system databases if this is desired.
 +
-.Data directories on SMB shares
 image:sql25_smb_bp_039.png[Data directories with UNC paths,width=600]
 
 . On the *TempDB* tab, select the default local data directory and click *Remove*.
 +
-.TempDB: remove the default local directory
 image:sql25_smb_bp_040.png[TempDB tab - remove default directory,width=600]
 
 . Click *Add...*. In the *Browse For Folder* dialog, type the UNC path `+\\a50-sql\sql1_tempdb+` into the *Folder* field and click *OK*.
 +
-.TempDB: add the SMB share
 image:sql25_smb_bp_041.png[TempDB tab - browse for folder with UNC path,width=600]
 
 . Set the *Log directory* to the same share (click *...*).
@@ -675,8 +646,9 @@ The yellow warnings, which say that a file server was specified as the data dire
 TIP: Use one TempDB data file per logical CPU core, up to 8 files.
 Set the initial sizes to the expected TempDB working set so that TempDB doesn't need to grow during operation.
 All data files must have the same size and autogrowth.
+
+NOTE: You need to use a folder for the TempDB data and log files as otherwise the installation will fail.
 +
-.TempDB on the SMB share
 image:sql25_smb_bp_042.png[TempDB configured on SMB share with warnings,width=600]
 
 . Configure the *MaxDOP* and *Memory* tabs according to your sizing (the recommended defaults are a good starting point) and click *Next*.
@@ -684,7 +656,6 @@ image:sql25_smb_bp_042.png[TempDB configured on SMB share with warnings,width=60
 . For each UNC path, Setup displays a dialog asking you to verify that the SQL Server service account has Full Control share permissions on the file server.
 After you have verified the permissions (see <<volumes>> and <<windows-prep>>), click *Yes*.
 +
-.Confirm the file server permissions
 image:sql25_smb_bp_043.png[File server permission confirmation dialog,width=600]
 
 [[sql-ready]]
@@ -695,17 +666,14 @@ image:sql25_smb_bp_043.png[File server permission confirmation dialog,width=600]
 TIP: Copy the `ConfigurationFile.ini` shown under *Configuration file path*.
 You can use it for unattended installations of additional SQL Server hosts (`setup.exe /ConfigurationFile=<path>`).
 +
-.Ready to install
 image:sql25_smb_bp_044.png[Ready to Install summary,width=600]
 
 . Wait while the installation runs.
 +
-.Installation progress
 image:sql25_smb_bp_045.png[Installation progress,width=600]
 
 . When the installation is finished, verify that all features show *Succeeded* and click *Close*.
 +
-.Installation complete
 image:sql25_smb_bp_046.png[Installation complete,width=600]
 
 [[post-install]]
@@ -719,12 +687,10 @@ image:sql25_smb_bp_046.png[Installation complete,width=600]
 Enter a database name (`SQ1` in the lab), set the initial file sizes, and click *OK*.
 The data and log file paths default to `+\\a50-sql\sql1_data+` and `+\\a50-sql\sql1_log+`.
 +
-.New database on the SMB shares
 image:sql25_smb_bp_047.png[New Database dialog with UNC paths,width=800]
 
 . The new database appears in *Object Explorer*.
 +
-.SSMS connected to SQL Server 2025 with database SQ1
 image:sql25_smb_bp_048.png[SSMS Object Explorer with database SQ1,width=800]
 
 . Verify the file locations with T-SQL:
