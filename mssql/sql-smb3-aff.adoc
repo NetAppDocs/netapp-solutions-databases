@@ -635,7 +635,7 @@ image:sql25_smb_bp_039.png[Data directories with UNC paths,width=600]
 +
 image:sql25_smb_bp_040.png[TempDB tab - remove default directory,width=600]
 
-. Click *Add...*. In the *Browse For Folder* dialog, type the UNC path `+\\a50-sql\sql1_tempdb+` into the *Folder* field and click *OK*.
+. Click *Add...*. In the *Browse For Folder* dialog, type the UNC path `+\\a50-sql\sql1_tempdb\data+` into the *Folder* field and click *OK*.
 +
 image:sql25_smb_bp_041.png[TempDB tab - browse for folder with UNC path,width=600]
 
