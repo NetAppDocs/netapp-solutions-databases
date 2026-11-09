@@ -200,6 +200,12 @@ For an additional clone database, create a separate clone_n_setup.yml and clone_
 
 ====
 
+== Github repository link:
+
+For detailed information and access to the repository, visit: https://github.com/NetApp/netapp-solutions-databases/automation/automation-ora-clone-lifecycle[Automation Oracle Clone Lifecycle Repository]
+
+====
+
 == Where to find additional information
 
 To learn more about the NetApp solution automation, review the following website link:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html[NetApp Solution Automation^^]
