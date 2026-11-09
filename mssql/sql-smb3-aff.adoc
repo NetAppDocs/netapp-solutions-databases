@@ -286,12 +286,13 @@ image:sql25_smb_bp_007.png[Add storage VM - name and protocol]
 NOTE: The Storage VM name is the SMB name of the CIFS server.
 
 . Enter the Active Directory information and the DNS information
+
 . Under *Network interface*, configure one data LIF on *each* node.
 +
 TIP: One LIF per node gives SQL Server a direct (local) path to each node, and it is a prerequisite for SMB multichannel and for nondisruptive failover.
 Use 25 GbE or faster ports, and use the same MTU end to end.
 +
-
+NOTE: You must configure these network interfaces within your DNS Server. See https://docs.netapp.com/us-en/ontap-system-manager-classic/smb-config/task_mapping_smb_server_dns_server.html for more details.
 
 . Click *Save*.
 System Manager creates the SVM, the root volume, the LIFs and the DNS configuration, and it joins the CIFS server to the domain.
@@ -374,7 +375,6 @@ System Manager creates the share together with the volume.
 image:sql25_smb_bp_013.png[Storage menu in System Manager]
 
 . The volume list opens.
-You can type the naming prefix (here `sql1-`) into the search field to filter the list.
 Click *+ Add*.
 +
 image:sql25_smb_bp_014.png[Volumes page with filter]
