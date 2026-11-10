@@ -30,7 +30,7 @@ It covers the ONTAP storage configuration, the creation and configuration of the
 == Introduction
 
 Microsoft SQL Server has supported placing database files on SMB file shares since SQL Server 2012.
-With SMB 3 and its continuously available (CA) shares, a file share is a fully supported, high-performance and highly available storage option for mission-critical SQL Server databases, as an alternative to block storage (iSCSI, FC or NVMe/TCP LUNs).
+With SMB 3 and its continuously available (CA) shares, a file share is a fully supported, high-performance and highly available storage option for mission-critical SQL Server databases, as an alternative to block storage (iSCSI or FCP LUNs).
 
 NetApp ONTAP implements SMB 3 natively on AFF all-flash systems.
 Together with SQL Server 2025 and Windows Server 2025, this gives a storage architecture that is simple to deploy and simple to operate, that tolerates failures, and that integrates with NetApp data protection.
@@ -66,7 +66,7 @@ No Windows disk or partition operations are required, and autogrow can do it aut
 |CA shares keep SQL Server running during ONTAP takeover/giveback, nondisruptive upgrades (NDU), LIF migrations and volume moves.
 
 |Performance and resiliency
-|SMB multichannel spreads the I/O across several network paths and NICs and survives the loss of a single path.
+|SMB multichannel spreads the I/O across several network paths and NICs and survives the loss of a single path. In addition SMB shares can directly be used for Windows Failover Clustering (FCI).
 AFF systems deliver consistently low latency.
 
 |Storage efficiency
@@ -102,7 +102,7 @@ The solution consists of the following components:
 |Two controllers with shared NVMe storage. If one controller fails or is upgraded, the partner takes over its storage and network interfaces.
 
 |Storage VM `{svm}`
-|A dedicated, Active Directory-joined CIFS server with one SMB data LIF per node, hosting four NTFS volumes with CA shares.
+|A dedicated, Active Directory-joined CIFS server with one SMB data LIF per node, hosting four volumes with CA shares.
 |===
 
 image:sql25_smb_bp_001.svg[Solution architecture: SQL Server 2025 on SMB 3 CA shares with NetApp AFF,width=1000]
@@ -229,7 +229,7 @@ Make sure that the following requirements are met before you start:
 
 * An Active Directory domain is available, and the DNS servers can be reached from the SVM data LIFs.
 * You have an account with permission to create computer objects in the target OU, for the CIFS server.
-* A dedicated domain user account (or gMSA) is available for the SQL Server Database Engine and SQL Server Agent services.
+* A dedicated domain user account as service account is available for the SQL Server Database Engine and SQL Server Agent services.
 
 IMPORTANT: SQL Server must run under a *domain account* when its files are on an SMB share.
 Built-in virtual accounts (`NT SERVICE\MSSQLSERVER`) and local accounts cannot be granted access to a remote file share.
@@ -539,10 +539,6 @@ Don't disable signing without a security review.
 . Mount the SQL Server 2025 ISO image.
 In File Explorer, open the DVD drive (`D:` in the lab) and double-click *setup*.
 +
-image:sql25_smb_bp_028.png[SQL Server 2025 installation media in File Explorer]
-
-. Wait while SQL Server Setup prepares the current operation.
-+
 image:sql25_smb_bp_029.png[SQL Server 2025 setup starting]
 
 . The *SQL Server Installation Center* opens.
@@ -627,7 +623,9 @@ image:sql25_smb_bp_038.png[Database Engine configuration - authentication,width=
 |`+\\a50-sql\sql1_backups+`
 |===
 +
-NOTE: To place the system databases (`master`, `model`, `msdb`) on the SMB share as well, set *Data root directory* to a UNC path. Create a new volume and share for the system databases if this is desired.
+TIP: To place the system databases (`master`, `model`, `msdb`) on the SMB share as well, set *Data root directory* to a UNC path. Create a new volume and share for the system databases if this is desired.
++
+NOTE: You need to use the UNC paths for the directories as mapped drives are not supported.
 +
 image:sql25_smb_bp_039.png[Data directories with UNC paths,width=600]
 
