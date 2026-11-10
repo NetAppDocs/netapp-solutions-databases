@@ -254,7 +254,7 @@ Log in with the cluster administrator account.
 +
 image:sql25_smb_bp_004.png["ONTAP System Manager login"]
 
-. The *Dashboard*, vis your entry point for the further configuration using System Manager
+. The *Dashboard*, is your entry point for the further configuration using System Manager
 +
 image:sql25_smb_bp_005.png[System Manager dashboard]
 . If NTP isn't configured yet, add your domain controllers or the corporate NTP servers using the CLI (SSH to the cluster management LIF):
