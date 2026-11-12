@@ -177,9 +177,13 @@ sidebar:
           pdf-filename: "SQL Server Always On with Google Cloud NetApp Volumes"
           url: /mssql/gcnv-sql-aoag-setup.html
 
-        - title: "Deploy Microsoft SQL Server 2025 on Windows Server 2025 Using SMB 3 Continuously Available Shares on NetApp AFF"
-          pdf-filename: "Deploy Microsoft SQL Server 2025 on Windows Server 2025 Using SMB 3 Continuously Available Shares on NetApp AFF"
-          url: /mssql/sql-smb3-aff.html
+        - title: "SQL Server on NetApp AFF"
+          pdf-filename: "SQL Server on NetApp AFF"
+          entries:
+            - title: "About SQL Server 2025 on NetApp AFF"
+              url: /mssql/sql-smb3-aff-overview.html
+            - title: "Deploy SQL Server 2025 on NetApp AFF"
+              url: /mssql/sql-smb3-aff.html
 
         - title: "SAP with Microsoft SQL Server on Windows using Clustered Data ONTAP"
           pdf-filename: "SAP with Microsoft SQL Server on Windows Using Clustered Data ONTAP"
