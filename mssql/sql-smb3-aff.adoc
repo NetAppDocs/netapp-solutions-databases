@@ -175,9 +175,13 @@ Use a dedicated SVM for SQL Server.
 The SVM joins Active Directory as a CIFS server and provides one SMB data LIF on each node of the HA pair.
 
 .Steps
-. Create the SVM with System Manager
-
-.. In System Manager, go to menu:Cluster[Storage VMs] and click *+ Add*.
+. Create the SVM with System Manager or the CLI:
++
+[role="tabbed-block"]
+======
+.System Manager
+--
+. In System Manager, go to menu:Cluster[Storage VMs] and click *+ Add*.
 +
 .Show example
 [%collapsible]
@@ -186,7 +190,7 @@ image:sql25_smb_bp_006.png[Cluster > Storage VMs > Add]
 ====
 
 
-.. Enter the *Storage VM name* `{svm}`.
+. Enter the *Storage VM name* `{svm}`.
 In *Access protocol*, select the *SMB/CIFS, NFS, S3* tab and select *Enable SMB/CIFS*.
 +
 .Show example
@@ -194,19 +198,19 @@ In *Access protocol*, select the *SMB/CIFS, NFS, S3* tab and select *Enable SMB/
 ====
 image:sql25_smb_bp_007.png[Add storage VM - name and protocol]
 ====
-+ 
++
 NOTE: The Storage VM name is the SMB name of the CIFS server.
 
-.. Enter the Active Directory information (domain, administrator name and password, and OU) and the DNS information (DNS domain and name servers).
+. Enter the Active Directory information (domain, administrator name and password, and OU) and the DNS information (DNS domain and name servers).
 
-.. Under *Network interface*, configure one data LIF on *each* node.
+. Under *Network interface*, configure one data LIF on *each* node.
 +
 TIP: One LIF per node gives SQL Server a direct (local) path to each node, and it is a prerequisite for SMB multichannel and for nondisruptive failover.
 Use 25 GbE or faster ports, and use the same MTU end to end.
 +
 NOTE: You must register these network interfaces in your DNS server. For details, see https://docs.netapp.com/us-en/ontap-system-manager-classic/smb-config/task_mapping_smb_server_dns_server.html[Map the SMB server to the DNS server^].
 
-.. Click *Save*.
+. Click *Save*.
 System Manager creates the SVM, the root volume, the LIFs and the DNS configuration, and it joins the CIFS server to the domain.
 
 . Verify the SVM root volume (`a50_sql_root` in the lab).
@@ -218,10 +222,10 @@ Go to menu:Storage[Volumes], select the root volume, and click *Edit* to review 
 ====
 image:sql25_smb_bp_012.png[Edit SVM root volume a50_sql_root]
 ====
+--
 
-[[svm-cli]]
-== Equivalent ONTAP CLI
-
+.ONTAP CLI
+--
 The following commands create the same configuration from the CLI.
 Replace the placeholder values in angle brackets.
 
@@ -238,12 +242,12 @@ cluster::> vserver services name-service dns create -vserver a50-sql -domains sa
 
 cluster::> vserver cifs create -vserver a50-sql -cifs-server A50-SQL -domain sapcc.stl.netapp.com -ou CN=Computers
 ----
+--
+======
 
-[[svm-smb-options]]
-=== Configure the SMB server options
-
+. [[svm-smb-options,Configure the SMB server options]]Configure the SMB server options.
 Verify that the SMB options required for SQL Server are enabled on the SVM:
-
++
 [source,console]
 ----
 cluster::> set -privilege advanced
@@ -251,7 +255,7 @@ cluster::*> vserver cifs options show -vserver a50-sql -fields smb3-enabled,is-m
 cluster::*> vserver cifs options modify -vserver a50-sql -smb3-enabled true -is-multichannel-enabled true -is-large-mtu-enabled true -copy-offload-enabled true -shadowcopy-enabled true
 cluster::*> set -privilege admin
 ----
-
++
 [cols="1,3",options="header"]
 |===
 |Option |Purpose
@@ -272,8 +276,8 @@ cluster::*> set -privilege admin
 |Remote VSS for SMB shares. Required by backup applications that use VSS for SMB shares.
 |===
 
-Finally, verify that the CIFS server is registered in DNS and can be resolved from the SQL Server host:
-
+. Verify that the CIFS server is registered in DNS and can be resolved from the SQL Server host:
++
 [source,powershell]
 ----
 PS C:\> Resolve-DnsName a50-sql.sapcc.stl.netapp.com
