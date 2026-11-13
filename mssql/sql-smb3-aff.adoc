@@ -307,13 +307,9 @@ Click *+ Add*.
 image:sql25_smb_bp_014.png[Volumes page with filter]
 ====
 
-[[vol-data]]
-=== Data volume (sql1_data)
+. Create the `sql1_data` volume and its SMB share for the user database data files.
 
-Create the `sql1_data` volume and its SMB share for the user database data files. Then repeat the steps for the log, TempDB, and backup volumes with the sizes and names listed in <<overview>>.
-
-.Steps
-. In the *Add volume* dialog, enter the following values:
+.. In the *Add volume* dialog, enter the following values:
 ** *Name*: `sql1_data`
 ** *Storage VM*: `{svm}`
 ** *Capacity*: `1024 GiB`
@@ -329,7 +325,7 @@ Click *Save*.
 image:sql25_smb_bp_015.png[Add volume sql1_data,width=450]
 ====
 
-. The volume is created and shows as *Online*.
+.. The volume is created and shows as *Online*.
 Expand the volume row to review the details: NTFS security style, SMB access paths through both LIFs (`+\\192.168.175.138\sql1_data+` and `+\\192.168.175.139\sql1_data+`), and the QoS policy group.
 +
 .Show example
@@ -338,17 +334,17 @@ Expand the volume row to review the details: NTFS security style, SMB access pat
 image:sql25_smb_bp_016.png[Volume sql1_data created with SMB share]
 ====
 
-. Repeat the steps for the other volumes.
+. Repeat the steps for the log, TempDB, and backup volumes with the sizes and names listed in <<overview>>.
 +
 .Show example
 [%collapsible]
 ====
 image:sql25_smb_bp_022.png[All four SQL Server volumes online,width=800]
 ====
-
++
 WARNING: The lab grants *Everyone / Full control* on the share level for simplicity.
 In production, restrict the share ACL to the SQL Server service account, the SQL Server Agent account and the DBA administration group, for example:
-
++
 [source,console]
 ----
 cluster::> vserver cifs share access-control create -vserver a50-sql -share sql1_data -user-or-group SAPCC\sql1admin -permission Full_Control
@@ -356,7 +352,7 @@ cluster::> vserver cifs share access-control create -vserver a50-sql -share sql1
 cluster::> vserver cifs share access-control delete -vserver a50-sql -share sql1_data -user-or-group Everyone
 ----
 
-Repeat the commands for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
+. Repeat the commands for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
 The service account also needs *Full Control* on the NTFS permissions of the share root.
 SQL Server Setup checks this, as shown in <<sql-dbengine>>.
 
