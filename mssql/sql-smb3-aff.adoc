@@ -21,14 +21,16 @@ summary: "Deploy SQL Server 2025 on Windows Server 2025 with user databases, tra
 [.lead]
 Deploy SQL Server 2025 on Windows Server 2025 with user databases, transaction logs, TempDB, and backups on SMB 3 continuously available shares on a NetApp AFF system. This procedure includes configuring the ONTAP SVM, volumes, and shares, installing SQL Server, and protecting the databases with SnapCenter.
 
-[[introduction]]
-== Introduction
+[[intro-scope]]
+== Scope
 
-This procedure deploys a standalone SQL Server 2025 instance on a Windows Server 2025 host, with user databases, transaction logs, TempDB, and backups on SMB 3 continuously available (CA) shares.
+This procedure deploys a standalone SQL Server 2025 instance on a single Windows Server 2025 host, with user databases, transaction logs, TempDB, and backups on SMB 3 continuously available (CA) shares.
+The same storage design applies to SQL Server failover cluster instances (FCI) and Always On availability groups, but their cluster-specific configuration is not covered.
+SQL Server performance tuning and sizing are also out of scope.
 For the benefits, solution components, design principles, and an explanation of how continuous availability works, see link:sql-smb3-aff-overview.html[Learn about SQL Server 2025 on NetApp AFF with SMB 3 continuous availability].
 
 [[intro-audience]]
-=== Audience
+== Audience
 
 This procedure is intended for:
 
@@ -37,13 +39,6 @@ This procedure is intended for:
 * *Database administrators*, who install and configure SQL Server 2025 and set up backup and recovery.
 
 Basic knowledge of ONTAP System Manager, Windows Server and SQL Server administration is assumed.
-
-[[intro-scope]]
-=== Scope
-
-This procedure covers a standalone SQL Server 2025 instance on a single Windows Server 2025 host.
-The same storage design applies to SQL Server failover cluster instances (FCI) and Always On availability groups, but their cluster-specific configuration is not covered.
-SQL Server performance tuning and sizing are also out of scope.
 
 [[overview]]
 == Lab environment
@@ -402,7 +397,13 @@ Continuous availability is the most important setting for SQL Server on SMB.
 Without it, SQL Server loses its open file handles during an ONTAP takeover or LIF migration, and the databases go suspect.
 
 .Steps
-. Go to menu:Storage[SMB shares].
+. Enable continuous availability on the SMB shares with System Manager or the CLI:
++
+[role="tabbed-block"]
+======
+.System Manager
+--
+.. Go to menu:Storage[SMB shares].
 The list shows the four new shares and the default administrative shares `c$` and `ipc$`.
 +
 .Show example
@@ -411,7 +412,7 @@ The list shows the four new shares and the default administrative shares `c$` an
 image::sql25_smb_bp_025.png[SMB shares list,width=800]
 ====
 
-. Click the more icon (*⋮*) next to the share `sql1_data` and select *Edit*.
+.. Click the more icon (*⋮*) next to the share `sql1_data` and select *Edit*.
 +
 .Show example
 [%collapsible]
@@ -419,7 +420,7 @@ image::sql25_smb_bp_025.png[SMB shares list,width=800]
 image::sql25_smb_bp_026.png[Share context menu with Edit,width=800]
 ====
 
-. Under *Share properties*, set the following:
+.. Under *Share properties*, set the following:
 ** *Enable continuous availability*: *selected*
 ** *Allow clients to access the snapshots directory*: cleared
 ** *Encrypt data while accessing this share*: cleared (optional, depending on your security requirements)
@@ -435,9 +436,11 @@ Click *Save*.
 image::sql25_smb_bp_027.png[Edit share with continuous availability enabled,width=450]
 ====
 
-. Repeat these steps for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
+.. Repeat these steps for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
+--
 
-.Equivalent ONTAP CLI
+.ONTAP CLI
+--
 [source,console]
 ----
 cluster::> vserver cifs share properties add -vserver a50-sql -share-name sql1_data -share-properties continuously-available
@@ -447,6 +450,8 @@ cluster::> vserver cifs share properties add -vserver a50-sql -share-name sql1_b
 
 cluster::> vserver cifs share show -vserver a50-sql -fields share-name,path,share-properties
 ----
+--
+======
 
 [[windows-prep]]
 == Step 6: Prepare Windows Server 2025
@@ -494,13 +499,10 @@ Don't disable signing without a security review.
 
 Install SQL Server 2025 on the Windows Server host with the Setup wizard. Install the binaries and system databases on the local disk, and point the user database, transaction log, TempDB, and backup locations to the SMB shares you created.
 
-[[sql-setup-start]]
-=== Start the setup
-
-Mount the SQL Server 2025 installation media on the Windows Server host and start the standalone installation from the SQL Server Installation Center.
-
 .Steps
-. Mount the SQL Server 2025 ISO image.
+. Start the standalone installation from the SQL Server Installation Center.
+
+.. Mount the SQL Server 2025 ISO image.
 In File Explorer, open the DVD drive (`D:` in the lab) and double-click *setup*.
 +
 .Show example
@@ -509,7 +511,7 @@ In File Explorer, open the DVD drive (`D:` in the lab) and double-click *setup*.
 image:sql25_smb_bp_029.png[SQL Server 2025 setup starting]
 ====
 
-. The *SQL Server Installation Center* opens.
+.. The *SQL Server Installation Center* opens.
 Select *Installation* in the left pane and click *New SQL Server standalone installation or add features to an existing installation*.
 +
 .Show example
@@ -520,13 +522,9 @@ image:sql25_smb_bp_030.png[SQL Server Installation Center,width=600]
 image:sql25_smb_bp_031.png[Standalone installation is starting,width=600]
 ====
 
-[[sql-edition]]
-=== Edition and license terms
+. Select the SQL Server edition, accept the license terms, and let Setup check for product updates.
 
-Select the SQL Server edition, accept the license terms, and let Setup check for product updates.
-
-.Steps
-. On the *Edition* page, select *Enter the product key* and enter your product key, or select a free edition (Evaluation, Enterprise Developer, Standard Developer or Express).
+.. On the *Edition* page, select *Enter the product key* and enter your product key, or select a free edition (Evaluation, Enterprise Developer, Standard Developer or Express).
 Select the license type that applies to you (*I have a SQL Server license only* in the lab) and click *Next*.
 +
 .Show example
@@ -535,7 +533,7 @@ Select the license type that applies to you (*I have a SQL Server license only* 
 image:sql25_smb_bp_032.png[Edition page,width=600]
 ====
 
-. On the *License Terms* page, read the terms, select *I accept the license terms and Privacy Statement*, and click *Next*.
+.. On the *License Terms* page, read the terms, select *I accept the license terms and Privacy Statement*, and click *Next*.
 +
 .Show example
 [%collapsible]
@@ -543,7 +541,7 @@ image:sql25_smb_bp_032.png[Edition page,width=600]
 image:sql25_smb_bp_033.png[License terms page,width=600]
 ====
 
-. On the *Microsoft Update* page, select *Use Microsoft Update to check for updates (recommended)* and click *Next*.
+.. On the *Microsoft Update* page, select *Use Microsoft Update to check for updates (recommended)* and click *Next*.
 Setup then runs the *Global Rules*, *Product Updates*, *Install Setup Files* and *Install Rules* checks.
 +
 .Show example
@@ -552,14 +550,10 @@ Setup then runs the *Global Rules*, *Product Updates*, *Install Setup Files* and
 image:sql25_smb_bp_034.png[Microsoft Update page,width=600]
 ====
 
-[[sql-features]]
-=== Feature selection and instance configuration
-
-Select the SQL Server features and the instance to install.
+. Select the SQL Server features and the instance to install.
 The binaries stay on the local disk; only the database files are placed on the SMB shares.
 
-.Steps
-. On the *Feature Selection* page, select *Database Engine Services* and any additional features you need (the lab also selected *SQL Server Replication*).
+.. On the *Feature Selection* page, select *Database Engine Services* and any additional features you need (the lab also selected *SQL Server Replication*).
 Leave the *Instance root directory* and *Shared feature directory* on the local disk `C:`.
 The binaries are installed locally; only the database files go to the SMB shares.
 +
@@ -569,7 +563,7 @@ The binaries are installed locally; only the database files go to the SMB shares
 image:sql25_smb_bp_035.png[Feature selection page,width=600]
 ====
 
-. On the *Instance Configuration* page, select *Default instance* (`MSSQLSERVER`), or enter a named instance, and click *Next*.
+.. On the *Instance Configuration* page, select *Default instance* (`MSSQLSERVER`), or enter a named instance, and click *Next*.
 +
 .Show example
 [%collapsible]
@@ -577,13 +571,9 @@ image:sql25_smb_bp_035.png[Feature selection page,width=600]
 image:sql25_smb_bp_036.png[Instance configuration page,width=600]
 ====
 
-[[sql-service-accounts]]
-=== Service accounts
+. Configure the SQL Server Database Engine and SQL Server Agent services to run under a domain account that has access to the SMB shares.
 
-Configure the SQL Server Database Engine and SQL Server Agent services to run under a domain account that has access to the SMB shares.
-
-.Steps
-. On the *Server Configuration* page, *Service Accounts* tab, enter the domain account and password for *SQL Server Agent* and *SQL Server Database Engine*, and set the *Startup Type* to *Automatic*.
+.. On the *Server Configuration* page, *Service Accounts* tab, enter the domain account and password for *SQL Server Agent* and *SQL Server Database Engine*, and set the *Startup Type* to *Automatic*.
 +
 IMPORTANT: Use the domain account that has Full Control on the SMB shares.
 The screenshot shows two different spellings (`SAPCC\sql1_admin` and `SAPCC\sql1admin`).
@@ -598,13 +588,9 @@ This enables instant file initialization, which speeds up database creation, fil
 image:sql25_smb_bp_037.png[Server configuration - service accounts,width=600]
 ====
 
-[[sql-dbengine]]
-=== Database Engine configuration
+. Set the authentication mode and the SQL Server administrators, and enter the UNC paths of the SMB shares for the user database, transaction log, backup, and TempDB files.
 
-Set the authentication mode and the SQL Server administrators, and enter the UNC paths of the SMB shares for the user database, transaction log, backup, and TempDB files.
-
-.Steps
-. On the *Database Engine Configuration* page, *Server Configuration* tab, select the authentication mode.
+.. On the *Database Engine Configuration* page, *Server Configuration* tab, select the authentication mode.
 The lab uses *Mixed Mode* with a strong password for the `sa` account.
 Click *Add Current User* and *Add...* to add the SQL Server administrators (users or, preferably, an AD group).
 +
@@ -616,7 +602,7 @@ TIP: Use *Windows authentication mode* unless applications require SQL Server lo
 image:sql25_smb_bp_038.png[Database Engine configuration - authentication,width=600]
 ====
 
-. On the *Data Directories* tab, enter the UNC paths of the SMB shares:
+.. On the *Data Directories* tab, enter the UNC paths of the SMB shares:
 +
 [cols="1,2",options="header"]
 |===
@@ -645,7 +631,7 @@ NOTE: You need to use the UNC paths for the directories as mapped drives are not
 image:sql25_smb_bp_039.png[Data directories with UNC paths,width=600]
 ====
 
-. On the *TempDB* tab, select the default local data directory and click *Remove*.
+.. On the *TempDB* tab, select the default local data directory and click *Remove*.
 +
 .Show example
 [%collapsible]
@@ -653,7 +639,7 @@ image:sql25_smb_bp_039.png[Data directories with UNC paths,width=600]
 image:sql25_smb_bp_040.png[TempDB tab - remove default directory,width=600]
 ====
 
-. Click *Add...*. In the *Browse For Folder* dialog, type the UNC path `+\\a50-sql\sql1_tempdb\data+` into the *Folder* field and click *OK*.
+.. Click *Add...*. In the *Browse For Folder* dialog, type the UNC path `+\\a50-sql\sql1_tempdb\data+` into the *Folder* field and click *OK*.
 +
 .Show example
 [%collapsible]
@@ -661,7 +647,7 @@ image:sql25_smb_bp_040.png[TempDB tab - remove default directory,width=600]
 image:sql25_smb_bp_041.png[TempDB tab - browse for folder with UNC path,width=600]
 ====
 
-. Set the *Log directory* to the same share (click *...*).
+.. Set the *Log directory* to the same share (click *...*).
 The lab uses `+\\a50-sql\sql1_tempdb\data+` for both TempDB data files and the TempDB log file.
 The yellow warnings, which say that a file server was specified as the data directory, are expected.
 +
@@ -677,9 +663,9 @@ NOTE: You need to use a folder for the TempDB data and log files as otherwise th
 image:sql25_smb_bp_042.png[TempDB configured on SMB share with warnings,width=600]
 ====
 
-. Configure the *MaxDOP* and *Memory* tabs according to your sizing (the recommended defaults are a good starting point) and click *Next*.
+.. Configure the *MaxDOP* and *Memory* tabs according to your sizing (the recommended defaults are a good starting point) and click *Next*.
 
-. For each UNC path, Setup displays a dialog asking you to verify that the SQL Server service account has Full Control share permissions on the file server.
+.. [[sql-dbengine,Step 7]]For each UNC path, Setup displays a dialog asking you to verify that the SQL Server service account has Full Control share permissions on the file server.
 After you have verified the permissions (see <<volumes>> and <<windows-prep>>), click *Yes*.
 +
 .Show example
@@ -688,13 +674,9 @@ After you have verified the permissions (see <<volumes>> and <<windows-prep>>), 
 image:sql25_smb_bp_043.png[File server permission confirmation dialog,width=600]
 ====
 
-[[sql-ready]]
-=== Install
+. Review the installation summary, run the installation, and confirm that all features installed successfully.
 
-Review the installation summary, run the installation, and confirm that all features installed successfully.
-
-.Steps
-. On the *Ready to Install* page, review the summary and click *Install*.
+.. On the *Ready to Install* page, review the summary and click *Install*.
 +
 TIP: Copy the `ConfigurationFile.ini` shown under *Configuration file path*.
 You can use it for unattended installations of additional SQL Server hosts (`setup.exe /ConfigurationFile=<path>`).
@@ -705,7 +687,7 @@ You can use it for unattended installations of additional SQL Server hosts (`set
 image:sql25_smb_bp_044.png[Ready to Install summary,width=600]
 ====
 
-. Wait while the installation runs.
+.. Wait while the installation runs.
 +
 .Show example
 [%collapsible]
@@ -713,7 +695,7 @@ image:sql25_smb_bp_044.png[Ready to Install summary,width=600]
 image:sql25_smb_bp_045.png[Installation progress,width=600]
 ====
 
-. When the installation is finished, verify that all features show *Succeeded* and click *Close*.
+.. When the installation is finished, verify that all features show *Succeeded* and click *Close*.
 +
 .Show example
 [%collapsible]
@@ -774,7 +756,7 @@ cluster::> vserver cifs session file show -vserver a50-sql -fields share,path,co
 All SQL Server files must show `continuously-available: Yes`.
 
 
-== Configure the storage with a single ONTAP CLI script
+== Use an ONTAP CLI script to configure the storage in one pass
 
 The following script contains the complete storage configuration from this procedure.
 Replace the values in angle brackets before you run it.
