@@ -181,7 +181,7 @@ The SVM joins Active Directory as a CIFS server and provides one SMB data LIF on
 ======
 .System Manager
 --
-. In System Manager, go to menu:Cluster[Storage VMs] and click *+ Add*.
+.. In System Manager, go to menu:Cluster[Storage VMs] and click *+ Add*.
 +
 .Show example
 [%collapsible]
@@ -190,7 +190,7 @@ image:sql25_smb_bp_006.png[Cluster > Storage VMs > Add]
 ====
 
 
-. Enter the *Storage VM name* `{svm}`.
+.. Enter the *Storage VM name* `{svm}`.
 In *Access protocol*, select the *SMB/CIFS, NFS, S3* tab and select *Enable SMB/CIFS*.
 +
 .Show example
@@ -201,19 +201,19 @@ image:sql25_smb_bp_007.png[Add storage VM - name and protocol]
 +
 NOTE: The Storage VM name is the SMB name of the CIFS server.
 
-. Enter the Active Directory information (domain, administrator name and password, and OU) and the DNS information (DNS domain and name servers).
+.. Enter the Active Directory information (domain, administrator name and password, and OU) and the DNS information (DNS domain and name servers).
 
-. Under *Network interface*, configure one data LIF on *each* node.
+.. Under *Network interface*, configure one data LIF on *each* node.
 +
 TIP: One LIF per node gives SQL Server a direct (local) path to each node, and it is a prerequisite for SMB multichannel and for nondisruptive failover.
 Use 25 GbE or faster ports, and use the same MTU end to end.
 +
 NOTE: You must register these network interfaces in your DNS server. For details, see https://docs.netapp.com/us-en/ontap-system-manager-classic/smb-config/task_mapping_smb_server_dns_server.html[Map the SMB server to the DNS server^].
 
-. Click *Save*.
+.. Click *Save*.
 System Manager creates the SVM, the root volume, the LIFs and the DNS configuration, and it joins the CIFS server to the domain.
 
-. Verify the SVM root volume (`a50_sql_root` in the lab).
+.. Verify the SVM root volume (`a50_sql_root` in the lab).
 It must use the *NTFS* security style as otherwise SMB shares will not work.
 Go to menu:Storage[Volumes], select the root volume, and click *Edit* to review its settings.
 +
