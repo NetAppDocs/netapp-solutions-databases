@@ -315,7 +315,7 @@ image:sql25_smb_bp_014.png[Volumes page with filter]
 ** *Capacity*: `1024 GiB`
 ** *Performance service level*: *Custom*, *Assign QoS policy group*: *Existing* > `none`
 ** *Access permissions*: select *Share via SMB/CIFS*. Share name `sql1_data`, grant access to user(s) `Everyone`, permission *Full control*.
-** *Protection*: leave *Enable snapshots (local)* cleared. Application-consistent backups are created by NetApp SnapCenter (see <<snapcenter>>).
+** *Protection*: leave *Enable snapshots (local)* cleared. Application-consistent backups are created by NetApp SnapCenter.
 +
 Click *Save*.
 +
