@@ -11,6 +11,9 @@ summary: Log of recent changes to the NetApp database solutions collateral.
 [.lead]
 Learn what's new in database solutions.
 
+== 9 November 2026
+Added the SQL Server SMB document: link:https://docs.netapp.com/us-en/mssql/sql-smb3-aff.html[Deploy Microsoft SQL Server 2025 on Windows Server 2025 Using SMB 3 Continuously Available Shares on NetApp AFF^]
+
 == 18 August 2025
 The NetApp Solutions site is now the link:https://docs.netapp.com/us-en/netapp-solutions-family/index.html[NetApp solutions family^], which includes the following sites:
 
