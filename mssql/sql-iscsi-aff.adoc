@@ -117,6 +117,8 @@ TIP: Use one LUN per volume and separate volumes for data, log, TempDB and backu
 This lets you apply different QoS, snapshot, efficiency and replication settings per volume.
 It also keeps TempDB, which changes constantly, out of the snapshots of your user databases.
 
+TIP: Use additional LUNs at different controllers for additional secondary datafiles (.ndf) to spread the load.
+
 [[prerequisites]]
 == Prerequisites
 

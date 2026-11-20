@@ -40,7 +40,7 @@ To deploy this configuration, see link:sql-iscsi-aff.html[Deploy SQL Server 2025
 SQL Server, its tools and third-party applications need no special configuration; local service accounts and virtual accounts work as usual.
 
 |Standard Ethernet
-|iSCSI runs on the existing 25/100 GbE data center network.
+|iSCSI runs on the existing Ethernet network in the data center.
 No Fibre Channel fabric, HBAs or FC switches are required.
 
 |High availability
