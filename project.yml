@@ -151,13 +151,29 @@ sidebar:
   #
     - title: "Microsoft SQL Server"
       entries:
-        - title: "Backup and recovery for Microsoft SQL Server on AWS FSx ONTAP"
-          pdf-filename: "Backup and Recovery for Microsoft SQL Server on AWS FSx ONTAP"
-          url: /mssql/sqlsb-backup-restore-aws-fsxn.html
-
-        - title: "SQL Server on AWS EC2 using Amazon FSx ONTAP"
-          pdf-filename: "SQL Server on AWS EC2 using Amazon FSx ONTAP"
-          url: /mssql/sql-aws-ec2.html
+        - title: "SQL Server on NetApp AFF"
+          entries:
+            - title: "About SQL Server 2025 with SMB"
+              pdf-filename: "About SQL Server 2025 with SMB"
+              entries:
+                - title: "Deploy SQL Server 2025 on NetApp AFF with SMB"
+                  url: /mssql/sql-smb3-aff.html
+              url: /mssql/sql-smb3-aff-overview.html    
+            - title: "About SQL Server 2025 with iSCSI"
+              pdf-filename: "About SQL Server 2025 with iSCSI"
+              entries:
+                - title: "Deploy SQL Server 2025 with iSCSI"
+                  url: /mssql/sql-iscsi-aff.html
+              url: /mssql/sql-iscsi-aff-overview.html
+              
+        - title: "SQL Server on AWS FSx ONTAP"
+          entries:
+            - title: "Backup and recovery for Microsoft SQL Server on AWS FSx ONTAP"
+              pdf-filename: "Backup and Recovery for Microsoft SQL Server on AWS FSx ONTAP"
+              url: /mssql/sqlsb-backup-restore-aws-fsxn.html
+            - title: "SQL Server on AWS EC2 using Amazon FSx ONTAP"
+              pdf-filename: "SQL Server on AWS EC2 using Amazon FSx ONTAP"
+              url: /mssql/sql-aws-ec2.html
 
         - title: "SQL Server on Azure NetApp Files"
           pdf-filename: "SQL Server on Azure NetApp Files"
@@ -176,20 +192,6 @@ sidebar:
         - title: "SQL Server Always On with Google Cloud NetApp Volumes"
           pdf-filename: "SQL Server Always On with Google Cloud NetApp Volumes"
           url: /mssql/gcnv-sql-aoag-setup.html
-
-        - title: "SQL Server on NetApp AFF"
-          pdf-filename: "SQL Server on NetApp AFF"
-          entries:
-            - title: "About SQL Server 2025 with SMB"
-              entries:
-                - title: "Deploy SQL Server 2025 on NetApp AFF with SMB"
-                  url: /mssql/sql-smb3-aff.html
-              url: /mssql/sql-smb3-aff-overview.html    
-            - title: "About SQL Server 2025 with iSCSI"
-              entries:
-                - title: "Deploy SQL Server 2025 with iSCSI"
-                  url: /mssql/sql-iscsi-aff.html
-              url: /mssql/sql-iscsi-aff-overview.html
 
         - title: "SAP with Microsoft SQL Server on Windows using Clustered Data ONTAP"
           pdf-filename: "SAP with Microsoft SQL Server on Windows Using Clustered Data ONTAP"

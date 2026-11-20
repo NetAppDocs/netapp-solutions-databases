@@ -491,10 +491,6 @@ System Manager uses sensible defaults; the following settings are recommended fo
 |`0` %
 |Snapshot space is monitored with the volume autosize instead.
 
-|Fractional reserve
-|`0`
-|Default for thin volumes.
-
 |Autosize
 |`grow`, maximum about 130 % of the volume size
 |Prevents the LUN from going offline when snapshots consume space.
@@ -508,7 +504,7 @@ Use the following commands to apply and verify the settings (shown for `sql_iscs
 
 [source,console]
 ----
-cluster::> volume modify -vserver a50-sql -volume sql_iscsi_1_data -snapshot-policy none -percent-snapshot-space 0 -fractional-reserve 0 -autosize-mode grow -max-autosize 730GB
+cluster::> volume modify -vserver a50-sql -volume sql_iscsi_1_data -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 730GB
 cluster::> lun modify -vserver a50-sql -path /vol/sql_iscsi_1_data/sql_iscsi_1_data_1 -space-allocation enabled
 cluster::> volume show -vserver a50-sql -volume sql_iscsi_1_* -fields aggregate,size,space-guarantee,snapshot-policy,autosize-mode
 ----
@@ -1047,10 +1043,10 @@ network interface create -vserver a50-sql -lif a50-sql_iscsi_n2_2 -service-polic
 lun igroup create -vserver a50-sql -igroup sql-iscsi-1 -protocol iscsi -ostype windows -initiator iqn.1991-05.com.microsoft:sql-iscsi-1.sapcc.stl.netapp.com
 
 # --- Volumes -------------------------------------------------------------
-volume create -vserver a50-sql -volume sql_iscsi_1_data      -aggregate <aggr_node1> -size 560GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -fractional-reserve 0 -autosize-mode grow -max-autosize 730GB
-volume create -vserver a50-sql -volume sql_iscsi_1_log       -aggregate <aggr_node2> -size 270GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -fractional-reserve 0 -autosize-mode grow -max-autosize 350GB
-volume create -vserver a50-sql -volume sql_iscsi_1_tempdb    -aggregate <aggr_node2> -size 165GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -fractional-reserve 0 -autosize-mode grow -max-autosize 210GB
-volume create -vserver a50-sql -volume sql_iscsi_1_logbackup -aggregate <aggr_node1> -size 325GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -fractional-reserve 0 -autosize-mode grow -max-autosize 420GB
+volume create -vserver a50-sql -volume sql_iscsi_1_data      -aggregate <aggr_node1> -size 560GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 730GB
+volume create -vserver a50-sql -volume sql_iscsi_1_log       -aggregate <aggr_node2> -size 270GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 350GB
+volume create -vserver a50-sql -volume sql_iscsi_1_tempdb    -aggregate <aggr_node2> -size 165GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 210GB
+volume create -vserver a50-sql -volume sql_iscsi_1_logbackup -aggregate <aggr_node1> -size 325GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 420GB
 
 # --- LUNs ----------------------------------------------------------------
 lun create -vserver a50-sql -path /vol/sql_iscsi_1_data/sql_iscsi_1_data_1           -size 520GB -ostype windows_2008 -space-reserve disabled -space-allocation enabled

@@ -51,7 +51,7 @@ No Windows disk or partition operations are required, and autogrow can do it aut
 |Inline deduplication, compression and compaction, together with thin provisioning, reduce the physical capacity used by databases and backups.
 
 |Integrated data protection
-|ONTAP snapshots, SnapRestore, FlexClone and SnapMirror, orchestrated by NetApp SnapCenter, provide backups in seconds, restores in minutes and instant database clones.
+|ONTAP snapshots, SnapRestore, FlexClone and SnapMirror, orchestrated by   https://docs.netapp.com/us-en/snapcenter/protect-scsql/concept_snapcenter_plug_in_for_microsoft_sql_server_overview.html[NetApp SnapCenter], provide backups in seconds, restores in minutes and instant database clones.
 
 |Flexibility
 |Databases can be moved between hosts by simply attaching them on another server, without remapping storage.
