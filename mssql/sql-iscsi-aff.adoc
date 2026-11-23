@@ -1123,11 +1123,10 @@ New-NetFirewallRule -DisplayName "SQL Server (TCP 1433)" -Direction Inbound -Pro
 
 For more information about the topics in this procedure, see the following resources:
 
-* NetApp: https://docs.netapp.com/us-en/ontap-apps-dbs/microsoft/mssql-overview.html[Microsoft SQL Server with ONTAP]
+* NetApp: https://docs.netapp.com/us-en/ontap-apps-dbs/mssql/mssql-overview.html[Microsoft SQL Server with ONTAP]
 * NetApp: https://docs.netapp.com/us-en/ontap/san-admin/index.html[ONTAP SAN storage management]
 * NetApp: https://docs.netapp.com/us-en/ontap-sanhost/index.html[ONTAP SAN host configuration]
-* NetApp: https://docs.netapp.com/us-en/ontap-sanhost/hu_wuhu_hu_wuhu_ug.html[NetApp Windows Host Utilities]
-* Microsoft: https://learn.microsoft.com/en-us/windows-server/storage/iscsi/iscsi-overview[iSCSI initiator in Windows Server]
+* NetApp: https://docs.netapp.com/us-en/ontap-sanhost/hu-wuhu-80.html[NetApp Windows Host Utilities]
 * Microsoft: https://learn.microsoft.com/en-us/powershell/module/mpio/[MPIO PowerShell module]
 * Microsoft: https://learn.microsoft.com/en-us/sql/database-engine/install-windows/install-sql-server[Install SQL Server]
 * NetApp: https://docs.netapp.com/us-en/data-services-backup-recovery/[NetApp Backup and Recovery documentation]
