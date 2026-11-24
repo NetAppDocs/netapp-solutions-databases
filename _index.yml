@@ -53,6 +53,14 @@ indexpage:
 #
     - title: "SQL server solutions for cloud and on-premises"
       links:
+        - title: "Learn about SQL Server 2025 on NetApp AFF with SMB"
+          url: /mssql/sql-smb3-aff-overview.html
+        - title: "Deploy SQL Server 2025 on NetApp AFF using SMB"
+          url: /mssql/sql-smb3-aff.html
+        - title: "Learn about SQL Server 2025 on NetApp AFF with iSCSI"
+          url: /mssql/sql-iscsi-aff-overview.html
+        - title: "Deploy SQL Server 2025 on NetApp AFF using iSCSI"
+          url: /mssql/sql-iscsi-aff.html
         - title: "Back up and recover SQL Server on AWS FSx ONTAP"
           url: /mssql/sqlsb-backup-restore-aws-fsxn.html
         - title: "Run SQL Server on AWS EC2 with FSx ONTAP"
@@ -61,10 +69,6 @@ indexpage:
           url: /mssql/sql-srv-anf-overview.html
         - title: "Run SQL Server on Google Cloud NetApp Volumes"
           url: /mssql/gcnv-sql-aoag-setup.html
-        - title: "Learn about SQL Server 2025 on NetApp AFF with SMB 3 continuous availability"
-          url: /mssql/sql-smb3-aff-overview.html
-        - title: "Deploy SQL Server 2025 on NetApp AFF using SMB 3 continuously available shares"
-          url: /mssql/sql-smb3-aff.html
         - title: "Migrate on-prem SQL workload to FSx ONTAP"
           url: /mssql/customer-usecase-mssql-fsx1.html
         - title: "SAP with Microsoft SQL Server on Windows using clustered data ONTAP"

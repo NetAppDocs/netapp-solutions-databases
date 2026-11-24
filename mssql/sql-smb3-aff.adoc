@@ -2,8 +2,9 @@
 sidebar: sidebar
 permalink: mssql/sql-smb3-aff.html
 keywords: Microsoft SQL server, SMB 3, AFF, ONTAP
-summary: "Deploy SQL Server 2025 on Windows Server 2025 with user databases, transaction logs, TempDB, and backups on SMB 3 continuously available shares on a NetApp AFF system. This procedure includes configuring the ONTAP SVM, volumes, and shares, installing SQL Server, and protecting the databases with SnapCenter."
+summary: "Deploy SQL Server 2025 on Windows Server 2025 with user databases, transaction logs, TempDB, and backups on SMB 3 continuously available shares on a NetApp AFF system. This procedure includes configuring the ONTAP SVM, volumes, and shares, and then installing SQL Server."
 ---
+
 = Deploy SQL Server 2025 on NetApp AFF using SMB 3 continuously available shares
 :icons: font
 :experimental:
@@ -19,7 +20,7 @@ summary: "Deploy SQL Server 2025 on Windows Server 2025 with user databases, tra
 :imagesdir: ../media/
 
 [.lead]
-Deploy SQL Server 2025 on Windows Server 2025 with user databases, transaction logs, TempDB, and backups on SMB 3 continuously available shares on a NetApp AFF system. This procedure includes configuring the ONTAP SVM, volumes, and shares, installing SQL Server, and protecting the databases with SnapCenter.
+Deploy SQL Server 2025 on Windows Server 2025 with user databases, transaction logs, TempDB, and backups on SMB 3 continuously available shares on a NetApp AFF system. This procedure includes configuring the ONTAP SVM, volumes, and shares, and then installing SQL Server.
 
 [[intro-scope]]
 == Scope
@@ -310,7 +311,7 @@ image:sql25_smb_bp_014.png[Volumes page with filter]
 ** *Capacity*: `1024 GiB`
 ** *Performance service level*: *Custom*, *Assign QoS policy group*: *Existing* > `none`
 ** *Access permissions*: select *Share via SMB/CIFS*. Share name `sql1_data`, grant access to user(s) `Everyone`, permission *Full control*.
-** *Protection*: leave *Enable snapshots (local)* cleared. Application-consistent backups are created by NetApp SnapCenter.
+** *Protection*: leave *Enable snapshots (local)* cleared. Application-consistent backups are created by NetApp SnapCenter (see <<references>>).
 +
 Click *Save*.
 +
@@ -371,7 +372,7 @@ image:sql25_smb_bp_023.png[Edit icon in the volume list]
 ** *Enable fractional reserve (100%)*: cleared
 ** *Security type*: `NTFS`
 ** *Snapshot reserve %*: `5` (`0` for `sql1_tempdb`)
-** *Schedule snapshots*: cleared. Snapshots that are not application-consistent are of no use for SQL Server; use NetApp SnapCenter instead.
+** *Schedule snapshots*: cleared. Snapshots that are not application-consistent are of no use for SQL Server; use NetApp SnapCenter instead (see <<references>>).
 ** *Show the snapshots directory to clients*: optional (the lab left it selected; clearing it hides `~snapshot` from the share)
 +
 Click *Save*, and repeat for `sql1_log`, `sql1_tempdb` and `sql1_backups`.
@@ -384,7 +385,7 @@ image:sql25_smb_bp_024.png[Edit volume sql1_data settings,width=450]
 
 [source,console]
 ----
-cluster::> volume modify -vserver a50-sql -volume sql1_data -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 1.3TB
+cluster::> volume modify -vserver a50-sql -volume sql1_data -space-guarantee none -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 1.3TB
 ----
 
 TIP: Keep storage efficiency (deduplication, compression, compaction) enabled on AFF.
@@ -778,10 +779,10 @@ vserver cifs options modify -vserver a50-sql -smb3-enabled true -is-multichannel
 set -privilege admin
 
 # --- Volumes -------------------------------------------------------------
-volume create -vserver a50-sql -volume sql1_data    -aggregate <aggr_node1> -size 1TB   -security-style ntfs -junction-path /sql1_data    -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 1.3TB
-volume create -vserver a50-sql -volume sql1_log     -aggregate <aggr_node2> -size 512GB -security-style ntfs -junction-path /sql1_log     -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 650GB
-volume create -vserver a50-sql -volume sql1_tempdb  -aggregate <aggr_node2> -size 500GB -security-style ntfs -junction-path /sql1_tempdb  -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 0 -snapshot-policy none -autosize-mode grow -max-autosize 650GB
-volume create -vserver a50-sql -volume sql1_backups -aggregate <aggr_node1> -size 2000GB -security-style ntfs -junction-path /sql1_backups -space-guarantee none -fractional-reserve 0 -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 2600GB
+volume create -vserver a50-sql -volume sql1_data    -aggregate <aggr_node1> -size 1TB   -security-style ntfs -junction-path /sql1_data    -space-guarantee none -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 1.3TB
+volume create -vserver a50-sql -volume sql1_log     -aggregate <aggr_node2> -size 512GB -security-style ntfs -junction-path /sql1_log     -space-guarantee none -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 650GB
+volume create -vserver a50-sql -volume sql1_tempdb  -aggregate <aggr_node2> -size 500GB -security-style ntfs -junction-path /sql1_tempdb  -space-guarantee none -percent-snapshot-space 0 -snapshot-policy none -autosize-mode grow -max-autosize 650GB
+volume create -vserver a50-sql -volume sql1_backups -aggregate <aggr_node1> -size 2000GB -security-style ntfs -junction-path /sql1_backups -space-guarantee none -percent-snapshot-space 5 -snapshot-policy none -autosize-mode grow -max-autosize 2600GB
 
 # --- CA shares -----------------------------------------------------------
 vserver cifs share create -vserver a50-sql -share-name sql1_data    -path /sql1_data    -share-properties oplocks,browsable,changenotify,continuously-available
