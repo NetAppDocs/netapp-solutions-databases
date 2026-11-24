@@ -170,4 +170,4 @@ image::sql25_iscsi_bp_057.svg[NetApp Console local backup workflow for SQL Serve
 * *No backup infrastructure to maintain.* The control plane is delivered as a service; only the lightweight Console agent runs on premises. There is no backup server or catalog database to install, patch or protect.
 * *Central management.* Inventory, policies, schedules, retention, role-based access control, job monitoring and notifications for all SQL Server hosts are in one web interface, with REST APIs for automation.
 * *Smooth transition from SnapCenter.* Existing SnapCenter configurations can be imported into NetApp Console.
-* *Ransomware resilience.* Snapshots are immutable by design and can be combined with ONTAP tamperproof snapshot locking and Autonomous Ransomware Protection.
+* *Ransomware resilience.* ONTAP snapshots are read-only, but privileged users can delete unlocked snapshots. Use ONTAP tamperproof snapshot locking with a retention period to protect against deletion, and combine it with Autonomous Ransomware Protection where supported.

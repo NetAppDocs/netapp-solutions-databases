@@ -622,7 +622,7 @@ The following commands discover the target portal and create one persistent, mul
 [source,powershell]
 ----
 PS C:\> New-IscsiTargetPortal -TargetPortalAddress 192.168.175.135 -InitiatorPortalAddress 192.168.175.44
-PS C:\> $target = Get-IscsiTarget | Where-Object NodeAddress -like 'iqn.1992-08.com.netapp:*'
+P PS C:\> $target = Get-IscsiTarget -NodeAddress '<target-IQN-recorded-in-Step-1>'
 PS C:\> foreach ($lif in '192.168.175.134','192.168.175.135','192.168.175.136','192.168.175.137') {
           Connect-IscsiTarget -NodeAddress $target.NodeAddress -TargetPortalAddress $lif `
             -InitiatorPortalAddress 192.168.175.44 -IsMultipathEnabled $true -IsPersistent $true
@@ -772,6 +772,7 @@ PS C:\> foreach ($d in Get-Disk | Where-Object FriendlyName -like 'NETAPP*') {
 PS C:\> 'E:\data','F:\log','G:\tempdb\data','G:\tempdb\log','H:\backup' | ForEach-Object { New-Item -ItemType Directory -Path $_ }
 PS C:\> Get-Volume -DriveLetter E,F,G,H | Format-Table DriveLetter,FileSystemLabel,FileSystem,AllocationUnitSize,Size
 ----
+CAUTION: Only run these commands if these LUNs are the only RAW LUNs connected to the system. If there are other RAW LUNs connected to the system, you will need to manually create the folders and format the volumes.
 --
 ======
 
@@ -1117,6 +1118,9 @@ foreach ($d in Get-Disk | Where-Object FriendlyName -like 'NETAPP*') {
 # --- Part 4: firewall for SQL Server -----------------------------------------
 New-NetFirewallRule -DisplayName "SQL Server (TCP 1433)" -Direction Inbound -Protocol TCP -LocalPort 1433 -Action Allow
 ----
+NOTE: Run each part separately. Part 1 requires a reboot of the host so the other parts won't continue after the reboot.
+
+CAUTION: Only run the commands from part 3 if these LUNs are the only RAW LUNs connected to the system. If there are other RAW LUNs connected to the system, you will need to manually create the folders and format the volumes.
 
 [[references]]
 == Additional information
