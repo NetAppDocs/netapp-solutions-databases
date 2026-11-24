@@ -578,7 +578,7 @@ image:sql25_iscsi_bp_029.png[Connect To Target dialog with favorite and multi-pa
 *** *Initiator IP*: the iSCSI IP address of the host (`192.168.175.44`)
 *** *Target portal IP*: the first iSCSI LIF (in the lab `192.168.175.137 / 3260`)
 +
-Leave CHAP cleared unless your security policy requires it (in that case, configure CHAP in the igroup security settings in ONTAP as well).
+ Leave CHAP cleared unless your security policy requires it. If CHAP is required, first configure matching credentials for the host's initiator IQN on the ONTAP SVM using `vserver iscsi security`, and then enter those credentials in the Windows iSCSI initiator.
 Click *OK* twice.
 +
 .Show example
